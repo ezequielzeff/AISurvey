@@ -1,0 +1,3607 @@
+<!DOCTYPE html>
+<!-- AI Adoption Assessment Wizard - Standalone (HTML+JS+CSS) -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Adoption Assessment</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .header {
+      background: #0a0a14;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      border-bottom: 3px solid #4f46e5;
+    }
+
+    .header-logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .header-logo span {
+      color: #818cf8;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .save-status {
+      font-size: 0.85rem;
+      color: #22c55e;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .save-status::before {
+      content: '✓';
+      font-size: 0.9rem;
+    }
+
+    .save-status.saving {
+      color: #fbbf24;
+    }
+
+    .save-status.saving::before {
+      content: '↻';
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .btn-header {
+      background: transparent;
+      color: #9ca3af;
+      border: 1px solid #4b5563;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-header:hover {
+      background: #1f2937;
+      color: #fff;
+      border-color: #6b7280;
+    }
+
+    .progress-container {
+      background: #1e1e3f;
+      padding: 1.5rem 2rem;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #2d2d5a;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4f46e5, #818cf8);
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-text {
+      color: #a5b4fc;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+
+    .main-container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+      padding: 2rem;
+      color: #fff;
+    }
+
+    .step-indicator {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-subtitle {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    /* Welcome Page Styles */
+    .welcome-header {
+      text-align: center;
+      padding: 2.5rem 2rem;
+    }
+
+    .welcome-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .welcome-title {
+      font-size: 2rem !important;
+    }
+
+    .welcome-subtitle {
+      font-size: 1.1rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .welcome-body {
+      padding: 1.5rem 2rem 2rem !important;
+    }
+
+    .welcome-purpose {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .welcome-purpose h3 {
+      color: #4f46e5;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .welcome-purpose p {
+      color: #64748b;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .welcome-sections h3 {
+      color: #1e293b;
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .welcome-sections-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .welcome-section-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+
+    .welcome-section-icon {
+      font-size: 1.1rem;
+    }
+
+    .welcome-section-text {
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    .welcome-info {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+      border-radius: 10px;
+    }
+
+    .welcome-info-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .welcome-info-icon {
+      font-size: 1.1rem;
+    }
+
+    .welcome-info-text {
+      font-size: 0.9rem;
+      color: #4338ca;
+    }
+
+    .welcome-account-section {
+      margin-top: 0.5rem;
+    }
+
+    .welcome-account-input {
+      font-size: 1rem;
+    }
+
+    .welcome-footer {
+      justify-content: center !important;
+      padding: 1.5rem 2rem !important;
+    }
+
+    .btn-large {
+      padding: 1rem 2.5rem !important;
+      font-size: 1.1rem !important;
+    }
+
+    .card-body {
+      padding: 2rem;
+    }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .role-card {
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 0.75rem 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      background: #fff;
+      position: relative;
+    }
+
+    .role-card:hover {
+      border-color: #a5b4fc;
+      background: #f5f3ff;
+    }
+
+    .role-card.selected {
+      border-color: #4f46e5;
+      background: #eef2ff;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+    }
+
+    .role-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .role-card.selected .role-icon {
+      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    }
+
+    .role-name {
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #1f2937;
+      line-height: 1.2;
+    }
+
+    .checkmark {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 18px;
+      height: 18px;
+      background: #4f46e5;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 11px;
+    }
+
+    .role-card.selected .checkmark {
+      display: flex;
+    }
+
+    .card-footer {
+      padding: 1.5rem 2rem;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 0.875rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: #4b5563;
+      border: 2px solid #d1d5db;
+    }
+
+    .btn-secondary:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .selection-count {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+
+    /* Tool selection styles - card based like Step 3 */
+    .tool-category {
+      margin-bottom: 1.5rem;
+    }
+
+    .tool-category:last-child {
+      margin-bottom: 0;
+    }
+
+    .tool-category-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .tool-category-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .tool-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .tool-card {
+      min-width: 100px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: #fff;
+    }
+
+    .tool-card:hover {
+      border-color: #a5b4fc;
+      background: #f5f3ff;
+    }
+
+    .tool-card.selected {
+      border-color: #4f46e5;
+      background: #eef2ff;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+
+    .tool-card-name {
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #1f2937;
+    }
+
+    .tool-card.selected .tool-card-name {
+      font-weight: 600;
+      color: #4f46e5;
+    }
+
+    .tool-card.selected .tool-card-name::before {
+      content: '✓ ';
+    }
+
+    .tool-add-input {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tool-add-input input {
+      width: 150px;
+      padding: 0.6rem 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .tool-add-input input:focus {
+      border-color: #4f46e5;
+    }
+
+    .tool-add-input button {
+      padding: 0.6rem 1rem;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .tool-card.special-option {
+      background: #f9fafb;
+      border-style: dashed;
+    }
+
+    .tool-card.special-option.selected {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+      border-style: dashed;
+      box-shadow: none;
+    }
+
+    .tool-card.special-option.selected .tool-card-name {
+      color: #6b7280;
+    }
+
+    .tool-card.special-option.selected .tool-card-name::before {
+      content: '';
+    }
+
+    .tool-card.not-applicable.selected {
+      background: #fef3c7;
+      border-color: #f59e0b;
+    }
+
+    .tool-card.not-applicable.selected .tool-card-name {
+      color: #b45309;
+    }
+
+    .tool-add-input button:hover {
+      background: #4338ca;
+    }
+
+    .custom-tool-input button:hover {
+      background: #4338ca;
+    }
+
+    .custom-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #ddd6fe;
+      color: #5b21b6;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .custom-tag button {
+      background: none;
+      border: none;
+      color: #7c3aed;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0;
+    }
+
+    /* Matrix styles */
+    .matrix-container {
+      overflow-x: auto;
+    }
+
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 400px;
+      background: #fefce8;
+    }
+
+    .matrix-table th,
+    .matrix-table td {
+      padding: 1rem 1.5rem;
+      text-align: center;
+      border: 1px solid #d4d4d4;
+    }
+
+    .matrix-table thead th {
+      background: #fef9c3;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .matrix-corner {
+      text-align: left !important;
+      font-weight: 600;
+    }
+
+    .tool-column-header {
+      min-width: 140px;
+    }
+
+    .role-row-header {
+      text-align: left !important;
+      font-weight: 600;
+      background: #fef9c3;
+      color: #1f2937;
+    }
+
+    .matrix-table td {
+      background: #fefce8;
+    }
+
+    .matrix-checkbox {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      accent-color: #22c55e;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* Use cases styles */
+    .usecase-category {
+      margin-bottom: 2.5rem;
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .usecase-category:last-child {
+      margin-bottom: 0;
+    }
+
+    .usecase-category-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .usecase-category-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .usecase-category-name {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .usecase-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .usecase-column {
+      background: #fff;
+      border-radius: 10px;
+      padding: 1rem;
+      min-height: 120px;
+    }
+
+    .usecase-column-header {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .usecase-column.need {
+      border: 2px solid #fbbf24;
+      background: #fffbeb;
+    }
+
+    .usecase-column.need .usecase-column-header {
+      color: #b45309;
+      border-bottom-color: #fbbf24;
+    }
+
+    .usecase-column.doing {
+      border: 2px solid #22c55e;
+      background: #f0fdf4;
+    }
+
+    .usecase-column.doing .usecase-column-header {
+      color: #15803d;
+      border-bottom-color: #22c55e;
+    }
+
+    .usecase-column-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-height: 60px;
+    }
+
+    .usecase-card {
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      font-size: 0.9rem;
+    }
+
+    .usecase-card:hover {
+      border-color: #a5b4fc;
+      background: #f5f3ff;
+    }
+
+    .usecase-column.need .usecase-card {
+      border-color: #fcd34d;
+    }
+
+    .usecase-column.need .usecase-card:hover {
+      background: #fef3c7;
+    }
+
+    .usecase-column.doing .usecase-card {
+      border-color: #86efac;
+    }
+
+    .usecase-column.doing .usecase-card:hover {
+      background: #dcfce7;
+    }
+
+    .usecase-name {
+      font-weight: 500;
+      color: #374151;
+      flex: 1;
+    }
+
+    .usecase-delete-btn {
+      background: none;
+      border: none;
+      color: #d1d5db;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .usecase-delete-btn:hover {
+      color: #ef4444;
+    }
+
+    .usecase-move-btn {
+      font-size: 1rem;
+      color: #9ca3af;
+      transition: color 0.2s;
+      padding: 0 0.25rem;
+    }
+
+    .usecase-column.need .usecase-move-btn {
+      color: #f59e0b;
+    }
+
+    .usecase-column.need .usecase-card:hover .usecase-move-btn {
+      color: #22c55e;
+    }
+
+    .usecase-column.doing .usecase-move-btn {
+      color: #22c55e;
+    }
+
+    .usecase-column.doing .usecase-card:hover .usecase-move-btn {
+      color: #f59e0b;
+    }
+
+    .usecase-empty {
+      color: #9ca3af;
+      font-size: 0.85rem;
+      font-style: italic;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .usecase-add-input {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .usecase-add-input input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .usecase-add-input input:focus {
+      border-color: #4f46e5;
+    }
+
+    .usecase-add-input button {
+      padding: 0.75rem 1rem;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .usecase-add-input button:hover {
+      background: #4338ca;
+    }
+
+    /* Engagement / Ownership slider styles */
+    .engagement-section {
+      margin-bottom: 2rem;
+    }
+
+    .engagement-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .engagement-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+    }
+
+    .engagement-hint {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 1rem;
+    }
+
+    .ownership-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .client-ai-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .client-ai-options .option-card {
+      flex: 0 1 auto;
+      min-width: 120px;
+      padding: 0.75rem;
+    }
+
+    .client-ai-options .option-card-icon {
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .client-ai-options .option-card-title {
+      font-size: 0.85rem;
+    }
+
+    .client-ai-options .option-card-desc {
+      font-size: 0.7rem;
+    }
+
+    /* Maturity Slider Styles */
+    .maturity-slider-container {
+      padding: 1rem 0;
+    }
+
+    .maturity-track {
+      position: relative;
+      height: 6px;
+      background: linear-gradient(to right, #e5e7eb 0%, #e5e7eb 100%);
+      border-radius: 3px;
+      margin: 0 40px;
+    }
+
+    .maturity-progress {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      background: linear-gradient(to right, #fbbf24, #f59e0b, #22c55e, #10b981, #4f46e5);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .maturity-stages {
+      display: flex;
+      justify-content: space-between;
+      margin-top: -12px;
+      position: relative;
+    }
+
+    .maturity-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      flex: 1;
+      position: relative;
+    }
+
+    .maturity-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #e5e7eb;
+      transition: all 0.2s ease;
+      z-index: 1;
+    }
+
+    .maturity-stage:hover .maturity-dot {
+      border-color: #a5b4fc;
+      transform: scale(1.1);
+    }
+
+    .maturity-stage.active .maturity-dot {
+      border-color: #4f46e5;
+      background: #4f46e5;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+    }
+
+    .maturity-stage.passed .maturity-dot {
+      border-color: #22c55e;
+      background: #22c55e;
+    }
+
+    .maturity-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 0.75rem;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .maturity-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .maturity-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #6b7280;
+    }
+
+    .maturity-stage.active .maturity-name,
+    .maturity-stage.passed .maturity-name {
+      color: #1f2937;
+    }
+
+    .maturity-stage.active .maturity-name {
+      color: #4f46e5;
+    }
+
+    .maturity-desc {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      margin-top: 0.15rem;
+    }
+
+    .maturity-stage.active .maturity-desc {
+      color: #6b7280;
+    }
+
+    /* Option cards for engagement questions */
+    .option-cards {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .option-card {
+      flex: 1;
+      min-width: 150px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      background: #fff;
+    }
+
+    .option-card:hover {
+      border-color: #a5b4fc;
+      background: #f5f3ff;
+    }
+
+    .option-card.selected {
+      border-color: #4f46e5;
+      background: #eef2ff;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+
+    .option-card-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .option-card-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #1f2937;
+    }
+
+    .option-card-desc {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+
+    .limiting-factors-hint {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-bottom: 1rem;
+    }
+
+    .limiting-factors-options {
+      flex-wrap: wrap;
+    }
+
+    .limiting-factors-options .option-card {
+      position: relative;
+    }
+
+    .limiting-factors-options .option-card[data-rank]::after {
+      content: attr(data-rank);
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: #312e81;
+      background: #e0e7ff;
+      border: 1px solid #c7d2fe;
+    }
+
+    .limiting-factor-other-wrap {
+      margin-top: 1.5rem;
+    }
+
+    .limiting-factor-other-wrap.hidden {
+      display: none;
+    }
+
+    /* Compliance chips styles */
+    .compliance-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .compliance-chips.custom-compliance {
+      margin-top: 0.75rem;
+    }
+
+    .compliance-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 25px;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+    }
+
+    .compliance-chip:hover {
+      border-color: #a5b4fc;
+      background: #f5f3ff;
+    }
+
+    .compliance-chip.selected {
+      border-color: #4f46e5;
+      background: #eef2ff;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+    }
+
+    .compliance-icon {
+      font-size: 1.1rem;
+    }
+
+    .compliance-name {
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .compliance-chip.selected .compliance-name {
+      color: #4f46e5;
+    }
+
+    .compliance-chip .compliance-delete {
+      margin-left: 0.25rem;
+      color: #9ca3af;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .compliance-chip:hover .compliance-delete {
+      color: #ef4444;
+    }
+
+    .compliance-add-input {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .compliance-add-input input {
+      flex: 1;
+      max-width: 300px;
+      padding: 0.6rem 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .compliance-add-input input:focus {
+      border-color: #4f46e5;
+    }
+
+    .compliance-add-input button {
+      padding: 0.6rem 1rem;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .compliance-add-input button:hover {
+      background: #4338ca;
+    }
+
+    /* Account name input styles */
+    .account-name-section {
+      margin-bottom: 2rem;
+    }
+
+    .account-name-label {
+      display: block;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+    }
+
+    .account-name-input {
+      width: 100%;
+      max-width: 500px;
+      padding: 0.875rem 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .account-name-input:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .roles-section-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body id="artifacts-component-root-html">
+  <div class="header">
+    <div class="header-logo">AI <span>Adoption</span> Assessment</div>
+    <div class="header-actions">
+      <span class="save-status" id="saveStatus">Progress auto-saved</span>
+      <button class="btn-header" id="clearProgress">Clear Progress</button>
+    </div>
+  </div>
+
+  <div class="progress-container">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width: 20%;"></div>
+    </div>
+    <div class="progress-text" id="progressText">Step 1 of 5</div>
+  </div>
+
+  <div class="main-container">
+    <div class="card">
+      <!-- Welcome Page -->
+      <div id="step0" class="step">
+        <div class="card-header welcome-header">
+          <div class="welcome-icon">🚀</div>
+          <h1 class="card-title welcome-title">AI Adoption Assessment</h1>
+          <p class="card-subtitle welcome-subtitle">Understand your team's AI readiness and identify opportunities for growth</p>
+        </div>
+        <div class="card-body welcome-body">
+          <div class="welcome-purpose">
+            <h3>Why this assessment?</h3>
+            <p>This survey helps us understand your current AI adoption landscape, identify opportunities for improvement, and align resources to accelerate your team's success with AI tools and practices.</p>
+          </div>
+          
+          <div class="welcome-sections">
+            <h3>What we'll cover</h3>
+            <div class="welcome-sections-grid">
+              <div class="welcome-section-item">
+                <span class="welcome-section-icon">👥</span>
+                <span class="welcome-section-text">Team roles & composition</span>
+              </div>
+              <div class="welcome-section-item">
+                <span class="welcome-section-icon">🛠️</span>
+                <span class="welcome-section-text">Tools & infrastructure</span>
+              </div>
+              <div class="welcome-section-item">
+                <span class="welcome-section-icon">📊</span>
+                <span class="welcome-section-text">AI tool usage patterns</span>
+              </div>
+              <div class="welcome-section-item">
+                <span class="welcome-section-icon">🎯</span>
+                <span class="welcome-section-text">Use case needs & priorities</span>
+              </div>
+              <div class="welcome-section-item">
+                <span class="welcome-section-icon">🤝</span>
+                <span class="welcome-section-text">Engagement model</span>
+              </div>
+              <div class="welcome-section-item">
+                <span class="welcome-section-icon">🏢</span>
+                <span class="welcome-section-text">Client AI landscape</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="welcome-info">
+            <div class="welcome-info-item">
+              <span class="welcome-info-icon">⏱️</span>
+              <span class="welcome-info-text"><strong>Time:</strong> ~5-10 minutes</span>
+            </div>
+            <div class="welcome-info-item">
+              <span class="welcome-info-icon">💾</span>
+              <span class="welcome-info-text"><strong>Auto-save:</strong> Your progress is saved automatically</span>
+            </div>
+          </div>
+          
+          <div class="welcome-account-section">
+            <label class="account-name-label" for="accountNameInput">Account / Project Name</label>
+            <input type="text" id="accountNameInput" class="account-name-input welcome-account-input" placeholder="Enter account or project name...">
+          </div>
+        </div>
+        <div class="card-footer welcome-footer">
+          <button class="btn btn-primary btn-large" id="startAssessment">Start Assessment →</button>
+        </div>
+      </div>
+
+      <!-- Step 1: Roles -->
+      <div id="step1" class="step hidden">
+        <div class="card-header">
+          <div class="step-indicator">Step 1</div>
+          <h1 class="card-title">Tell us about your project</h1>
+          <p class="card-subtitle">Select the team roles involved in this project</p>
+        </div>
+        <div class="card-body">
+          <div class="roles-section-label">Who's on your team?</div>
+          <div class="role-grid" id="roleGrid">
+        <div class="role-card" data-role-id="pm">
+          <div class="checkmark">✓</div>
+          <div class="role-icon">📋</div>
+          <div class="role-name">Project Managers / Scrum Masters</div>
+        </div>
+      
+        <div class="role-card" data-role-id="ba">
+          <div class="checkmark">✓</div>
+          <div class="role-icon">📊</div>
+          <div class="role-name">Business Analysts / Product Managers</div>
+        </div>
+      
+        <div class="role-card" data-role-id="ux">
+          <div class="checkmark">✓</div>
+          <div class="role-icon">🎨</div>
+          <div class="role-name">UI/UX Designers</div>
+        </div>
+      
+        <div class="role-card" data-role-id="devops">
+          <div class="checkmark">✓</div>
+          <div class="role-icon">⚙️</div>
+          <div class="role-name">DevOps Engineers</div>
+        </div>
+      
+        <div class="role-card" data-role-id="swe">
+          <div class="checkmark">✓</div>
+          <div class="role-icon">💻</div>
+          <div class="role-name">Software Engineers</div>
+        </div>
+      
+        <div class="role-card" data-role-id="qa">
+          <div class="checkmark">✓</div>
+          <div class="role-icon">🔍</div>
+          <div class="role-name">Manual QA</div>
+        </div>
+      
+        <div class="role-card" data-role-id="qaa">
+          <div class="checkmark">✓</div>
+          <div class="role-icon">🤖</div>
+          <div class="role-name">QA Automation Engineers</div>
+        </div>
+      
+        <div class="role-card selected" data-role-id="data">
+          <div class="checkmark">✓</div>
+          <div class="role-icon">📈</div>
+          <div class="role-name">Data Engineers / Scientists</div>
+        </div>
+      
+        <div class="role-card" data-role-id="arch">
+          <div class="checkmark">✓</div>
+          <div class="role-icon">🏗️</div>
+          <div class="role-name">Solutions Architects</div>
+        </div>
+      </div>
+        </div>
+        <div class="card-footer">
+          <div class="selection-count" id="roleCount">1 roles selected</div>
+          <button class="btn btn-primary" id="step1Next">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Tools & Infrastructure -->
+      <div id="step2" class="step hidden">
+        <div class="card-header">
+          <div class="step-indicator">Step 2</div>
+          <h1 class="card-title">What tools and infrastructure does your team use?</h1>
+          <p class="card-subtitle">Select all tools and platforms used in your project</p>
+        </div>
+        <div class="card-body" id="toolsContainer">
+          <!-- Tools will be populated by JS (including cloud platforms) -->
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" id="step2Back">← Back</button>
+          <button class="btn btn-primary" id="step2Next">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 5: Customer Engagement -->
+      <div id="step5" class="step hidden">
+        <div class="card-header">
+          <div class="step-indicator">Step 5</div>
+          <h1 class="card-title">What's your engagement model?</h1>
+          <p class="card-subtitle">Define your relationship and responsibilities with the customer</p>
+        </div>
+        <div class="card-body">
+          <!-- Question 1: Ownership Level (Multi-select) -->
+          <div class="engagement-section">
+            <div class="engagement-label">What level of ownership do you have on this project?</div>
+            <div class="engagement-hint">Select all that apply</div>
+            <div class="option-cards ownership-options" id="ownershipOptions">
+              <div class="option-card" data-value="staff">
+                <div class="option-card-icon">👤</div>
+                <div class="option-card-title">Staff Augmentation</div>
+                <div class="option-card-desc">Team members embedded with client</div>
+              </div>
+              <div class="option-card" data-value="project">
+                <div class="option-card-icon">📁</div>
+                <div class="option-card-title">Project Ownership</div>
+                <div class="option-card-desc">Full ownership of project delivery</div>
+              </div>
+              <div class="option-card" data-value="program">
+                <div class="option-card-icon">📊</div>
+                <div class="option-card-title">Program Ownership</div>
+                <div class="option-card-desc">Ownership across multiple projects</div>
+              </div>
+              <div class="option-card" data-value="outcome">
+                <div class="option-card-icon">🎯</div>
+                <div class="option-card-title">Business Outcome</div>
+                <div class="option-card-desc">Accountable for business results</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 2: AI Tool Payment -->
+          <div class="engagement-section">
+            <div class="engagement-label">Who pays (or will pay) for AI tools?</div>
+            <div class="option-cards" id="paymentOptions">
+              <div class="option-card" data-value="us">
+                <div class="option-card-icon">🏢</div>
+                <div class="option-card-title">We Will</div>
+                <div class="option-card-desc">Our organization pays</div>
+              </div>
+              <div class="option-card" data-value="customer">
+                <div class="option-card-icon">🤝</div>
+                <div class="option-card-title">Customer Will</div>
+                <div class="option-card-desc">Customer pays for tools</div>
+              </div>
+              <div class="option-card" data-value="tbd">
+                <div class="option-card-icon">💭</div>
+                <div class="option-card-title">To Be Determined</div>
+                <div class="option-card-desc">Still need to figure out</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 3: Compliance Requirements -->
+          <div class="engagement-section">
+            <div class="engagement-label">What compliance requirements apply to this project?</div>
+            <div class="compliance-chips" id="complianceOptions">
+              <div class="compliance-chip" data-value="hipaa">
+                <span class="compliance-icon">🏥</span>
+                <span class="compliance-name">HIPAA</span>
+              </div>
+              <div class="compliance-chip" data-value="gdpr">
+                <span class="compliance-icon">🇪🇺</span>
+                <span class="compliance-name">GDPR</span>
+              </div>
+              <div class="compliance-chip" data-value="sox">
+                <span class="compliance-icon">📊</span>
+                <span class="compliance-name">SOX</span>
+              </div>
+              <div class="compliance-chip" data-value="pci-dss">
+                <span class="compliance-icon">💳</span>
+                <span class="compliance-name">PCI-DSS</span>
+              </div>
+              <div class="compliance-chip" data-value="fedramp">
+                <span class="compliance-icon">🏛️</span>
+                <span class="compliance-name">FedRAMP</span>
+              </div>
+              <div class="compliance-chip" data-value="soc2">
+                <span class="compliance-icon">🔒</span>
+                <span class="compliance-name">SOC 2</span>
+              </div>
+              <div class="compliance-chip" data-value="ccpa">
+                <span class="compliance-icon">🌴</span>
+                <span class="compliance-name">CCPA</span>
+              </div>
+              <div class="compliance-chip" data-value="iso27001">
+                <span class="compliance-icon">📋</span>
+                <span class="compliance-name">ISO 27001</span>
+              </div>
+            </div>
+            <div id="customComplianceChips" class="compliance-chips custom-compliance"></div>
+            <div class="compliance-add-input">
+              <input type="text" placeholder="Add other compliance requirement..." id="customComplianceInput">
+              <button type="button" id="addComplianceBtn">Add</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" id="step5Back">← Back</button>
+          <button class="btn btn-primary" id="step5Next">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 6: Client AI Landscape -->
+      <div id="step6" class="step hidden">
+        <div class="card-header">
+          <div class="step-indicator">Step 6</div>
+          <h1 class="card-title">What is the client's AI landscape?</h1>
+          <p class="card-subtitle">Help us understand where the client stands with AI</p>
+        </div>
+        <div class="card-body">
+          <!-- Question 1: AI Maturity (Slider) -->
+          <div class="engagement-section">
+            <div class="engagement-label">What is the client's AI maturity stage?</div>
+            <div class="maturity-slider-container">
+              <div class="maturity-track">
+                <div class="maturity-progress" id="maturityProgress"></div>
+              </div>
+              <div class="maturity-stages" id="maturityStages">
+                <div class="maturity-stage" data-value="not-started" data-index="0">
+                  <div class="maturity-dot"></div>
+                  <div class="maturity-label">
+                    <span class="maturity-icon">🚫</span>
+                    <span class="maturity-name">Not Started</span>
+                    <span class="maturity-desc">No AI initiatives</span>
+                  </div>
+                </div>
+                <div class="maturity-stage" data-value="exploring" data-index="1">
+                  <div class="maturity-dot"></div>
+                  <div class="maturity-label">
+                    <span class="maturity-icon">🔍</span>
+                    <span class="maturity-name">Exploring</span>
+                    <span class="maturity-desc">Researching & learning</span>
+                  </div>
+                </div>
+                <div class="maturity-stage" data-value="piloting" data-index="2">
+                  <div class="maturity-dot"></div>
+                  <div class="maturity-label">
+                    <span class="maturity-icon">🧪</span>
+                    <span class="maturity-name">Piloting</span>
+                    <span class="maturity-desc">Running POCs</span>
+                  </div>
+                </div>
+                <div class="maturity-stage" data-value="scaling" data-index="3">
+                  <div class="maturity-dot"></div>
+                  <div class="maturity-label">
+                    <span class="maturity-icon">📈</span>
+                    <span class="maturity-name">Scaling</span>
+                    <span class="maturity-desc">Expanding solutions</span>
+                  </div>
+                </div>
+                <div class="maturity-stage" data-value="optimizing" data-index="4">
+                  <div class="maturity-dot"></div>
+                  <div class="maturity-label">
+                    <span class="maturity-icon">⚡</span>
+                    <span class="maturity-name">Optimizing</span>
+                    <span class="maturity-desc">AI embedded</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 2: Current AI Usage -->
+          <div class="engagement-section">
+            <div class="engagement-label">How is the client currently using AI?</div>
+            <div class="engagement-hint">Select all that apply</div>
+            <div class="option-cards client-ai-options" id="clientUsageOptions">
+              <div class="option-card" data-value="not-using">
+                <div class="option-card-icon">❌</div>
+                <div class="option-card-title">Not Using AI</div>
+                <div class="option-card-desc">No AI adoption yet</div>
+              </div>
+              <div class="option-card" data-value="internal-tools">
+                <div class="option-card-icon">🛠️</div>
+                <div class="option-card-title">Internal Tools</div>
+                <div class="option-card-desc">Copilot, ChatGPT, etc.</div>
+              </div>
+              <div class="option-card" data-value="customer-facing">
+                <div class="option-card-icon">👥</div>
+                <div class="option-card-title">Customer-Facing</div>
+                <div class="option-card-desc">AI in customer apps</div>
+              </div>
+              <div class="option-card" data-value="business-processes">
+                <div class="option-card-icon">⚙️</div>
+                <div class="option-card-title">Business Processes</div>
+                <div class="option-card-desc">Automation & workflows</div>
+              </div>
+              <div class="option-card" data-value="ai-products">
+                <div class="option-card-icon">🚀</div>
+                <div class="option-card-title">AI Products</div>
+                <div class="option-card-desc">AI-driven products/services</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 3: Strategic Priority -->
+          <div class="engagement-section">
+            <div class="engagement-label">Is AI a strategic priority for the client?</div>
+            <div class="option-cards client-ai-options" id="clientPriorityOptions">
+              <div class="option-card" data-value="not-priority">
+                <div class="option-card-icon">➖</div>
+                <div class="option-card-title">Not a Priority</div>
+                <div class="option-card-desc">No focus on AI</div>
+              </div>
+              <div class="option-card" data-value="low">
+                <div class="option-card-icon">🔻</div>
+                <div class="option-card-title">Low Priority</div>
+                <div class="option-card-desc">Exploring opportunistically</div>
+              </div>
+              <div class="option-card" data-value="medium">
+                <div class="option-card-icon">▶️</div>
+                <div class="option-card-title">Medium Priority</div>
+                <div class="option-card-desc">Dedicated budget/resources</div>
+              </div>
+              <div class="option-card" data-value="high">
+                <div class="option-card-icon">🔺</div>
+                <div class="option-card-title">High Priority</div>
+                <div class="option-card-desc">Executive sponsorship</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 4: AI Governance -->
+          <div class="engagement-section">
+            <div class="engagement-label">Does the client have AI governance in place?</div>
+            <div class="option-cards client-ai-options" id="clientGovernanceOptions">
+              <div class="option-card" data-value="none">
+                <div class="option-card-icon">🚫</div>
+                <div class="option-card-title">No Governance</div>
+                <div class="option-card-desc">No policies in place</div>
+              </div>
+              <div class="option-card" data-value="informal">
+                <div class="option-card-icon">📝</div>
+                <div class="option-card-title">Informal</div>
+                <div class="option-card-desc">Informal guidelines only</div>
+              </div>
+              <div class="option-card" data-value="developing">
+                <div class="option-card-icon">🔄</div>
+                <div class="option-card-title">Developing</div>
+                <div class="option-card-desc">Policies being developed</div>
+              </div>
+              <div class="option-card" data-value="established">
+                <div class="option-card-icon">✅</div>
+                <div class="option-card-title">Established</div>
+                <div class="option-card-desc">Formal AI governance</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 5: Biggest Challenge -->
+          <div class="engagement-section">
+            <div class="engagement-label">What is the client's biggest AI challenge?</div>
+            <div class="option-cards client-ai-options" id="clientChallengeOptions">
+              <div class="option-card" data-value="unclear-roi">
+                <div class="option-card-icon">❓</div>
+                <div class="option-card-title">Unclear ROI</div>
+                <div class="option-card-desc">Use cases or value unclear</div>
+              </div>
+              <div class="option-card" data-value="skills">
+                <div class="option-card-icon">🎓</div>
+                <div class="option-card-title">Skills Gap</div>
+                <div class="option-card-desc">Lack of talent/skills</div>
+              </div>
+              <div class="option-card" data-value="data">
+                <div class="option-card-icon">📊</div>
+                <div class="option-card-title">Data Issues</div>
+                <div class="option-card-desc">Quality or availability</div>
+              </div>
+              <div class="option-card" data-value="security">
+                <div class="option-card-icon">🔒</div>
+                <div class="option-card-title">Security/Compliance</div>
+                <div class="option-card-desc">Privacy or regulatory</div>
+              </div>
+              <div class="option-card" data-value="budget">
+                <div class="option-card-icon">💰</div>
+                <div class="option-card-title">Budget/Buy-in</div>
+                <div class="option-card-desc">Funding or sponsorship</div>
+              </div>
+              <div class="option-card" data-value="infrastructure">
+                <div class="option-card-icon">🏗️</div>
+                <div class="option-card-title">Infrastructure</div>
+                <div class="option-card-desc">Technology readiness</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" id="step6Back">← Back</button>
+          <button class="btn btn-primary" id="step6Next">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: AI Tool Usage by Role -->
+      <div id="step3" class="step hidden">
+        <div class="card-header">
+          <div class="step-indicator">Step 3</div>
+          <h1 class="card-title">Who uses which AI tools?</h1>
+          <p class="card-subtitle">Check the boxes where a role uses a tool</p>
+        </div>
+        <div class="card-body" id="matrixContainer">
+          <!-- Matrix will be populated by JS -->
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" id="step3Back">← Back</button>
+          <button class="btn btn-primary" id="step3Next">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Use Cases / Account Needs -->
+      <div id="step4" class="step hidden">
+        <div class="card-header">
+          <div class="step-indicator">Step 4</div>
+          <h1 class="card-title">What are your AI use case needs?</h1>
+          <p class="card-subtitle">Move use cases between "Need" and "Already Doing" columns</p>
+        </div>
+        <div class="card-body" id="useCasesContainer">
+          <!-- Use cases will be populated by JS -->
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" id="step4Back">← Back</button>
+          <button class="btn btn-primary" id="step4Next">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 7: Limiting Factors -->
+      <div id="step7" class="step hidden">
+        <div class="card-header">
+          <div class="step-indicator">Step 7</div>
+          <h1 class="card-title">What are the main factors limiting your ability to adopt or use AI more effectively in your current work?</h1>
+          <p class="card-subtitle">Select up to 2 options</p>
+        </div>
+        <div class="card-body">
+          <div class="limiting-factors-hint" id="limitingFactorsHint">Select up to 2</div>
+          <div class="option-cards limiting-factors-options" id="limitingFactorsOptions">
+            <div class="option-card" data-value="time">
+              <div class="option-card-icon">⏱️</div>
+              <div class="option-card-title">Lack of time / competing priorities</div>
+            </div>
+            <div class="option-card" data-value="knowledge">
+              <div class="option-card-icon">📚</div>
+              <div class="option-card-title">Lack of knowledge or practical skills</div>
+            </div>
+            <div class="option-card" data-value="unclear-value">
+              <div class="option-card-icon">❓</div>
+              <div class="option-card-title">Unclear value or relevant use cases</div>
+            </div>
+            <div class="option-card" data-value="client">
+              <div class="option-card-icon">🤝</div>
+              <div class="option-card-title">Client or stakeholder not ready or supportive</div>
+            </div>
+            <div class="option-card" data-value="access">
+              <div class="option-card-icon">🔒</div>
+              <div class="option-card-title">Lack of access to tools, data, budget, or clear governance</div>
+            </div>
+            <div class="option-card" data-value="other">
+              <div class="option-card-icon">📝</div>
+              <div class="option-card-title">Other (please specify)...</div>
+            </div>
+          </div>
+          <div class="limiting-factor-other-wrap hidden" id="limitingFactorOtherWrap">
+            <label class="account-name-label" for="limitingFactorOtherInput">Please specify</label>
+            <input type="text" id="limitingFactorOtherInput" class="account-name-input" placeholder="Describe other limiting factors...">
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" id="step7Back">← Back</button>
+          <button class="btn btn-primary" id="downloadAssessment">📦 Download Assessment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Data
+    const roles = [
+      { id: 'pm', name: 'Project Managers / Scrum Masters', icon: '📋' },
+      { id: 'ba', name: 'Business Analysts / Product Managers', icon: '📊' },
+      { id: 'ux', name: 'UI/UX Designers', icon: '🎨' },
+      { id: 'devops', name: 'DevOps Engineers', icon: '⚙️' },
+      { id: 'swe', name: 'Software Engineers', icon: '💻' },
+      { id: 'qa', name: 'Manual QA', icon: '🔍' },
+      { id: 'qaa', name: 'QA Automation Engineers', icon: '🤖' },
+      { id: 'data', name: 'Data Engineers / Scientists', icon: '📈' },
+      { id: 'arch', name: 'Solutions Architects', icon: '🏗️' },
+    ];
+
+    const toolCategories = [
+      {
+        id: 'cloud',
+        name: 'Cloud Platforms',
+        description: 'Where your application runs',
+        icon: '☁️',
+        showAlways: true,
+        tools: [
+          { id: 'aws', name: 'Amazon Web Services (AWS)' },
+          { id: 'gcp', name: 'Google Cloud Platform (GCP)' },
+          { id: 'azure', name: 'Microsoft Azure' },
+          { id: 'onprem', name: 'On-Premises' },
+        ]
+      },
+      {
+        id: 'ai',
+        name: 'AI Tools',
+        description: 'AI assistants and code generation tools',
+        icon: '🧠',
+        showAlways: true,
+        tools: [
+          { id: 'copilot', name: 'GitHub Copilot' },
+          { id: 'claudecode', name: 'Claude Code' },
+          { id: 'openaicodex', name: 'OpenAI Codex' },
+          { id: 'cursor', name: 'Cursor' },
+          { id: 'gemini', name: 'Gemini' },
+          { id: 'amazonq', name: 'Amazon Q Developer' },
+          { id: 'intellij', name: 'IntelliJ AI' },
+          { id: 'rovo', name: 'Atlassian Rovo' },
+        ]
+      },
+      {
+        id: 'collab',
+        name: 'Collaboration Tools',
+        description: 'Communication and project management',
+        icon: '🤝',
+        showAlways: true,
+        tools: [
+          { id: 'slack', name: 'Slack' },
+          { id: 'teams', name: 'Microsoft Teams' },
+          { id: 'jira', name: 'Jira' },
+          { id: 'confluence', name: 'Confluence' },
+          { id: 'notion', name: 'Notion' },
+          { id: 'azuredevops', name: 'Azure DevOps' },
+          { id: 'githubissues', name: 'GitHub Issues' },
+          { id: 'googleworkspace', name: 'Google Workspace' },
+          { id: 'sharepoint', name: 'SharePoint' },
+        ]
+      },
+      {
+        id: 'testmgmt',
+        name: 'Test Management Tools',
+        description: 'Test case and QA management',
+        icon: '✅',
+        showForRoles: ['qa', 'qaa'],
+        tools: [
+          { id: 'testrail', name: 'TestRail' },
+          { id: 'zephyr', name: 'Zephyr' },
+        ]
+      },
+      {
+        id: 'scm',
+        name: 'Source Control',
+        description: 'Version control and code repositories',
+        icon: '📦',
+        showAlways: true,
+        tools: [
+          { id: 'github', name: 'GitHub' },
+          { id: 'gitlab', name: 'GitLab' },
+          { id: 'bitbucket', name: 'Bitbucket' },
+          { id: 'azurerepos', name: 'Azure Repos' },
+        ]
+      },
+      {
+        id: 'cicd',
+        name: 'CI/CD Tools',
+        description: 'Continuous integration and deployment',
+        icon: '🚀',
+        showAlways: true,
+        tools: [
+          { id: 'githubactions', name: 'GitHub Actions' },
+          { id: 'jenkins', name: 'Jenkins' },
+          { id: 'gitlabci', name: 'GitLab CI' },
+          { id: 'circleci', name: 'CircleCI' },
+          { id: 'azurepipelines', name: 'Azure Pipelines' },
+          { id: 'argocd', name: 'ArgoCD' },
+        ]
+      },
+      {
+        id: 'design',
+        name: 'Design Tools',
+        description: 'UI/UX design and prototyping',
+        icon: '🎨',
+        showForRoles: ['ux'],
+        tools: [
+          { id: 'figma', name: 'Figma' },
+          { id: 'miro', name: 'Miro' },
+        ]
+      },
+    ];
+
+    // Use cases organized by category, filtered by roles
+    const useCases = [
+      {
+        category: 'Code Development',
+        icon: '💻',
+        roles: ['swe', 'devops', 'qaa', 'data', 'arch'],
+        items: [
+          { id: 'code-completion', name: 'Code completion and suggestions' },
+          { id: 'code-generation', name: 'Generate code from natural language' },
+          { id: 'code-refactoring', name: 'Code refactoring and optimization' },
+          { id: 'code-review', name: 'Automated code review assistance' },
+          { id: 'debugging', name: 'Debugging and error resolution' },
+          { id: 'code-explanation', name: 'Code explanation and documentation' },
+        ]
+      },
+      {
+        category: 'Testing & QA',
+        icon: '🧪',
+        roles: ['qa', 'qaa', 'swe'],
+        items: [
+          { id: 'test-generation', name: 'Test case generation' },
+          { id: 'test-automation', name: 'Test automation script creation' },
+          { id: 'test-data', name: 'Test data generation' },
+          { id: 'bug-analysis', name: 'Bug analysis and reproduction steps' },
+          { id: 'edge-cases', name: 'Edge case identification' },
+          { id: 'test-coverage', name: 'Test coverage analysis' },
+        ]
+      },
+      {
+        category: 'Documentation',
+        icon: '📝',
+        roles: ['swe', 'ba', 'pm', 'arch', 'devops', 'qa', 'qaa', 'data', 'ux'],
+        items: [
+          { id: 'api-docs', name: 'API documentation generation' },
+          { id: 'readme-generation', name: 'README and setup guides' },
+          { id: 'technical-specs', name: 'Technical specification writing' },
+          { id: 'inline-comments', name: 'Code comments and docstrings' },
+          { id: 'release-notes', name: 'Release notes generation' },
+        ]
+      },
+      {
+        category: 'Requirements & Analysis',
+        icon: '📊',
+        roles: ['ba', 'pm', 'arch'],
+        items: [
+          { id: 'user-stories', name: 'User story creation and refinement' },
+          { id: 'requirements-analysis', name: 'Requirements gap analysis' },
+          { id: 'acceptance-criteria', name: 'Acceptance criteria generation' },
+          { id: 'impact-analysis', name: 'Impact analysis for changes' },
+          { id: 'backlog-refinement', name: 'Backlog grooming assistance' },
+        ]
+      },
+      {
+        category: 'Project Management',
+        icon: '📋',
+        roles: ['pm', 'ba'],
+        items: [
+          { id: 'meeting-summaries', name: 'Meeting summaries and action items' },
+          { id: 'status-reports', name: 'Status report generation' },
+          { id: 'risk-identification', name: 'Risk identification and mitigation' },
+          { id: 'estimation', name: 'Effort estimation assistance' },
+          { id: 'stakeholder-comms', name: 'Stakeholder communication drafts' },
+        ]
+      },
+      {
+        category: 'Design & UX',
+        icon: '🎨',
+        roles: ['ux'],
+        items: [
+          { id: 'design-feedback', name: 'Design critique and feedback' },
+          { id: 'copy-writing', name: 'UI copy and microcopy writing' },
+          { id: 'accessibility', name: 'Accessibility recommendations' },
+          { id: 'user-research', name: 'User research analysis' },
+          { id: 'persona-creation', name: 'Persona and journey mapping' },
+        ]
+      },
+      {
+        category: 'DevOps & Infrastructure',
+        icon: '⚙️',
+        roles: ['devops', 'arch', 'swe'],
+        items: [
+          { id: 'iac-generation', name: 'Infrastructure as Code generation' },
+          { id: 'cicd-config', name: 'CI/CD pipeline configuration' },
+          { id: 'troubleshooting', name: 'Infrastructure troubleshooting' },
+          { id: 'security-scanning', name: 'Security configuration review' },
+          { id: 'monitoring-setup', name: 'Monitoring and alerting setup' },
+          { id: 'cost-optimization', name: 'Cloud cost optimization' },
+        ]
+      },
+      {
+        category: 'Data & Analytics',
+        icon: '📈',
+        roles: ['data', 'ba', 'arch'],
+        items: [
+          { id: 'sql-generation', name: 'SQL query generation' },
+          { id: 'data-transformation', name: 'Data transformation scripts' },
+          { id: 'data-analysis', name: 'Data analysis and insights' },
+          { id: 'pipeline-development', name: 'Data pipeline development' },
+          { id: 'data-quality', name: 'Data quality checks' },
+        ]
+      },
+      {
+        category: 'Architecture',
+        icon: '🏗️',
+        roles: ['arch', 'swe', 'devops'],
+        items: [
+          { id: 'design-patterns', name: 'Design pattern recommendations' },
+          { id: 'architecture-review', name: 'Architecture review and feedback' },
+          { id: 'adr-creation', name: 'Architecture Decision Records (ADRs)' },
+          { id: 'scalability', name: 'Scalability analysis' },
+          { id: 'tech-evaluation', name: 'Technology evaluation and comparison' },
+        ]
+      },
+    ];
+
+    // State
+    let currentStep = 1;
+    let accountName = '';
+    let selectedRoles = new Set();
+    let selectedTools = {};
+    let customTools = {};
+    let selectedOwnership = new Set();   // Multi-select: staff, project, program, outcome
+    let aiToolPayment = null;            // 'us', 'customer', 'tbd'
+    let selectedCompliance = new Set();  // Selected compliance requirements
+    let customCompliance = [];           // Custom compliance requirements [{id, name}]
+    let toolRoleMatrix = {};
+    let useCaseNeeds = new Set();      // Use cases in "Need" column
+    let useCaseDoing = new Set();      // Use cases in "Already Doing" column
+    let customUseCases = {};           // Custom use cases by category
+    let selectedLimitingFactors = new Set();  // Max 2; values: time, knowledge, unclear-value, client, access, other
+    let limitingFactorsOrder = [];     // Ordered list for primary/secondary
+    let limitingFactorOther = '';      // "Other" free text when other is selected
+    
+    // Client AI Landscape
+    let clientAIMaturity = null;       // not-started, exploring, piloting, scaling, optimizing
+    let clientAIUsage = new Set();     // Multi-select: not-using, internal-tools, customer-facing, business-processes, ai-products
+    let clientAIPriority = null;       // not-priority, low, medium, high
+    let clientAIGovernance = null;     // none, informal, developing, established
+    let clientAIChallenge = null;      // unclear-roi, skills, data, security, budget, infrastructure
+
+    // Render flags
+    let toolsRendered = false;
+    let engagementRendered = false;
+    let useCasesRendered = false;
+    let useCasesInitialized = false;
+    let limitingFactorsRendered = false;
+    let clientAIRendered = false;
+
+    // Compliance options data
+    const complianceOptions = [
+      { id: 'hipaa', name: 'HIPAA', icon: '🏥' },
+      { id: 'gdpr', name: 'GDPR', icon: '🇪🇺' },
+      { id: 'sox', name: 'SOX', icon: '📊' },
+      { id: 'pci-dss', name: 'PCI-DSS', icon: '💳' },
+      { id: 'fedramp', name: 'FedRAMP', icon: '🏛️' },
+      { id: 'soc2', name: 'SOC 2', icon: '🔒' },
+      { id: 'ccpa', name: 'CCPA', icon: '🌴' },
+      { id: 'iso27001', name: 'ISO 27001', icon: '📋' },
+    ];
+
+    const ownershipLabels = {
+      staff: { name: 'Staff Augmentation', description: 'Team members work under client direction' },
+      project: { name: 'Project Ownership', description: 'Full ownership of project delivery' },
+      program: { name: 'Program Ownership', description: 'Ownership across multiple related projects' },
+      outcome: { name: 'Business Outcome', description: 'Accountable for business results' }
+    };
+
+    const STORAGE_KEY = 'ai-adoption-assessment';
+
+    // LocalStorage functions
+    function saveToLocalStorage() {
+      const saveStatus = document.getElementById('saveStatus');
+      saveStatus.textContent = 'Saving...';
+      saveStatus.className = 'save-status saving';
+      
+      const state = {
+        currentStep,
+        accountName,
+        selectedRoles: Array.from(selectedRoles),
+        selectedTools: Object.fromEntries(
+          Object.entries(selectedTools).map(([k, v]) => [k, Array.from(v)])
+        ),
+        customTools,
+        selectedOwnership: Array.from(selectedOwnership),
+        aiToolPayment,
+        selectedCompliance: Array.from(selectedCompliance),
+        customCompliance,
+        toolRoleMatrix,
+        useCaseNeeds: Array.from(useCaseNeeds),
+        useCaseDoing: Array.from(useCaseDoing),
+        customUseCases,
+        selectedLimitingFactors: Array.from(selectedLimitingFactors),
+        limitingFactorsOrder,
+        limitingFactorOther,
+        clientAIMaturity,
+        clientAIUsage: Array.from(clientAIUsage),
+        clientAIPriority,
+        clientAIGovernance,
+        clientAIChallenge,
+        savedAt: new Date().toISOString()
+      };
+      
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        setTimeout(() => {
+          saveStatus.textContent = 'Progress auto-saved';
+          saveStatus.className = 'save-status';
+        }, 500);
+      } catch (e) {
+        console.error('Failed to save to localStorage:', e);
+        saveStatus.textContent = 'Failed to save';
+        saveStatus.className = 'save-status';
+      }
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return false;
+        
+        const state = JSON.parse(saved);
+        
+        currentStep = state.currentStep || 1;
+        accountName = state.accountName || '';
+        selectedRoles = new Set(state.selectedRoles || []);
+        selectedTools = Object.fromEntries(
+          Object.entries(state.selectedTools || {}).map(([k, v]) => [k, new Set(v)])
+        );
+        customTools = state.customTools || {};
+        selectedOwnership = new Set(state.selectedOwnership || []);
+        aiToolPayment = state.aiToolPayment || null;
+        selectedCompliance = new Set(state.selectedCompliance || []);
+        customCompliance = state.customCompliance || [];
+        toolRoleMatrix = state.toolRoleMatrix || {};
+        useCaseNeeds = new Set(state.useCaseNeeds || []);
+        useCaseDoing = new Set(state.useCaseDoing || []);
+        customUseCases = state.customUseCases || {};
+        selectedLimitingFactors = new Set(state.selectedLimitingFactors || []);
+        limitingFactorsOrder = Array.isArray(state.limitingFactorsOrder) ? state.limitingFactorsOrder : [];
+        limitingFactorOther = state.limitingFactorOther || '';
+        clientAIMaturity = state.clientAIMaturity || null;
+        clientAIUsage = new Set(state.clientAIUsage || []);
+        clientAIPriority = state.clientAIPriority || null;
+        clientAIGovernance = state.clientAIGovernance || null;
+        clientAIChallenge = state.clientAIChallenge || null;
+        
+        // If we have use case data, mark as initialized
+        if (state.useCaseNeeds?.length > 0 || state.useCaseDoing?.length > 0) {
+          useCasesInitialized = true;
+        }
+        
+        return true;
+      } catch (e) {
+        console.error('Failed to load from localStorage:', e);
+        return false;
+      }
+    }
+
+    function clearLocalStorage() {
+      if (confirm('Are you sure you want to clear all progress? This cannot be undone.')) {
+        localStorage.removeItem(STORAGE_KEY);
+        
+        // Reset all state
+        currentStep = 1;
+        accountName = '';
+        selectedRoles = new Set();
+        selectedTools = {};
+        customTools = {};
+        selectedOwnership = new Set();
+        aiToolPayment = null;
+        selectedCompliance = new Set();
+        customCompliance = [];
+        toolRoleMatrix = {};
+        useCaseNeeds = new Set();
+        useCaseDoing = new Set();
+        customUseCases = {};
+        selectedLimitingFactors = new Set();
+        limitingFactorsOrder = [];
+        limitingFactorOther = '';
+        clientAIMaturity = null;
+        clientAIUsage = new Set();
+        clientAIPriority = null;
+        clientAIGovernance = null;
+        clientAIChallenge = null;
+        
+        // Reset render flags so steps re-initialize
+        toolsRendered = false;
+        useCasesRendered = false;
+        useCasesInitialized = false;
+        engagementRendered = false;
+        limitingFactorsRendered = false;
+        clientAIRendered = false;
+        
+        // Reset UI elements
+        renderRoles();
+        updateRoleUI();
+        
+        // Reset account name input
+        const accountInput = document.getElementById('accountNameInput');
+        if (accountInput) accountInput.value = '';
+        
+        // Reset engagement UI
+        document.querySelectorAll('#ownershipOptions .option-card').forEach(card => {
+          card.classList.remove('selected');
+        });
+        document.querySelectorAll('#paymentOptions .option-card').forEach(card => {
+          card.classList.remove('selected');
+        });
+        document.querySelectorAll('#complianceOptions .compliance-chip').forEach(chip => {
+          chip.classList.remove('selected');
+        });
+        const customComplianceContainer = document.getElementById('customComplianceChips');
+        if (customComplianceContainer) customComplianceContainer.innerHTML = '';
+        
+        document.querySelectorAll('#limitingFactorsOptions .option-card').forEach(card => {
+          card.classList.remove('selected');
+          card.removeAttribute('data-rank');
+        });
+        const otherWrap = document.getElementById('limitingFactorOtherWrap');
+        if (otherWrap) otherWrap.classList.add('hidden');
+        const otherInput = document.getElementById('limitingFactorOtherInput');
+        if (otherInput) otherInput.value = '';
+        
+        // Clear any pending auto-save
+        clearTimeout(saveTimeout);
+        
+        // Go to welcome page without triggering auto-save
+        currentStep = 0;
+        document.querySelectorAll('.step').forEach(el => el.classList.add('hidden'));
+        document.getElementById('step0').classList.remove('hidden');
+        document.querySelector('.progress-container').style.display = 'none';
+        
+        document.getElementById('saveStatus').textContent = 'Progress cleared';
+      }
+    }
+
+    // Debounced auto-save
+    let saveTimeout;
+    function autoSave() {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(saveToLocalStorage, 1000);
+    }
+
+    // Initialize
+    function init() {
+      const hasExistingData = loadFromLocalStorage();
+      renderRoles();
+      setupEventListeners();
+      
+      if (hasExistingData) {
+        updateRoleUI();
+        // Restore account name
+        document.getElementById('accountNameInput').value = accountName;
+        // Restore to saved step (but at least step 1 if they had progress)
+        goToStep(currentStep > 0 ? currentStep : 1);
+      } else {
+        goToStep(0); // Start at welcome page
+      }
+      
+      // Add account name input handler
+      document.getElementById('accountNameInput').addEventListener('input', (e) => {
+        accountName = e.target.value;
+        autoSave();
+      });
+      
+      // Add clear progress handler
+      document.getElementById('clearProgress').addEventListener('click', clearLocalStorage);
+    }
+
+    function renderRoles() {
+      const grid = document.getElementById('roleGrid');
+      grid.innerHTML = roles.map(role => `
+        <div class="role-card" data-role-id="${role.id}">
+          <div class="checkmark">✓</div>
+          <div class="role-icon">${role.icon}</div>
+          <div class="role-name">${role.name}</div>
+        </div>
+      `).join('');
+
+      // Add click handlers
+      grid.querySelectorAll('.role-card').forEach(card => {
+        card.addEventListener('click', () => toggleRole(card.dataset.roleId));
+      });
+    }
+
+    function toggleRole(roleId) {
+      if (selectedRoles.has(roleId)) {
+        selectedRoles.delete(roleId);
+      } else {
+        selectedRoles.add(roleId);
+      }
+      updateRoleUI();
+      autoSave();
+    }
+
+    function updateRoleUI() {
+      document.querySelectorAll('#roleGrid .role-card').forEach(card => {
+        const isSelected = selectedRoles.has(card.dataset.roleId);
+        card.classList.toggle('selected', isSelected);
+      });
+
+      const count = selectedRoles.size;
+      document.getElementById('roleCount').textContent = 
+        `${count} roles selected`;
+    }
+
+    function renderTools() {
+      const container = document.getElementById('toolsContainer');
+      
+      const visibleCategories = toolCategories.filter(cat => {
+        if (cat.showAlways) return true;
+        if (cat.showForRoles) {
+          return cat.showForRoles.some(role => selectedRoles.has(role));
+        }
+        return false;
+      });
+
+      // Initialize "dont-know" as selected by default for categories without any selection
+      visibleCategories.forEach(cat => {
+        if (!selectedTools[cat.id]) {
+          selectedTools[cat.id] = new Set(['dont-know']);
+        } else if (selectedTools[cat.id].size === 0) {
+          selectedTools[cat.id].add('dont-know');
+        }
+      });
+
+      container.innerHTML = visibleCategories.map(cat => {
+        // Get custom tools for this category
+        const customList = customTools[cat.id] || [];
+        const allTools = [...cat.tools, ...customList];
+        
+        // Check special options
+        const dontKnowSelected = selectedTools[cat.id]?.has('dont-know') || false;
+        const notApplicableSelected = selectedTools[cat.id]?.has('not-applicable') || false;
+        
+        return `
+          <div class="tool-category" data-category-id="${cat.id}">
+            <div class="tool-category-header">
+              <span class="tool-category-label">${cat.icon} ${cat.name}</span>
+            </div>
+            <div class="tool-grid">
+              <div class="tool-card special-option${dontKnowSelected ? ' selected' : ''}" data-category="${cat.id}" data-tool-id="dont-know">
+                <span class="tool-card-name">Don't know</span>
+              </div>
+              <div class="tool-card special-option not-applicable${notApplicableSelected ? ' selected' : ''}" data-category="${cat.id}" data-tool-id="not-applicable">
+                <span class="tool-card-name">Not Applicable</span>
+              </div>
+              ${allTools.map(tool => {
+                const isSelected = selectedTools[cat.id]?.has(tool.id) || false;
+                return `<div class="tool-card${isSelected ? ' selected' : ''}" data-category="${cat.id}" data-tool-id="${tool.id}">
+                  <span class="tool-card-name">${tool.name}</span>
+                </div>`;
+              }).join('')}
+            </div>
+            <div class="tool-add-input">
+              <input type="text" placeholder="Add custom tool..." data-category="${cat.id}">
+              <button type="button" data-category="${cat.id}" class="add-tool-btn">Add</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Setup direct event listeners for the rendered nodes
+      container.querySelectorAll('.tool-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const catId = card.dataset.category;
+          const toolId = card.dataset.toolId;
+          if (catId && toolId) {
+            toggleTool(catId, toolId);
+          }
+        });
+      });
+
+      container.querySelectorAll('.add-tool-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const catId = btn.dataset.category;
+          if (catId) {
+            addCustomTool(catId);
+          }
+        });
+      });
+
+      container.querySelectorAll('.tool-add-input input').forEach(input => {
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            const catId = input.dataset.category;
+            if (catId) {
+              addCustomTool(catId);
+            }
+          }
+        });
+      });
+    }
+
+    function handleStep2Continue() {
+      // Check which categories have "Don't know" selected
+      const visibleCategories = toolCategories.filter(cat => {
+        if (cat.showAlways) return true;
+        if (cat.showForRoles) {
+          return cat.showForRoles.some(role => selectedRoles.has(role));
+        }
+        return false;
+      });
+      
+      const dontKnowCategories = visibleCategories.filter(cat => 
+        selectedTools[cat.id]?.has('dont-know')
+      );
+      
+      if (dontKnowCategories.length > 0) {
+        const categoryNames = dontKnowCategories.map(cat => cat.name).join(', ');
+        const confirmed = confirm(
+          `You have "Don't know" selected for the following sections:\n\n` +
+          `• ${dontKnowCategories.map(cat => cat.name).join('\n• ')}\n\n` +
+          `Are you sure you want to continue?`
+        );
+        if (!confirmed) return;
+      }
+      
+      // Navigate to appropriate next step
+      const hasAITools = selectedTools['ai'] && selectedTools['ai'].size > 0 && 
+                         !selectedTools['ai'].has('dont-know') && !selectedTools['ai'].has('not-applicable');
+      const hasRoles = selectedRoles.size > 0;
+      
+      if (hasAITools && hasRoles) {
+        goToStep(3); // Go to Matrix
+      } else if (hasRoles) {
+        goToStep(4); // Skip Matrix, go to Use Cases
+      } else {
+        goToStep(5); // Skip Matrix and Use Cases, go to Engagement
+      }
+    }
+
+    function toggleTool(categoryId, toolId) {
+      if (!selectedTools[categoryId]) {
+        selectedTools[categoryId] = new Set();
+      }
+      
+      const specialOptions = ['dont-know', 'not-applicable'];
+      
+      if (toolId === 'dont-know') {
+        // If clicking "Don't know", clear all and select only "Don't know"
+        selectedTools[categoryId].clear();
+        selectedTools[categoryId].add('dont-know');
+      } else if (toolId === 'not-applicable') {
+        // If clicking "Not Applicable", clear all and select only "Not Applicable"
+        selectedTools[categoryId].clear();
+        selectedTools[categoryId].add('not-applicable');
+      } else {
+        // If clicking any regular tool
+        if (selectedTools[categoryId].has(toolId)) {
+          // Deselecting a tool
+          selectedTools[categoryId].delete(toolId);
+          // If no regular tools left selected, re-select "Don't know"
+          const hasRegularTools = Array.from(selectedTools[categoryId]).some(id => !specialOptions.includes(id));
+          if (!hasRegularTools) {
+            selectedTools[categoryId].clear();
+            selectedTools[categoryId].add('dont-know');
+          }
+        } else {
+          // Selecting a tool - remove special options and add the tool
+          selectedTools[categoryId].delete('dont-know');
+          selectedTools[categoryId].delete('not-applicable');
+          selectedTools[categoryId].add(toolId);
+        }
+      }
+      
+      updateToolUI();
+      autoSave();
+    }
+
+    function updateToolUI() {
+      const container = document.getElementById('toolsContainer');
+      container.querySelectorAll('.tool-card').forEach(card => {
+        const catId = card.dataset.category;
+        const toolId = card.dataset.toolId;
+        const isSelected = selectedTools[catId]?.has(toolId) || false;
+        card.classList.toggle('selected', isSelected);
+      });
+    }
+
+    function addCustomTool(categoryId) {
+      const container = document.getElementById('toolsContainer');
+      const input = container.querySelector(`input[data-category="${categoryId}"]`);
+      const value = input.value.trim();
+      
+      if (!value) return;
+      
+      // Generate a unique ID for the custom tool
+      const customId = `custom-${Date.now()}`;
+      
+      if (!customTools[categoryId]) {
+        customTools[categoryId] = [];
+      }
+      
+      customTools[categoryId].push({ id: customId, name: value });
+      
+      // Add the tool to selected tools
+      if (!selectedTools[categoryId]) {
+        selectedTools[categoryId] = new Set();
+      }
+      selectedTools[categoryId].add(customId);
+      
+      // Re-render tools to include the new custom tool
+      renderTools();
+      autoSave();
+    }
+
+    function removeCustomTool(categoryId, index) {
+      customTools[categoryId].splice(index, 1);
+      renderCustomTools(categoryId);
+    }
+
+    function renderCustomTools(categoryId) {
+      // No longer needed - custom tools are now rendered as cards
+    }
+
+    function goToStep(step) {
+      currentStep = step;
+      
+      // Determine total steps based on AI tool and role selection
+      const hasAITools = selectedTools['ai'] && selectedTools['ai'].size > 0 && 
+                         !selectedTools['ai'].has('dont-know') && !selectedTools['ai'].has('not-applicable');
+      const hasRoles = selectedRoles.size > 0;
+      // Steps: 1-Roles, 2-Tools, 3-Matrix(conditional), 4-UseCases(conditional), 5-Engagement, 6-ClientAI, 7-LimitingFactors
+      const totalSteps = (hasAITools && hasRoles) ? 7 : (hasRoles ? 6 : 5);
+      
+      // Show/hide progress container (hide for welcome page)
+      const progressContainer = document.querySelector('.progress-container');
+      if (step === 0) {
+        progressContainer.style.display = 'none';
+      } else {
+        progressContainer.style.display = 'block';
+        // Update progress
+        const progress = (step / totalSteps) * 100;
+        document.getElementById('progressFill').style.width = `${progress}%`;
+        document.getElementById('progressText').textContent = `Step ${step} of ${totalSteps}`;
+      }
+      
+      // Show/hide steps
+      document.querySelectorAll('.step').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`step${step}`).classList.remove('hidden');
+      
+      // Render content for step
+      if (step === 2) {
+        renderTools();
+      }
+      if (step === 3) {
+        renderMatrix();
+      }
+      if (step === 4) {
+        renderUseCases();
+      }
+      if (step === 5) {
+        renderEngagement();
+      }
+      if (step === 6) {
+        renderClientAILandscape();
+      }
+      if (step === 7) {
+        renderLimitingFactors();
+      }
+      
+      autoSave();
+    }
+
+    function renderEngagement() {
+      updateOwnershipUI();
+      updatePaymentUI();
+      updateComplianceUI();
+      renderCustomComplianceChips();
+      
+      // Setup event listeners (only once)
+      if (!engagementRendered) {
+        // Ownership options (multi-select)
+        document.getElementById('ownershipOptions').addEventListener('click', (e) => {
+          const card = e.target.closest('.option-card');
+          if (card) {
+            const value = card.dataset.value;
+            if (selectedOwnership.has(value)) {
+              selectedOwnership.delete(value);
+            } else {
+              selectedOwnership.add(value);
+            }
+            updateOwnershipUI();
+            autoSave();
+          }
+        });
+        
+        // Payment options
+        document.getElementById('paymentOptions').addEventListener('click', (e) => {
+          const card = e.target.closest('.option-card');
+          if (card) {
+            aiToolPayment = card.dataset.value;
+            updatePaymentUI();
+            autoSave();
+          }
+        });
+        
+        // Compliance options (predefined)
+        document.getElementById('complianceOptions').addEventListener('click', (e) => {
+          const chip = e.target.closest('.compliance-chip');
+          if (chip) {
+            const value = chip.dataset.value;
+            if (selectedCompliance.has(value)) {
+              selectedCompliance.delete(value);
+            } else {
+              selectedCompliance.add(value);
+            }
+            updateComplianceUI();
+            autoSave();
+          }
+        });
+        
+        // Custom compliance chips (click to toggle or delete)
+        document.getElementById('customComplianceChips').addEventListener('click', (e) => {
+          const deleteBtn = e.target.closest('.compliance-delete');
+          if (deleteBtn) {
+            const chip = deleteBtn.closest('.compliance-chip');
+            const id = chip.dataset.value;
+            selectedCompliance.delete(id);
+            customCompliance = customCompliance.filter(c => c.id !== id);
+            renderCustomComplianceChips();
+            autoSave();
+            return;
+          }
+          
+          const chip = e.target.closest('.compliance-chip');
+          if (chip) {
+            const value = chip.dataset.value;
+            if (selectedCompliance.has(value)) {
+              selectedCompliance.delete(value);
+            } else {
+              selectedCompliance.add(value);
+            }
+            updateCustomComplianceUI();
+            autoSave();
+          }
+        });
+        
+        // Add custom compliance
+        document.getElementById('addComplianceBtn').addEventListener('click', addCustomCompliance);
+        document.getElementById('customComplianceInput').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            addCustomCompliance();
+          }
+        });
+        
+        engagementRendered = true;
+      }
+    }
+
+    function updateOwnershipUI() {
+      document.querySelectorAll('#ownershipOptions .option-card').forEach(card => {
+        card.classList.toggle('selected', selectedOwnership.has(card.dataset.value));
+      });
+    }
+
+
+    function updatePaymentUI() {
+      document.querySelectorAll('#paymentOptions .option-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.value === aiToolPayment);
+      });
+    }
+
+    function updateComplianceUI() {
+      document.querySelectorAll('#complianceOptions .compliance-chip').forEach(chip => {
+        chip.classList.toggle('selected', selectedCompliance.has(chip.dataset.value));
+      });
+    }
+
+    function updateCustomComplianceUI() {
+      document.querySelectorAll('#customComplianceChips .compliance-chip').forEach(chip => {
+        chip.classList.toggle('selected', selectedCompliance.has(chip.dataset.value));
+      });
+    }
+
+    function renderCustomComplianceChips() {
+      const container = document.getElementById('customComplianceChips');
+      container.innerHTML = customCompliance.map(c => `
+        <div class="compliance-chip ${selectedCompliance.has(c.id) ? 'selected' : ''}" data-value="${c.id}">
+          <span class="compliance-icon">📝</span>
+          <span class="compliance-name">${c.name}</span>
+          <span class="compliance-delete" title="Remove">×</span>
+        </div>
+      `).join('');
+    }
+
+    function addCustomCompliance() {
+      const input = document.getElementById('customComplianceInput');
+      const value = input.value.trim();
+      
+      if (!value) return;
+      
+      const id = `custom-compliance-${Date.now()}`;
+      customCompliance.push({ id, name: value });
+      selectedCompliance.add(id);
+      input.value = '';
+      
+      renderCustomComplianceChips();
+      autoSave();
+    }
+
+    // Client AI Landscape labels
+    const clientAILabels = {
+      maturity: {
+        'not-started': 'Not Started',
+        'exploring': 'Exploring',
+        'piloting': 'Piloting',
+        'scaling': 'Scaling',
+        'optimizing': 'Optimizing'
+      },
+      usage: {
+        'not-using': 'Not Using AI',
+        'internal-tools': 'Internal Tools',
+        'customer-facing': 'Customer-Facing',
+        'business-processes': 'Business Processes',
+        'ai-products': 'AI Products'
+      },
+      priority: {
+        'not-priority': 'Not a Priority',
+        'low': 'Low Priority',
+        'medium': 'Medium Priority',
+        'high': 'High Priority'
+      },
+      governance: {
+        'none': 'No Governance',
+        'informal': 'Informal',
+        'developing': 'Developing',
+        'established': 'Established'
+      },
+      challenge: {
+        'unclear-roi': 'Unclear ROI',
+        'skills': 'Skills Gap',
+        'data': 'Data Issues',
+        'security': 'Security/Compliance',
+        'budget': 'Budget/Buy-in',
+        'infrastructure': 'Infrastructure'
+      }
+    };
+
+    function renderClientAILandscape() {
+      updateClientAIMaturityUI();
+      updateClientAIUsageUI();
+      updateClientAIPriorityUI();
+      updateClientAIGovernanceUI();
+      updateClientAIChallengeUI();
+
+      if (!clientAIRendered) {
+        // Maturity (slider)
+        document.getElementById('maturityStages').addEventListener('click', (e) => {
+          const stage = e.target.closest('.maturity-stage');
+          if (stage) {
+            clientAIMaturity = stage.dataset.value;
+            updateClientAIMaturityUI();
+            autoSave();
+          }
+        });
+
+        // Usage (multi-select)
+        document.getElementById('clientUsageOptions').addEventListener('click', (e) => {
+          const card = e.target.closest('.option-card');
+          if (card) {
+            const value = card.dataset.value;
+            if (value === 'not-using') {
+              // "Not using" is exclusive
+              clientAIUsage.clear();
+              clientAIUsage.add('not-using');
+            } else {
+              clientAIUsage.delete('not-using');
+              if (clientAIUsage.has(value)) {
+                clientAIUsage.delete(value);
+              } else {
+                clientAIUsage.add(value);
+              }
+              // If nothing selected, default to not-using
+              if (clientAIUsage.size === 0) {
+                clientAIUsage.add('not-using');
+              }
+            }
+            updateClientAIUsageUI();
+            autoSave();
+          }
+        });
+
+        // Priority (single select)
+        document.getElementById('clientPriorityOptions').addEventListener('click', (e) => {
+          const card = e.target.closest('.option-card');
+          if (card) {
+            clientAIPriority = card.dataset.value;
+            updateClientAIPriorityUI();
+            autoSave();
+          }
+        });
+
+        // Governance (single select)
+        document.getElementById('clientGovernanceOptions').addEventListener('click', (e) => {
+          const card = e.target.closest('.option-card');
+          if (card) {
+            clientAIGovernance = card.dataset.value;
+            updateClientAIGovernanceUI();
+            autoSave();
+          }
+        });
+
+        // Challenge (single select)
+        document.getElementById('clientChallengeOptions').addEventListener('click', (e) => {
+          const card = e.target.closest('.option-card');
+          if (card) {
+            clientAIChallenge = card.dataset.value;
+            updateClientAIChallengeUI();
+            autoSave();
+          }
+        });
+
+        clientAIRendered = true;
+      }
+    }
+
+    function updateClientAIMaturityUI() {
+      const stages = document.querySelectorAll('#maturityStages .maturity-stage');
+      const maturityValues = ['not-started', 'exploring', 'piloting', 'scaling', 'optimizing'];
+      const selectedIndex = maturityValues.indexOf(clientAIMaturity);
+      
+      stages.forEach((stage, index) => {
+        stage.classList.remove('active', 'passed');
+        if (index === selectedIndex) {
+          stage.classList.add('active');
+        } else if (index < selectedIndex) {
+          stage.classList.add('passed');
+        }
+      });
+      
+      // Update progress bar
+      const progress = document.getElementById('maturityProgress');
+      if (selectedIndex >= 0) {
+        const progressPercent = (selectedIndex / (maturityValues.length - 1)) * 100;
+        progress.style.width = `${progressPercent}%`;
+      } else {
+        progress.style.width = '0%';
+      }
+    }
+
+    function updateClientAIUsageUI() {
+      document.querySelectorAll('#clientUsageOptions .option-card').forEach(card => {
+        card.classList.toggle('selected', clientAIUsage.has(card.dataset.value));
+      });
+    }
+
+    function updateClientAIPriorityUI() {
+      document.querySelectorAll('#clientPriorityOptions .option-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.value === clientAIPriority);
+      });
+    }
+
+    function updateClientAIGovernanceUI() {
+      document.querySelectorAll('#clientGovernanceOptions .option-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.value === clientAIGovernance);
+      });
+    }
+
+    function updateClientAIChallengeUI() {
+      document.querySelectorAll('#clientChallengeOptions .option-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.value === clientAIChallenge);
+      });
+    }
+
+    const LIMITING_FACTORS_MAX = 2;
+    const limitingFactorLabels = {
+      time: 'Lack of time / competing priorities',
+      knowledge: 'Lack of knowledge or practical skills',
+      'unclear-value': 'Unclear value or relevant use cases',
+      client: 'Client or stakeholder not ready or supportive',
+      access: 'Lack of access to tools, data, budget, or clear governance',
+      other: 'Other (please specify)...'
+    };
+
+    function renderLimitingFactors() {
+      updateLimitingFactorsUI();
+      if (!limitingFactorsRendered) {
+        const opts = document.getElementById('limitingFactorsOptions');
+        opts.addEventListener('click', (e) => {
+          const card = e.target.closest('.option-card');
+          if (!card) return;
+          const value = card.dataset.value;
+          toggleLimitingFactor(value);
+        });
+        const otherInput = document.getElementById('limitingFactorOtherInput');
+        otherInput.addEventListener('input', () => {
+          limitingFactorOther = otherInput.value;
+          autoSave();
+        });
+        limitingFactorsRendered = true;
+      }
+    }
+
+    function toggleLimitingFactor(value) {
+      if (selectedLimitingFactors.has(value)) {
+        selectedLimitingFactors.delete(value);
+        limitingFactorsOrder = limitingFactorsOrder.filter(id => id !== value);
+        if (value === 'other') limitingFactorOther = '';
+      } else {
+        if (selectedLimitingFactors.size >= LIMITING_FACTORS_MAX) return;
+        selectedLimitingFactors.add(value);
+        if (!limitingFactorsOrder.includes(value)) {
+          limitingFactorsOrder.push(value);
+        }
+      }
+      updateLimitingFactorsUI();
+      autoSave();
+    }
+
+    function updateLimitingFactorsUI() {
+      // Normalize order list to selected items only
+      limitingFactorsOrder = limitingFactorsOrder.filter(id => selectedLimitingFactors.has(id));
+      if (limitingFactorsOrder.length < selectedLimitingFactors.size) {
+        selectedLimitingFactors.forEach(id => {
+          if (!limitingFactorsOrder.includes(id)) limitingFactorsOrder.push(id);
+        });
+      }
+
+      document.querySelectorAll('#limitingFactorsOptions .option-card').forEach(card => {
+        card.classList.toggle('selected', selectedLimitingFactors.has(card.dataset.value));
+        card.removeAttribute('data-rank');
+      });
+
+      if (limitingFactorsOrder[0]) {
+        const primary = document.querySelector(`#limitingFactorsOptions .option-card[data-value="${limitingFactorsOrder[0]}"]`);
+        if (primary) primary.setAttribute('data-rank', 'Primary');
+      }
+      if (limitingFactorsOrder[1]) {
+        const secondary = document.querySelector(`#limitingFactorsOptions .option-card[data-value="${limitingFactorsOrder[1]}"]`);
+        if (secondary) secondary.setAttribute('data-rank', 'Secondary');
+      }
+
+      const hint = document.getElementById('limitingFactorsHint');
+      const n = selectedLimitingFactors.size;
+      hint.textContent = n >= LIMITING_FACTORS_MAX ? `Selected ${LIMITING_FACTORS_MAX} (max)` : `Select up to ${LIMITING_FACTORS_MAX}`;
+      const wrap = document.getElementById('limitingFactorOtherWrap');
+      const otherInput = document.getElementById('limitingFactorOtherInput');
+      if (selectedLimitingFactors.has('other')) {
+        wrap.classList.remove('hidden');
+        if (otherInput) otherInput.value = limitingFactorOther;
+      } else {
+        wrap.classList.add('hidden');
+        if (otherInput) otherInput.value = '';
+      }
+    }
+
+    function getSelectedAITools() {
+      const aiTools = [];
+      
+      // Get predefined AI tools
+      const aiCategory = toolCategories.find(c => c.id === 'ai');
+      if (selectedTools['ai']) {
+        selectedTools['ai'].forEach(toolId => {
+          const tool = aiCategory.tools.find(t => t.id === toolId);
+          if (tool) {
+            aiTools.push(tool);
+          }
+        });
+      }
+      
+      // Get custom AI tools
+      if (customTools['ai']) {
+        customTools['ai'].forEach(tool => {
+          aiTools.push(tool);
+        });
+      }
+      
+      return aiTools;
+    }
+
+    function renderMatrix() {
+      const container = document.getElementById('matrixContainer');
+      const aiTools = getSelectedAITools();
+      const selectedRolesList = Array.from(selectedRoles);
+      
+      if (aiTools.length === 0 || selectedRolesList.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #6b7280;">No AI tools or roles selected. Go back to make selections.</p>';
+        return;
+      }
+      
+      // Build the matrix table - Roles as rows, Tools as columns
+      let html = '<div class="matrix-container"><table class="matrix-table">';
+      
+      // Header row with tool names
+      html += '<thead><tr><th class="matrix-corner">Role</th>';
+      aiTools.forEach(tool => {
+        html += `<th class="tool-column-header">${tool.name}</th>`;
+      });
+      html += '</tr></thead>';
+      
+      // Body rows with roles
+      html += '<tbody>';
+      selectedRolesList.forEach(roleId => {
+        const role = roles.find(r => r.id === roleId);
+        html += `<tr><th class="role-row-header">${role.name}</th>`;
+        aiTools.forEach(tool => {
+          const key = `${tool.id}-${roleId}`;
+          const isChecked = toolRoleMatrix[key] || false;
+          html += `<td>
+            <input type="checkbox" 
+              class="matrix-checkbox" 
+              data-tool="${tool.id}" 
+              data-role="${roleId}"
+              ${isChecked ? 'checked' : ''}
+            >
+          </td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+      
+      container.innerHTML = html;
+      
+      // Add checkbox event listeners
+      container.querySelectorAll('.matrix-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+          const toolId = e.target.dataset.tool;
+          const roleId = e.target.dataset.role;
+          const key = `${toolId}-${roleId}`;
+          toolRoleMatrix[key] = e.target.checked;
+          autoSave();
+        });
+      });
+    }
+
+    function setupEventListeners() {
+      // Welcome page
+      document.getElementById('startAssessment').addEventListener('click', () => goToStep(1));
+      
+      // Step 1: Roles
+      document.getElementById('step1Next').addEventListener('click', () => goToStep(2));
+      document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
+      document.getElementById('step2Next').addEventListener('click', () => handleStep2Continue());
+      
+      // Step 3: Matrix (conditional)
+      document.getElementById('step3Back').addEventListener('click', () => goToStep(2));
+      document.getElementById('step3Next').addEventListener('click', () => goToStep(4)); // Go to Use Cases
+      
+      // Step 4: Use Cases (conditional)
+      document.getElementById('step4Back').addEventListener('click', () => {
+        const hasAITools = selectedTools['ai'] && selectedTools['ai'].size > 0 && 
+                           !selectedTools['ai'].has('dont-know') && !selectedTools['ai'].has('not-applicable');
+        const hasRoles = selectedRoles.size > 0;
+        if (hasAITools && hasRoles) {
+          goToStep(3); // Go back to Matrix
+        } else {
+          goToStep(2); // Go back to Tools
+        }
+      });
+      document.getElementById('step4Next').addEventListener('click', () => goToStep(5)); // Go to Engagement
+      
+      // Step 5: Engagement
+      document.getElementById('step5Back').addEventListener('click', () => {
+        const hasRoles = selectedRoles.size > 0;
+        if (hasRoles) {
+          goToStep(4); // Go back to Use Cases
+        } else {
+          goToStep(2); // Go back to Tools
+        }
+      });
+      document.getElementById('step5Next').addEventListener('click', () => goToStep(6)); // Go to Client AI
+      
+      // Step 6: Client AI Landscape
+      document.getElementById('step6Back').addEventListener('click', () => goToStep(5));
+      document.getElementById('step6Next').addEventListener('click', () => goToStep(7)); // Go to Limiting Factors
+      
+      // Step 7: Limiting Factors
+      document.getElementById('step7Back').addEventListener('click', () => goToStep(6));
+      document.getElementById('downloadAssessment').addEventListener('click', () => downloadAssessment());
+    }
+
+    function renderUseCases() {
+      const container = document.getElementById('useCasesContainer');
+      
+      // Filter use cases by selected roles
+      const visibleCategories = useCases.filter(cat => {
+        return cat.roles.some(role => selectedRoles.has(role));
+      });
+
+      if (visibleCategories.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #6b7280;">No use cases available for the selected roles.</p>';
+        return;
+      }
+
+      // On first render, add all use cases to Need column
+      if (!useCasesInitialized) {
+        visibleCategories.forEach(cat => {
+          cat.items.forEach(item => {
+            if (!useCaseDoing.has(item.id)) {
+              useCaseNeeds.add(item.id);
+            }
+          });
+        });
+        useCasesInitialized = true;
+      }
+
+      container.innerHTML = visibleCategories.map(cat => {
+        const categoryKey = cat.category.replace(/\s+/g, '-').toLowerCase();
+        
+        // Get items for each column
+        const needItems = cat.items.filter(item => useCaseNeeds.has(item.id));
+        const doingItems = cat.items.filter(item => useCaseDoing.has(item.id));
+        const customNeed = (customUseCases[categoryKey] || []).filter(item => useCaseNeeds.has(item.id));
+        const customDoing = (customUseCases[categoryKey] || []).filter(item => useCaseDoing.has(item.id));
+        
+        return `
+          <div class="usecase-category" data-category="${categoryKey}">
+            <div class="usecase-category-header">
+              <div class="usecase-category-icon">${cat.icon}</div>
+              <div class="usecase-category-name">${cat.category}</div>
+            </div>
+            <div class="usecase-columns">
+              <div class="usecase-column need" data-column="need">
+                <div class="usecase-column-header">📋 Need</div>
+                <div class="usecase-column-items">
+                  ${needItems.length === 0 && customNeed.length === 0 ? '<div class="usecase-empty">No items - add custom use cases below</div>' : ''}
+                  ${needItems.map(item => `
+                    <div class="usecase-card" data-usecase-id="${item.id}" data-status="need">
+                      <button class="usecase-delete-btn" data-usecase-id="${item.id}" title="Remove">×</button>
+                      <div class="usecase-name">${item.name}</div>
+                      <div class="usecase-move-btn" title="Move to Already Doing">→</div>
+                    </div>
+                  `).join('')}
+                  ${customNeed.map(item => `
+                    <div class="usecase-card" data-usecase-id="${item.id}" data-status="need" data-custom="true">
+                      <button class="usecase-delete-btn" data-usecase-id="${item.id}" title="Remove">×</button>
+                      <div class="usecase-name">${item.name}</div>
+                      <div class="usecase-move-btn" title="Move to Already Doing">→</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+              <div class="usecase-column doing" data-column="doing">
+                <div class="usecase-column-header">✅ Already Doing</div>
+                <div class="usecase-column-items">
+                  ${doingItems.length === 0 && customDoing.length === 0 ? '<div class="usecase-empty">Move items here when already addressed</div>' : ''}
+                  ${doingItems.map(item => `
+                    <div class="usecase-card" data-usecase-id="${item.id}" data-status="doing">
+                      <button class="usecase-delete-btn" data-usecase-id="${item.id}" title="Remove">×</button>
+                      <div class="usecase-name">${item.name}</div>
+                      <div class="usecase-move-btn" title="Move to Need">←</div>
+                    </div>
+                  `).join('')}
+                  ${customDoing.map(item => `
+                    <div class="usecase-card" data-usecase-id="${item.id}" data-status="doing" data-custom="true">
+                      <button class="usecase-delete-btn" data-usecase-id="${item.id}" title="Remove">×</button>
+                      <div class="usecase-name">${item.name}</div>
+                      <div class="usecase-move-btn" title="Move to Need">←</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+            <div class="usecase-add-input">
+              <input type="text" placeholder="Add use case..." data-category="${categoryKey}">
+              <button type="button" data-category="${categoryKey}" class="add-usecase-btn">Add</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Setup event delegation (only once)
+      if (!useCasesRendered) {
+        container.addEventListener('click', (e) => {
+          // Handle delete button click
+          const deleteBtn = e.target.closest('.usecase-delete-btn');
+          if (deleteBtn) {
+            e.stopPropagation();
+            const usecaseId = deleteBtn.dataset.usecaseId;
+            if (usecaseId) {
+              deleteUseCase(usecaseId);
+            }
+            return;
+          }
+          
+          // Handle clicking on move button or card (to move between columns)
+          const moveBtn = e.target.closest('.usecase-move-btn');
+          if (moveBtn) {
+            const usecaseCard = moveBtn.closest('.usecase-card');
+            if (usecaseCard) {
+              const usecaseId = usecaseCard.dataset.usecaseId;
+              const currentStatus = usecaseCard.dataset.status;
+              if (usecaseId && currentStatus) {
+                moveUseCase(usecaseId, currentStatus);
+              }
+            }
+            return;
+          }
+          
+          // Handle add custom use case button
+          const addBtn = e.target.closest('.add-usecase-btn');
+          if (addBtn) {
+            const categoryKey = addBtn.dataset.category;
+            addCustomUseCase(categoryKey);
+            return;
+          }
+        });
+
+        container.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+            const categoryKey = e.target.dataset.category;
+            if (categoryKey) {
+              addCustomUseCase(categoryKey);
+            }
+          }
+        });
+        
+        useCasesRendered = true;
+      }
+    }
+
+    function deleteUseCase(usecaseId) {
+      useCaseNeeds.delete(usecaseId);
+      useCaseDoing.delete(usecaseId);
+      // Also remove from custom use cases if it's a custom one
+      Object.keys(customUseCases).forEach(catKey => {
+        customUseCases[catKey] = customUseCases[catKey].filter(item => item.id !== usecaseId);
+      });
+      renderUseCases();
+      autoSave();
+    }
+
+    function moveUseCase(usecaseId, currentStatus) {
+      if (currentStatus === 'need') {
+        useCaseNeeds.delete(usecaseId);
+        useCaseDoing.add(usecaseId);
+      } else {
+        useCaseDoing.delete(usecaseId);
+        useCaseNeeds.add(usecaseId);
+      }
+      renderUseCases();
+      autoSave();
+    }
+
+    function addCustomUseCase(categoryKey) {
+      const container = document.getElementById('useCasesContainer');
+      const input = container.querySelector(`input[data-category="${categoryKey}"]`);
+      const value = input.value.trim();
+      
+      if (!value) return;
+      
+      const customId = `custom-usecase-${Date.now()}`;
+      
+      if (!customUseCases[categoryKey]) {
+        customUseCases[categoryKey] = [];
+      }
+      
+      customUseCases[categoryKey].push({ id: customId, name: value });
+      useCaseNeeds.add(customId);
+      input.value = '';
+      
+      renderUseCases();
+      autoSave();
+    }
+
+    function generateJSON() {
+      // Helper to find use case name
+      const findUseCaseName = (id) => {
+        for (const cat of useCases) {
+          const item = cat.items.find(i => i.id === id);
+          if (item) {
+            return { id, name: item.name, category: cat.category };
+          }
+        }
+        // Check custom use cases
+        for (const [catKey, items] of Object.entries(customUseCases)) {
+          const item = items.find(i => i.id === id);
+          if (item) {
+            return { id, name: item.name, category: catKey, custom: true };
+          }
+        }
+        return { id, name: id };
+      };
+
+      // Build the results object
+      const results = {
+        timestamp: new Date().toISOString(),
+        accountName: accountName || 'Unnamed Account',
+        assessment: {
+          roles: Array.from(selectedRoles).map(id => {
+            const role = roles.find(r => r.id === id);
+            return { id, name: role?.name || id };
+          }),
+          tools: {},
+          engagement: {
+            ownership: Array.from(selectedOwnership).map(id => ({
+              id,
+              name: ownershipLabels[id]?.name || id
+            })),
+            aiToolPayment: aiToolPayment,
+            aiToolPaymentLabel: aiToolPayment === 'us' ? 'We Will Pay' : aiToolPayment === 'customer' ? 'Customer Will Pay' : aiToolPayment === 'tbd' ? 'To Be Determined' : 'Not Selected',
+            compliance: Array.from(selectedCompliance).map(id => {
+              const predefined = complianceOptions.find(c => c.id === id);
+              if (predefined) {
+                return { id, name: predefined.name };
+              }
+              const custom = customCompliance.find(c => c.id === id);
+              return { id, name: custom?.name || id, custom: true };
+            })
+          },
+          aiToolsByRole: {},
+          useCases: {
+            needs: Array.from(useCaseNeeds).map(findUseCaseName),
+            alreadyDoing: Array.from(useCaseDoing).map(findUseCaseName)
+          },
+          clientAILandscape: {
+            maturity: clientAIMaturity ? { id: clientAIMaturity, name: clientAILabels.maturity[clientAIMaturity] } : null,
+            usage: Array.from(clientAIUsage).filter(id => id !== 'not-using').map(id => ({ id, name: clientAILabels.usage[id] })),
+            priority: clientAIPriority ? { id: clientAIPriority, name: clientAILabels.priority[clientAIPriority] } : null,
+            governance: clientAIGovernance ? { id: clientAIGovernance, name: clientAILabels.governance[clientAIGovernance] } : null,
+            challenge: clientAIChallenge ? { id: clientAIChallenge, name: clientAILabels.challenge[clientAIChallenge] } : null
+          },
+          limitingFactors: (limitingFactorsOrder.length ? limitingFactorsOrder : Array.from(selectedLimitingFactors)).map((id, index) => ({
+            id,
+            name: id === 'other' ? (limitingFactorOther || limitingFactorLabels.other) : limitingFactorLabels[id],
+            rank: index === 0 ? 'primary' : index === 1 ? 'secondary' : undefined
+          }))
+        }
+      };
+
+      // Add tools by category
+      toolCategories.forEach(cat => {
+        const selected = selectedTools[cat.id];
+        if (selected && selected.size > 0) {
+          // Filter out special options from exports
+          const filteredTools = Array.from(selected)
+            .filter(toolId => toolId !== 'dont-know' && toolId !== 'not-applicable')
+            .map(toolId => {
+              const tool = cat.tools.find(t => t.id === toolId);
+              if (tool) {
+                return { id: toolId, name: tool.name };
+              }
+              // Check custom tools
+              const custom = customTools[cat.id]?.find(t => t.id === toolId);
+              return { id: toolId, name: custom?.name || toolId, custom: true };
+            });
+          if (filteredTools.length > 0) {
+            results.assessment.tools[cat.name] = filteredTools;
+          }
+        }
+      });
+
+      // Add AI tools by role matrix
+      Object.keys(toolRoleMatrix).forEach(key => {
+        if (toolRoleMatrix[key]) {
+          const [toolId, roleId] = key.split('-');
+          const role = roles.find(r => r.id === roleId);
+          const roleName = role?.name || roleId;
+          
+          if (!results.assessment.aiToolsByRole[roleName]) {
+            results.assessment.aiToolsByRole[roleName] = [];
+          }
+          
+          const aiCategory = toolCategories.find(c => c.id === 'ai');
+          const tool = aiCategory.tools.find(t => t.id === toolId);
+          const customTool = customTools['ai']?.find(t => t.id === toolId);
+          const toolName = tool?.name || customTool?.name || toolId;
+          
+          results.assessment.aiToolsByRole[roleName].push(toolName);
+        }
+      });
+
+      return JSON.stringify(results, null, 2);
+    }
+
+    function generateMarkdown() {
+      // Helper to find use case name
+      const findUseCaseName = (id) => {
+        for (const cat of useCases) {
+          const item = cat.items.find(i => i.id === id);
+          if (item) {
+            return { name: item.name, category: cat.category };
+          }
+        }
+        for (const [catKey, items] of Object.entries(customUseCases)) {
+          const item = items.find(i => i.id === id);
+          if (item) {
+            return { name: item.name, category: catKey, custom: true };
+          }
+        }
+        return { name: id, category: 'Unknown' };
+      };
+
+      const displayName = accountName || 'Unnamed Account';
+      let md = `# AI Adoption Assessment Report\n\n`;
+      md += `**Account:** ${displayName}\n\n`;
+      md += `**Generated:** ${new Date().toLocaleString()}\n\n`;
+      md += `---\n\n`;
+
+      // Team Roles
+      md += `## 👥 Team Roles\n\n`;
+      if (selectedRoles.size > 0) {
+        Array.from(selectedRoles).forEach(roleId => {
+          const role = roles.find(r => r.id === roleId);
+          md += `- ${role?.name || roleId}\n`;
+        });
+      } else {
+        md += `_No roles selected_\n`;
+      }
+      md += `\n`;
+
+      // Engagement Model
+      md += `## 🤝 Engagement Model\n\n`;
+      if (selectedOwnership.size > 0) {
+        md += `**Ownership Level(s):**\n`;
+        Array.from(selectedOwnership).forEach(id => {
+          const label = ownershipLabels[id];
+          md += `- ${label?.name || id}\n`;
+        });
+        md += `\n`;
+      } else {
+        md += `**Ownership Level:** _Not selected_\n\n`;
+      }
+      
+      const paymentLabel = aiToolPayment === 'us' ? 'We Will Pay' : aiToolPayment === 'customer' ? 'Customer Will Pay' : aiToolPayment === 'tbd' ? 'To Be Determined' : '_Not selected_';
+      md += `**AI Tool Payment:** ${paymentLabel}\n\n`;
+
+      // Compliance Requirements
+      md += `**Compliance Requirements:**\n`;
+      if (selectedCompliance.size > 0) {
+        Array.from(selectedCompliance).forEach(id => {
+          const predefined = complianceOptions.find(c => c.id === id);
+          if (predefined) {
+            md += `- ${predefined.name}\n`;
+          } else {
+            const custom = customCompliance.find(c => c.id === id);
+            md += `- ${custom?.name || id} *(custom)*\n`;
+          }
+        });
+      } else {
+        md += `_None selected_\n`;
+      }
+      md += `\n`;
+
+      // Tools & Infrastructure
+      md += `## 🛠️ Tools & Infrastructure\n\n`;
+      let hasTools = false;
+      toolCategories.forEach(cat => {
+        const selected = selectedTools[cat.id];
+        if (selected && selected.size > 0) {
+          // Filter out special options
+          const filteredTools = Array.from(selected).filter(toolId => toolId !== 'dont-know' && toolId !== 'not-applicable');
+          if (filteredTools.length > 0) {
+            hasTools = true;
+            md += `### ${cat.icon} ${cat.name}\n\n`;
+            filteredTools.forEach(toolId => {
+              const tool = cat.tools.find(t => t.id === toolId);
+              const customTool = customTools[cat.id]?.find(t => t.id === toolId);
+              const name = tool?.name || customTool?.name || toolId;
+              const isCustom = !tool && customTool;
+              md += `- ${name}${isCustom ? ' *(custom)*' : ''}\n`;
+            });
+            md += `\n`;
+          }
+        }
+      });
+      if (!hasTools) {
+        md += `_No tools selected_\n\n`;
+      }
+
+      // AI Tools by Role
+      const hasMatrix = Object.values(toolRoleMatrix).some(v => v);
+      if (hasMatrix) {
+        md += `## 🤖 AI Tool Usage by Role\n\n`;
+        
+        const aiTools = getSelectedAITools();
+        const rolesList = Array.from(selectedRoles);
+        
+        // Build table header
+        md += `| Role |`;
+        aiTools.forEach(tool => {
+          md += ` ${tool.name} |`;
+        });
+        md += `\n`;
+        
+        // Build separator
+        md += `|------|`;
+        aiTools.forEach(() => {
+          md += `:---:|`;
+        });
+        md += `\n`;
+        
+        // Build rows
+        rolesList.forEach(roleId => {
+          const role = roles.find(r => r.id === roleId);
+          md += `| ${role?.name || roleId} |`;
+          aiTools.forEach(tool => {
+            const key = `${tool.id}-${roleId}`;
+            md += toolRoleMatrix[key] ? ` ✅ |` : ` |`;
+          });
+          md += `\n`;
+        });
+        md += `\n`;
+      }
+
+      // Client AI Landscape
+      md += `## 🏢 Client AI Landscape\n\n`;
+      
+      if (clientAIMaturity) {
+        md += `**AI Maturity Stage:** ${clientAILabels.maturity[clientAIMaturity]}\n\n`;
+      }
+      
+      const usageItems = Array.from(clientAIUsage).filter(id => id !== 'not-using');
+      if (usageItems.length > 0) {
+        md += `**Current AI Usage:**\n`;
+        usageItems.forEach(id => {
+          md += `- ${clientAILabels.usage[id]}\n`;
+        });
+        md += `\n`;
+      } else if (clientAIUsage.has('not-using')) {
+        md += `**Current AI Usage:** Not using AI yet\n\n`;
+      }
+      
+      if (clientAIPriority) {
+        md += `**AI Strategic Priority:** ${clientAILabels.priority[clientAIPriority]}\n\n`;
+      }
+      
+      if (clientAIGovernance) {
+        md += `**AI Governance:** ${clientAILabels.governance[clientAIGovernance]}\n\n`;
+      }
+      
+      if (clientAIChallenge) {
+        md += `**Biggest AI Challenge:** ${clientAILabels.challenge[clientAIChallenge]}\n\n`;
+      }
+
+      // Use Cases
+      md += `## 📋 AI Use Cases\n\n`;
+      
+      if (useCaseNeeds.size > 0) {
+        md += `### 🎯 Needs (To Be Addressed)\n\n`;
+        const needsByCategory = {};
+        Array.from(useCaseNeeds).forEach(id => {
+          const info = findUseCaseName(id);
+          if (!needsByCategory[info.category]) {
+            needsByCategory[info.category] = [];
+          }
+          needsByCategory[info.category].push(info.name + (info.custom ? ' *(custom)*' : ''));
+        });
+        Object.entries(needsByCategory).forEach(([cat, items]) => {
+          md += `**${cat}:**\n`;
+          items.forEach(item => {
+            md += `- ${item}\n`;
+          });
+          md += `\n`;
+        });
+      }
+
+      if (useCaseDoing.size > 0) {
+        md += `### ✅ Already Doing\n\n`;
+        const doingByCategory = {};
+        Array.from(useCaseDoing).forEach(id => {
+          const info = findUseCaseName(id);
+          if (!doingByCategory[info.category]) {
+            doingByCategory[info.category] = [];
+          }
+          doingByCategory[info.category].push(info.name + (info.custom ? ' *(custom)*' : ''));
+        });
+        Object.entries(doingByCategory).forEach(([cat, items]) => {
+          md += `**${cat}:**\n`;
+          items.forEach(item => {
+            md += `- ${item}\n`;
+          });
+          md += `\n`;
+        });
+      }
+
+      if (useCaseNeeds.size === 0 && useCaseDoing.size === 0) {
+        md += `_No use cases selected_\n\n`;
+      }
+
+      md += `## 🚧 Factors Limiting AI Adoption\n\n`;
+      const orderedFactors = limitingFactorsOrder.length ? limitingFactorsOrder : Array.from(selectedLimitingFactors);
+      if (orderedFactors.length > 0) {
+        const primaryId = orderedFactors[0];
+        const primaryLabel = primaryId === 'other' ? (limitingFactorOther || 'Other (please specify)...') : limitingFactorLabels[primaryId];
+        md += `**Primary reason:** ${primaryLabel}\n\n`;
+        if (orderedFactors[1]) {
+          const secondaryId = orderedFactors[1];
+          const secondaryLabel = secondaryId === 'other' ? (limitingFactorOther || 'Other (please specify)...') : limitingFactorLabels[secondaryId];
+          md += `**Secondary reason:** ${secondaryLabel}\n\n`;
+        }
+      } else {
+        md += `_None selected_\n\n`;
+      }
+
+      md += `---\n\n`;
+      md += `*Report generated by AI Adoption Assessment Tool*\n`;
+
+      return md;
+    }
+
+    async function downloadAssessment() {
+      const btn = document.getElementById('downloadAssessment');
+      const originalText = btn.textContent;
+      btn.textContent = '⏳ Generating...';
+      btn.disabled = true;
+      
+      try {
+        // Generate content
+        const jsonContent = generateJSON();
+        const mdContent = generateMarkdown();
+        
+        // Create filename base
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const dateStr = `${yyyy}_${mm}_${dd}`;
+        const quarter = `Q${Math.ceil((now.getMonth() + 1) / 3)}`;
+        const safeAccountName = (accountName || 'Project').replace(/[^a-zA-Z0-9-_]/g, '_');
+        const fileBaseName = `${dateStr}_AI_Adoption_Assessment_${yyyy}_${quarter}_${safeAccountName}`;
+        
+        // Create zip
+        const zip = new JSZip();
+        zip.file(`${fileBaseName}.json`, jsonContent);
+        zip.file(`${fileBaseName}.md`, mdContent);
+        
+        // Generate and download
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${fileBaseName}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error generating download:', error);
+        alert('Error generating download. Please try again.');
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    // Start
+    init();
+  </script>
+
+
+</body></html>
