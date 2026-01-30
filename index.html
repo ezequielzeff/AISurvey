@@ -1196,6 +1196,113 @@
       color: #1f2937;
       margin-bottom: 1rem;
     }
+
+    .validation-error {
+      background: #fef2f2;
+      border: 1px solid #F0503C;
+      color: #BF3422;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      display: none;
+    }
+    .validation-error.visible { display: block; }
+
+    .review-section {
+      background: #F8FAFA;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .review-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+    }
+    .review-section-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #000;
+    }
+    .review-edit-btn {
+      background: none;
+      border: none;
+      color: #284086;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+    .review-edit-btn:hover {
+      background: #eef2ff;
+    }
+    .review-content {
+      font-size: 0.9rem;
+      color: #374151;
+      line-height: 1.6;
+    }
+    .review-content ul {
+      list-style: disc;
+      margin-left: 1.25rem;
+    }
+    .review-empty {
+      color: #9ca3af;
+      font-style: italic;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 640px) {
+      .card-footer {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .card-footer .btn {
+        width: 100%;
+        text-align: center;
+      }
+      .role-grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      }
+      .option-cards {
+        flex-direction: column;
+      }
+      .option-card {
+        min-width: unset;
+      }
+      .usecase-columns {
+        grid-template-columns: 1fr;
+      }
+      .matrix-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .maturity-desc {
+        display: none;
+      }
+      .maturity-name {
+        font-size: 0.7rem;
+      }
+      .welcome-sections-grid {
+        grid-template-columns: 1fr;
+      }
+      .welcome-info {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .ownership-options {
+        grid-template-columns: 1fr;
+      }
+      .card-header {
+        padding: 1.5rem;
+      }
+      .card-body {
+        padding: 1.25rem;
+      }
+    }
   </style>
 </head>
 <body id="artifacts-component-root-html">
@@ -1211,7 +1318,7 @@
     <div class="progress-bar">
       <div class="progress-fill" id="progressFill" style="width: 20%;"></div>
     </div>
-    <div class="progress-text" id="progressText">Step 1 of 5</div>
+    <div class="progress-text" id="progressText" aria-live="polite">Step 1 of 5</div>
   </div>
 
   <div class="main-container">
@@ -1274,9 +1381,10 @@
             <label class="account-name-label" for="accountNameInput">Account / Project Name</label>
             <input type="text" id="accountNameInput" class="account-name-input welcome-account-input" placeholder="Enter account or project name...">
           </div>
+          <div class="validation-error" id="step0Error" role="alert"></div>
         </div>
         <div class="card-footer welcome-footer">
-          <button class="btn btn-primary btn-large" id="startAssessment">Start Assessment →</button>
+          <button class="btn btn-primary btn-large" id="startAssessment" disabled>Start Assessment →</button>
         </div>
       </div>
 
@@ -1344,6 +1452,7 @@
           <div class="role-name">Solutions Architects</div>
         </div>
       </div>
+          <div class="validation-error" id="step1Error" role="alert"></div>
         </div>
         <div class="card-footer">
           <div class="selection-count" id="roleCount">1 roles selected</div>
@@ -1468,6 +1577,7 @@
               <button type="button" id="addComplianceBtn">Add</button>
             </div>
           </div>
+          <div class="validation-error" id="step5Error" role="alert"></div>
         </div>
         <div class="card-footer">
           <button class="btn btn-secondary" id="step5Back">← Back</button>
@@ -1658,6 +1768,7 @@
               </div>
             </div>
           </div>
+          <div class="validation-error" id="step6Error" role="alert"></div>
         </div>
         <div class="card-footer">
           <button class="btn btn-secondary" id="step6Back">← Back</button>
@@ -1736,10 +1847,27 @@
             <label class="account-name-label" for="limitingFactorOtherInput">Please specify</label>
             <input type="text" id="limitingFactorOtherInput" class="account-name-input" placeholder="Describe other limiting factors...">
           </div>
+          <div class="validation-error" id="step7Error" role="alert"></div>
         </div>
         <div class="card-footer">
           <button class="btn btn-secondary" id="step7Back">← Back</button>
-          <button class="btn btn-primary" id="downloadAssessment">📦 Download Assessment</button>
+          <button class="btn btn-primary" id="step7Next">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 8: Review -->
+      <div id="step8" class="step hidden">
+        <div class="card-header">
+          <div class="step-indicator">Review</div>
+          <h1 class="card-title">Review your assessment</h1>
+          <p class="card-subtitle">Check your answers before downloading</p>
+        </div>
+        <div class="card-body">
+          <div id="reviewContainer"></div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" id="step8Back">← Back</button>
+          <button class="btn btn-primary" id="downloadAssessmentReview">📦 Download Assessment</button>
         </div>
       </div>
     </div>
@@ -2224,6 +2352,14 @@
         accountName = e.target.value;
         autoSave();
       });
+
+      // Enable/disable start button based on account name
+      const startBtn = document.getElementById('startAssessment');
+      const updateStartBtn = () => {
+        startBtn.disabled = !document.getElementById('accountNameInput').value.trim();
+      };
+      document.getElementById('accountNameInput').addEventListener('input', updateStartBtn);
+      updateStartBtn();
       
       // Add clear progress handler
       document.getElementById('clearProgress').addEventListener('click', clearLocalStorage);
@@ -2232,7 +2368,7 @@
     function renderRoles() {
       const grid = document.getElementById('roleGrid');
       grid.innerHTML = roles.map(role => `
-        <div class="role-card" data-role-id="${role.id}">
+        <div class="role-card" data-role-id="${role.id}" role="checkbox" aria-checked="false" tabindex="0">
           <div class="checkmark">✓</div>
           <div class="role-icon">${role.icon}</div>
           <div class="role-name">${role.name}</div>
@@ -2242,6 +2378,12 @@
       // Add click handlers
       grid.querySelectorAll('.role-card').forEach(card => {
         card.addEventListener('click', () => toggleRole(card.dataset.roleId));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleRole(card.dataset.roleId);
+          }
+        });
       });
     }
 
@@ -2259,6 +2401,7 @@
       document.querySelectorAll('#roleGrid .role-card').forEach(card => {
         const isSelected = selectedRoles.has(card.dataset.roleId);
         card.classList.toggle('selected', isSelected);
+        card.setAttribute('aria-checked', isSelected ? 'true' : 'false');
       });
 
       const count = selectedRoles.size;
@@ -2300,6 +2443,7 @@
             <div class="tool-category-header">
               <span class="tool-category-label">${cat.icon} ${cat.name}</span>
             </div>
+            <div style="font-size:0.8rem;color:#6b7280;margin-bottom:0.5rem;">Select tools used, or choose "Don't know" / "Not Applicable"</div>
             <div class="tool-grid">
               <div class="tool-card special-option${dontKnowSelected ? ' selected' : ''}" data-category="${cat.id}" data-tool-id="dont-know">
                 <span class="tool-card-name">Don't know</span>
@@ -2495,13 +2639,22 @@
         // Update progress
         const progress = (step / totalSteps) * 100;
         document.getElementById('progressFill').style.width = `${progress}%`;
-        document.getElementById('progressText').textContent = `Step ${step} of ${totalSteps}`;
+        const stepLabels = {0:'Welcome',1:'Roles',2:'Tools',3:'AI Matrix',4:'Use Cases',5:'Engagement',6:'Client AI',7:'Limiting Factors',8:'Review'};
+        document.getElementById('progressText').textContent = `Step ${step} of ${totalSteps} — ${stepLabels[step] || ''}`;
       }
       
       // Show/hide steps
       document.querySelectorAll('.step').forEach(el => el.classList.add('hidden'));
       document.getElementById(`step${step}`).classList.remove('hidden');
-      
+
+      // Focus card header for accessibility
+      const stepEl = document.getElementById(`step${step}`);
+      const header = stepEl.querySelector('.card-header');
+      if (header) {
+        header.setAttribute('tabindex', '-1');
+        header.focus();
+      }
+
       // Render content for step
       if (step === 2) {
         renderTools();
@@ -2521,7 +2674,10 @@
       if (step === 7) {
         renderLimitingFactors();
       }
-      
+      if (step === 8) {
+        renderReview();
+      }
+
       autoSave();
     }
 
@@ -2987,12 +3143,194 @@
       });
     }
 
+    function validateStep(step) {
+      // Hide all errors first
+      document.querySelectorAll('.validation-error').forEach(el => {
+        el.classList.remove('visible');
+      });
+
+      let errorDiv, message;
+
+      switch(step) {
+        case 0:
+          errorDiv = document.getElementById('step0Error');
+          if (!accountName.trim()) {
+            message = 'Please enter an account or project name before starting.';
+          }
+          break;
+        case 1:
+          errorDiv = document.getElementById('step1Error');
+          if (selectedRoles.size === 0) {
+            message = 'Please select at least one team role to continue.';
+          }
+          break;
+        case 5:
+          errorDiv = document.getElementById('step5Error');
+          if (selectedOwnership.size === 0 && !aiToolPayment) {
+            message = 'Please select at least one ownership level and who pays for AI tools.';
+          } else if (selectedOwnership.size === 0) {
+            message = 'Please select at least one ownership level.';
+          } else if (!aiToolPayment) {
+            message = 'Please select who pays (or will pay) for AI tools.';
+          }
+          break;
+        case 6:
+          errorDiv = document.getElementById('step6Error');
+          const missing = [];
+          if (!clientAIMaturity) missing.push('AI maturity stage');
+          if (!clientAIPriority) missing.push('strategic priority');
+          if (!clientAIGovernance) missing.push('AI governance');
+          if (!clientAIChallenge) missing.push('biggest challenge');
+          if (missing.length > 0) {
+            message = 'Please select: ' + missing.join(', ') + '.';
+          }
+          break;
+        case 7:
+          errorDiv = document.getElementById('step7Error');
+          if (selectedLimitingFactors.size === 0) {
+            message = 'Please select at least one limiting factor.';
+          } else if (selectedLimitingFactors.has('other') && !limitingFactorOther.trim()) {
+            message = 'Please specify the "Other" limiting factor.';
+          }
+          break;
+      }
+
+      if (message && errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.classList.add('visible');
+        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return false;
+      }
+      return true;
+    }
+
+    function renderReview() {
+      const container = document.getElementById('reviewContainer');
+      let html = '';
+
+      // Account Name
+      html += `<div class="review-section">
+        <div class="review-section-header" onclick="goToStep(0)">
+          <span class="review-section-title">📋 Account Name</span>
+          <button class="review-edit-btn">Edit</button>
+        </div>
+        <div class="review-content">${accountName || '<span class="review-empty">Not provided</span>'}</div>
+      </div>`;
+
+      // Roles
+      html += `<div class="review-section">
+        <div class="review-section-header" onclick="goToStep(1)">
+          <span class="review-section-title">👥 Team Roles</span>
+          <button class="review-edit-btn">Edit</button>
+        </div>
+        <div class="review-content">`;
+      if (selectedRoles.size > 0) {
+        html += '<ul>' + Array.from(selectedRoles).map(id => {
+          const role = roles.find(r => r.id === id);
+          return `<li>${role?.name || id}</li>`;
+        }).join('') + '</ul>';
+      } else {
+        html += '<span class="review-empty">No roles selected</span>';
+      }
+      html += '</div></div>';
+
+      // Tools
+      html += `<div class="review-section">
+        <div class="review-section-header" onclick="goToStep(2)">
+          <span class="review-section-title">🛠️ Tools & Infrastructure</span>
+          <button class="review-edit-btn">Edit</button>
+        </div>
+        <div class="review-content">`;
+      let hasAnyTools = false;
+      toolCategories.forEach(cat => {
+        const selected = selectedTools[cat.id];
+        if (selected && selected.size > 0) {
+          const filtered = Array.from(selected).filter(id => id !== 'dont-know' && id !== 'not-applicable');
+          if (filtered.length > 0) {
+            hasAnyTools = true;
+            html += `<strong>${cat.name}:</strong> `;
+            html += filtered.map(toolId => {
+              const tool = cat.tools.find(t => t.id === toolId);
+              const custom = customTools[cat.id]?.find(t => t.id === toolId);
+              return tool?.name || custom?.name || toolId;
+            }).join(', ') + '<br>';
+          }
+        }
+      });
+      if (!hasAnyTools) html += '<span class="review-empty">No tools selected</span>';
+      html += '</div></div>';
+
+      // Engagement
+      html += `<div class="review-section">
+        <div class="review-section-header" onclick="goToStep(5)">
+          <span class="review-section-title">🤝 Engagement Model</span>
+          <button class="review-edit-btn">Edit</button>
+        </div>
+        <div class="review-content">`;
+      if (selectedOwnership.size > 0) {
+        html += '<strong>Ownership:</strong> ' + Array.from(selectedOwnership).map(id => ownershipLabels[id]?.name || id).join(', ') + '<br>';
+      }
+      const payLabel = aiToolPayment === 'us' ? 'We Are/Will' : aiToolPayment === 'customer' ? 'Customer Is/Will' : aiToolPayment === 'tbd' ? 'To Be Determined' : 'Not selected';
+      html += `<strong>AI Tool Payment:</strong> ${payLabel}<br>`;
+      if (selectedCompliance.size > 0) {
+        html += '<strong>Compliance:</strong> ' + Array.from(selectedCompliance).map(id => {
+          const pre = complianceOptions.find(c => c.id === id);
+          if (pre) return pre.name;
+          const cust = customCompliance.find(c => c.id === id);
+          return cust?.name || id;
+        }).join(', ');
+      }
+      html += '</div></div>';
+
+      // Client AI Landscape
+      html += `<div class="review-section">
+        <div class="review-section-header" onclick="goToStep(6)">
+          <span class="review-section-title">🏢 Client AI Landscape</span>
+          <button class="review-edit-btn">Edit</button>
+        </div>
+        <div class="review-content">`;
+      if (clientAIMaturity) html += `<strong>Maturity:</strong> ${clientAILabels.maturity[clientAIMaturity]}<br>`;
+      if (clientAIPriority) html += `<strong>Priority:</strong> ${clientAILabels.priority[clientAIPriority]}<br>`;
+      if (clientAIGovernance) html += `<strong>Governance:</strong> ${clientAILabels.governance[clientAIGovernance]}<br>`;
+      if (clientAIChallenge) html += `<strong>Challenge:</strong> ${clientAILabels.challenge[clientAIChallenge]}<br>`;
+      const usageItems = Array.from(clientAIUsage).filter(id => id !== 'not-using');
+      if (usageItems.length > 0) {
+        html += '<strong>Usage:</strong> ' + usageItems.map(id => clientAILabels.usage[id]).join(', ');
+      } else if (clientAIUsage.has('not-using')) {
+        html += '<strong>Usage:</strong> Not using AI';
+      }
+      html += '</div></div>';
+
+      // Limiting Factors
+      html += `<div class="review-section">
+        <div class="review-section-header" onclick="goToStep(7)">
+          <span class="review-section-title">🚧 Limiting Factors</span>
+          <button class="review-edit-btn">Edit</button>
+        </div>
+        <div class="review-content">`;
+      const ordered = limitingFactorsOrder.length ? limitingFactorsOrder : Array.from(selectedLimitingFactors);
+      if (ordered.length > 0) {
+        html += '<ul>';
+        ordered.forEach((id, i) => {
+          const label = id === 'other' ? (limitingFactorOther || 'Other') : limitingFactorLabels[id];
+          const rank = i === 0 ? ' (Primary)' : i === 1 ? ' (Secondary)' : '';
+          html += `<li>${label}<strong>${rank}</strong></li>`;
+        });
+        html += '</ul>';
+      } else {
+        html += '<span class="review-empty">None selected</span>';
+      }
+      html += '</div></div>';
+
+      container.innerHTML = html;
+    }
+
     function setupEventListeners() {
       // Welcome page
-      document.getElementById('startAssessment').addEventListener('click', () => goToStep(1));
+      document.getElementById('startAssessment').addEventListener('click', () => { if (validateStep(0)) goToStep(1); });
       
       // Step 1: Roles
-      document.getElementById('step1Next').addEventListener('click', () => goToStep(2));
+      document.getElementById('step1Next').addEventListener('click', () => { if (validateStep(1)) goToStep(2); });
       document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
       document.getElementById('step2Next').addEventListener('click', () => handleStep2Continue());
       
@@ -3022,15 +3360,19 @@
           goToStep(2); // Go back to Tools
         }
       });
-      document.getElementById('step5Next').addEventListener('click', () => goToStep(6)); // Go to Client AI
+      document.getElementById('step5Next').addEventListener('click', () => { if (validateStep(5)) goToStep(6); }); // Go to Client AI
       
       // Step 6: Client AI Landscape
       document.getElementById('step6Back').addEventListener('click', () => goToStep(5));
-      document.getElementById('step6Next').addEventListener('click', () => goToStep(7)); // Go to Limiting Factors
+      document.getElementById('step6Next').addEventListener('click', () => { if (validateStep(6)) goToStep(7); }); // Go to Limiting Factors
       
       // Step 7: Limiting Factors
       document.getElementById('step7Back').addEventListener('click', () => goToStep(6));
-      document.getElementById('downloadAssessment').addEventListener('click', () => downloadAssessment());
+      document.getElementById('step7Next').addEventListener('click', () => { if (validateStep(7)) goToStep(8); });
+
+      // Step 8: Review
+      document.getElementById('step8Back').addEventListener('click', () => goToStep(7));
+      document.getElementById('downloadAssessmentReview').addEventListener('click', () => downloadAssessment());
     }
 
     function renderUseCases() {
@@ -3058,7 +3400,11 @@
         useCasesInitialized = true;
       }
 
-      container.innerHTML = visibleCategories.map(cat => {
+      const bannerHtml = `<div style="background:rgba(83,207,248,0.1);border-left:4px solid #284086;padding:0.75rem 1rem;margin-bottom:1.5rem;border-radius:4px;color:#284086;font-size:0.9rem;">
+  💡 All relevant use cases start in the "Need" column. Click to move items to "Already Doing" or click × to remove irrelevant ones.
+</div>`;
+
+      container.innerHTML = bannerHtml + visibleCategories.map(cat => {
         const categoryKey = cat.category.replace(/\s+/g, '-').toLowerCase();
         
         // Get items for each column
@@ -3554,7 +3900,7 @@
     }
 
     async function downloadAssessment() {
-      const btn = document.getElementById('downloadAssessment');
+      const btn = document.getElementById('downloadAssessmentReview');
       const originalText = btn.textContent;
       btn.textContent = '⏳ Generating...';
       btn.disabled = true;
