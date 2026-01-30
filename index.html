@@ -1696,7 +1696,7 @@
 
           <!-- Question 4 & 5: Service Revenue & AI Investment -->
           <div class="engagement-section">
-            <div class="engagement-label">Service revenue and AI investment</div>
+            <div class="engagement-label">2026 Service revenue and AI investment</div>
             <div class="revenue-ai-card">
               <div class="revenue-ai-row">
                 <div class="revenue-ai-field">
@@ -3471,17 +3471,48 @@
           }
           return id;
         };
+        // Find which use case category each "doing" item belongs to, then map to roles
+        const findUCCategory = (id) => {
+          for (const cat of useCases) {
+            if (cat.items.find(i => i.id === id)) return cat;
+          }
+          return null;
+        };
         html += `<div class="review-section">
           <div class="review-section-header" onclick="goToStep(4)">
             <span class="review-section-title">📋 AI Use Cases</span>
             <button class="review-edit-btn">Edit</button>
           </div>
           <div class="review-content">`;
-        if (useCaseNeeds.size > 0) {
-          html += '<strong>Needs:</strong><ul>' + Array.from(useCaseNeeds).map(id => `<li>${findUCName(id)}</li>`).join('') + '</ul>';
-        }
         if (useCaseDoing.size > 0) {
           html += '<strong>Already Doing:</strong><ul>' + Array.from(useCaseDoing).map(id => `<li>${findUCName(id)}</li>`).join('') + '</ul>';
+
+          // Build role-to-doing-use-cases map
+          const roleDoing = {};
+          Array.from(useCaseDoing).forEach(ucId => {
+            const cat = findUCCategory(ucId);
+            if (cat) {
+              cat.roles.forEach(roleId => {
+                if (selectedRoles.has(roleId)) {
+                  if (!roleDoing[roleId]) roleDoing[roleId] = [];
+                  roleDoing[roleId].push(findUCName(ucId));
+                }
+              });
+            }
+          });
+          const roleEntries = Object.entries(roleDoing);
+          if (roleEntries.length > 0) {
+            html += '<div style="margin-top:0.75rem;padding:0.75rem 1rem;background:#F8FAFA;border-radius:8px;border-left:4px solid #2BC6BF;">';
+            html += '<strong style="color:#284086;">Roles already leveraging AI:</strong><br>';
+            roleEntries.forEach(([roleId, ucNames]) => {
+              const role = roles.find(r => r.id === roleId);
+              html += `<span style="display:inline-block;margin:0.25rem 0;"><strong>${role?.name || roleId}</strong> — ${ucNames.join(', ')}</span><br>`;
+            });
+            html += '</div>';
+          }
+        }
+        if (useCaseNeeds.size > 0) {
+          html += '<strong>Needs:</strong><ul>' + Array.from(useCaseNeeds).map(id => `<li>${findUCName(id)}</li>`).join('') + '</ul>';
         }
         html += '</div></div>';
       }
