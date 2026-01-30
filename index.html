@@ -1303,6 +1303,76 @@
         padding: 1.25rem;
       }
     }
+    .revenue-input-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .revenue-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .revenue-input:focus {
+      outline: none;
+      border-color: #284086;
+    }
+    .revenue-currency {
+      font-weight: 600;
+      color: #284086;
+      font-size: 1.1rem;
+    }
+    .ai-slider-container {
+      margin-top: 0.5rem;
+    }
+    .ai-slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .ai-slider-value {
+      font-weight: 600;
+      color: #284086;
+      font-size: 1.1rem;
+    }
+    .ai-slider-amount {
+      font-size: 0.9rem;
+      color: #2BC6BF;
+      font-weight: 600;
+    }
+    .ai-slider {
+      width: 100%;
+      height: 8px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #e5e7eb;
+      border-radius: 4px;
+      outline: none;
+    }
+    .ai-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #284086;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px #284086;
+    }
+    .ai-slider::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #284086;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px #284086;
+    }
   </style>
 </head>
 <body id="artifacts-component-root-html">
@@ -1577,6 +1647,31 @@
               <button type="button" id="addComplianceBtn">Add</button>
             </div>
           </div>
+
+          <!-- Question 4: Expected Service Revenue -->
+          <div class="engagement-section">
+            <div class="engagement-label">What is the expected service revenue for 2026?</div>
+            <div class="engagement-hint">Enter the projected annual revenue in USD</div>
+            <div class="revenue-input-group">
+              <span class="revenue-currency">USD $</span>
+              <input type="number" id="serviceRevenueInput" class="revenue-input"
+                     placeholder="e.g. 500000" min="0" step="1000">
+            </div>
+          </div>
+
+          <!-- Question 5: AI Investment % -->
+          <div class="engagement-section">
+            <div class="engagement-label">What percentage of service revenue is (or will be) invested in AI?</div>
+            <div class="ai-slider-container">
+              <div class="ai-slider-header">
+                <span class="ai-slider-value" id="aiPctLabel">0%</span>
+                <span class="ai-slider-amount" id="aiAmountLabel">$0</span>
+              </div>
+              <input type="range" id="aiInvestmentSlider" class="ai-slider"
+                     min="0" max="100" step="1" value="0">
+            </div>
+          </div>
+
           <div class="validation-error" id="step5Error" role="alert"></div>
         </div>
         <div class="card-footer">
@@ -2120,6 +2215,8 @@
     let selectedLimitingFactors = new Set();  // Max 2; values: time, knowledge, unclear-value, client, access, other
     let limitingFactorsOrder = [];     // Ordered list for primary/secondary
     let limitingFactorOther = '';      // "Other" free text when other is selected
+    let serviceRevenue = 0;
+    let aiInvestmentPct = 0;
     
     // Client AI Landscape
     let clientAIMaturity = null;       // not-started, exploring, piloting, scaling, optimizing
@@ -2133,7 +2230,6 @@
     let engagementRendered = false;
     let useCasesRendered = false;
     let useCasesInitialized = false;
-    let limitingFactorsRendered = false;
     let clientAIRendered = false;
 
     // Compliance options data
@@ -2187,6 +2283,8 @@
         clientAIPriority,
         clientAIGovernance,
         clientAIChallenge,
+        serviceRevenue,
+        aiInvestmentPct,
         savedAt: new Date().toISOString()
       };
       
@@ -2233,7 +2331,9 @@
         clientAIPriority = state.clientAIPriority || null;
         clientAIGovernance = state.clientAIGovernance || null;
         clientAIChallenge = state.clientAIChallenge || null;
-        
+        serviceRevenue = state.serviceRevenue || 0;
+        aiInvestmentPct = state.aiInvestmentPct || 0;
+
         // If we have use case data, mark as initialized
         if (state.useCaseNeeds?.length > 0 || state.useCaseDoing?.length > 0) {
           useCasesInitialized = true;
@@ -2272,13 +2372,14 @@
         clientAIPriority = null;
         clientAIGovernance = null;
         clientAIChallenge = null;
-        
+        serviceRevenue = 0;
+        aiInvestmentPct = 0;
+
         // Reset render flags so steps re-initialize
         toolsRendered = false;
         useCasesRendered = false;
         useCasesInitialized = false;
         engagementRendered = false;
-        limitingFactorsRendered = false;
         clientAIRendered = false;
         
         // Reset UI elements
@@ -2686,7 +2787,13 @@
       updatePaymentUI();
       updateComplianceUI();
       renderCustomComplianceChips();
-      
+      // Restore revenue & investment
+      const revInput = document.getElementById('serviceRevenueInput');
+      if (serviceRevenue > 0) revInput.value = serviceRevenue;
+      const slider = document.getElementById('aiInvestmentSlider');
+      slider.value = aiInvestmentPct;
+      updateAIInvestmentDisplay();
+
       // Setup event listeners (only once)
       if (!engagementRendered) {
         // Ownership options (multi-select)
@@ -2765,6 +2872,14 @@
         
         engagementRendered = true;
       }
+    }
+
+    function updateAIInvestmentDisplay() {
+      const pctLabel = document.getElementById('aiPctLabel');
+      const amountLabel = document.getElementById('aiAmountLabel');
+      pctLabel.textContent = `${aiInvestmentPct}%`;
+      const amount = (serviceRevenue * aiInvestmentPct) / 100;
+      amountLabel.textContent = `$${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     }
 
     function updateOwnershipUI() {
@@ -2994,21 +3109,6 @@
 
     function renderLimitingFactors() {
       updateLimitingFactorsUI();
-      if (!limitingFactorsRendered) {
-        const opts = document.getElementById('limitingFactorsOptions');
-        opts.addEventListener('click', (e) => {
-          const card = e.target.closest('.option-card');
-          if (!card) return;
-          const value = card.dataset.value;
-          toggleLimitingFactor(value);
-        });
-        const otherInput = document.getElementById('limitingFactorOtherInput');
-        otherInput.addEventListener('input', () => {
-          limitingFactorOther = otherInput.value;
-          autoSave();
-        });
-        limitingFactorsRendered = true;
-      }
     }
 
     function toggleLimitingFactor(value) {
@@ -3260,6 +3360,56 @@
       if (!hasAnyTools) html += '<span class="review-empty">No tools selected</span>';
       html += '</div></div>';
 
+      // AI Matrix (Step 3) - which roles are leveraging AI
+      const hasMatrix = Object.values(toolRoleMatrix).some(v => v);
+      if (hasMatrix) {
+        html += `<div class="review-section">
+          <div class="review-section-header" onclick="goToStep(3)">
+            <span class="review-section-title">🤖 AI Tools by Role</span>
+            <button class="review-edit-btn">Edit</button>
+          </div>
+          <div class="review-content">`;
+        const aiTools = getSelectedAITools();
+        Array.from(selectedRoles).forEach(roleId => {
+          const role = roles.find(r => r.id === roleId);
+          const roleTools = aiTools.filter(tool => toolRoleMatrix[`${tool.id}-${roleId}`]);
+          if (roleTools.length > 0) {
+            html += `<strong>${role?.name || roleId}:</strong> ${roleTools.map(t => t.name).join(', ')}<br>`;
+          } else {
+            html += `<strong>${role?.name || roleId}:</strong> <em style="color:#9ca3af">No AI tools assigned</em><br>`;
+          }
+        });
+        html += '</div></div>';
+      }
+
+      // Use Cases (Step 4)
+      if (useCaseNeeds.size > 0 || useCaseDoing.size > 0) {
+        const findUCName = (id) => {
+          for (const cat of useCases) {
+            const item = cat.items.find(i => i.id === id);
+            if (item) return item.name;
+          }
+          for (const [k, items] of Object.entries(customUseCases)) {
+            const item = items.find(i => i.id === id);
+            if (item) return item.name;
+          }
+          return id;
+        };
+        html += `<div class="review-section">
+          <div class="review-section-header" onclick="goToStep(4)">
+            <span class="review-section-title">📋 AI Use Cases</span>
+            <button class="review-edit-btn">Edit</button>
+          </div>
+          <div class="review-content">`;
+        if (useCaseNeeds.size > 0) {
+          html += '<strong>Needs:</strong><ul>' + Array.from(useCaseNeeds).map(id => `<li>${findUCName(id)}</li>`).join('') + '</ul>';
+        }
+        if (useCaseDoing.size > 0) {
+          html += '<strong>Already Doing:</strong><ul>' + Array.from(useCaseDoing).map(id => `<li>${findUCName(id)}</li>`).join('') + '</ul>';
+        }
+        html += '</div></div>';
+      }
+
       // Engagement
       html += `<div class="review-section">
         <div class="review-section-header" onclick="goToStep(5)">
@@ -3279,6 +3429,10 @@
           const cust = customCompliance.find(c => c.id === id);
           return cust?.name || id;
         }).join(', ');
+      }
+      if (serviceRevenue > 0) {
+        html += `<br><strong>Service Revenue (2026):</strong> $${serviceRevenue.toLocaleString('en-US')}<br>`;
+        html += `<strong>AI Investment:</strong> ${aiInvestmentPct}% ($${((serviceRevenue * aiInvestmentPct) / 100).toLocaleString('en-US')})`;
       }
       html += '</div></div>';
 
@@ -3361,7 +3515,18 @@
         }
       });
       document.getElementById('step5Next').addEventListener('click', () => { if (validateStep(5)) goToStep(6); }); // Go to Client AI
-      
+      // Service Revenue & AI Investment
+      document.getElementById('serviceRevenueInput').addEventListener('input', (e) => {
+        serviceRevenue = parseFloat(e.target.value) || 0;
+        updateAIInvestmentDisplay();
+        autoSave();
+      });
+      document.getElementById('aiInvestmentSlider').addEventListener('input', (e) => {
+        aiInvestmentPct = parseInt(e.target.value) || 0;
+        updateAIInvestmentDisplay();
+        autoSave();
+      });
+
       // Step 6: Client AI Landscape
       document.getElementById('step6Back').addEventListener('click', () => goToStep(5));
       document.getElementById('step6Next').addEventListener('click', () => { if (validateStep(6)) goToStep(7); }); // Go to Limiting Factors
@@ -3369,6 +3534,17 @@
       // Step 7: Limiting Factors
       document.getElementById('step7Back').addEventListener('click', () => goToStep(6));
       document.getElementById('step7Next').addEventListener('click', () => { if (validateStep(7)) goToStep(8); });
+
+      // Step 7: Limiting Factors click handler
+      document.getElementById('limitingFactorsOptions').addEventListener('click', (e) => {
+        const card = e.target.closest('.option-card');
+        if (!card) return;
+        toggleLimitingFactor(card.dataset.value);
+      });
+      document.getElementById('limitingFactorOtherInput').addEventListener('input', (e) => {
+        limitingFactorOther = e.target.value;
+        autoSave();
+      });
 
       // Step 8: Review
       document.getElementById('step8Back').addEventListener('click', () => goToStep(7));
@@ -3606,7 +3782,10 @@
               }
               const custom = customCompliance.find(c => c.id === id);
               return { id, name: custom?.name || id, custom: true };
-            })
+            }),
+            serviceRevenue: serviceRevenue,
+            aiInvestmentPct: aiInvestmentPct,
+            aiInvestmentAmount: (serviceRevenue * aiInvestmentPct) / 100,
           },
           aiToolsByRole: {},
           useCases: {
@@ -3724,6 +3903,11 @@
       
       const paymentLabel = aiToolPayment === 'us' ? 'We Will Pay' : aiToolPayment === 'customer' ? 'Customer Will Pay' : aiToolPayment === 'tbd' ? 'To Be Determined' : '_Not selected_';
       md += `**AI Tool Payment:** ${paymentLabel}\n\n`;
+      if (serviceRevenue > 0) {
+        md += `**Service Revenue (2026):** $${serviceRevenue.toLocaleString('en-US')}\n\n`;
+        const aiAmount = (serviceRevenue * aiInvestmentPct) / 100;
+        md += `**AI Investment:** ${aiInvestmentPct}% ($${aiAmount.toLocaleString('en-US')})\n\n`;
+      }
 
       // Compliance Requirements
       md += `**Compliance Requirements:**\n`;
