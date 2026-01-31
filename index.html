@@ -895,7 +895,7 @@
       left: 0;
       top: 0;
       height: 100%;
-      background: linear-gradient(to right, #fbbf24, #f59e0b, #22c55e, #10b981, #4f46e5);
+      background: linear-gradient(to right, #ef4444, #f59e0b, #fbbf24, #84cc16, #22c55e);
       border-radius: 3px;
       transition: width 0.3s ease;
       width: 0%;
@@ -939,8 +939,8 @@
     }
 
     .maturity-stage.passed .maturity-dot {
-      border-color: #22c55e;
-      background: #22c55e;
+      border-color: #6b7280;
+      background: #6b7280;
     }
 
     .maturity-label {
@@ -979,6 +979,16 @@
     }
 
     .maturity-stage.active .maturity-desc {
+      color: #6b7280;
+    }
+
+    .maturity-stage[data-value="dont-know"].active .maturity-dot {
+      border-color: #9ca3af;
+      background: #9ca3af;
+      box-shadow: 0 0 0 4px rgba(156, 163, 175, 0.2);
+    }
+
+    .maturity-stage[data-value="dont-know"].active .maturity-name {
       color: #6b7280;
     }
 
@@ -1825,7 +1835,15 @@
                 <div class="maturity-progress" id="maturityProgress"></div>
               </div>
               <div class="maturity-stages" id="maturityStages">
-                <div class="maturity-stage" data-value="not-started" data-index="0">
+                <div class="maturity-stage" data-value="dont-know" data-index="0">
+                  <div class="maturity-dot"></div>
+                  <div class="maturity-label">
+                    <span class="maturity-icon">🤷</span>
+                    <span class="maturity-name">I don't know</span>
+                    <span class="maturity-desc">Unsure of AI status</span>
+                  </div>
+                </div>
+                <div class="maturity-stage" data-value="not-started" data-index="1">
                   <div class="maturity-dot"></div>
                   <div class="maturity-label">
                     <span class="maturity-icon">🚫</span>
@@ -1833,7 +1851,7 @@
                     <span class="maturity-desc">No AI initiatives</span>
                   </div>
                 </div>
-                <div class="maturity-stage" data-value="exploring" data-index="1">
+                <div class="maturity-stage" data-value="exploring" data-index="2">
                   <div class="maturity-dot"></div>
                   <div class="maturity-label">
                     <span class="maturity-icon">🔍</span>
@@ -1841,7 +1859,7 @@
                     <span class="maturity-desc">Researching & learning</span>
                   </div>
                 </div>
-                <div class="maturity-stage" data-value="piloting" data-index="2">
+                <div class="maturity-stage" data-value="piloting" data-index="3">
                   <div class="maturity-dot"></div>
                   <div class="maturity-label">
                     <span class="maturity-icon">🧪</span>
@@ -1849,7 +1867,7 @@
                     <span class="maturity-desc">Running POCs</span>
                   </div>
                 </div>
-                <div class="maturity-stage" data-value="scaling" data-index="3">
+                <div class="maturity-stage" data-value="scaling" data-index="4">
                   <div class="maturity-dot"></div>
                   <div class="maturity-label">
                     <span class="maturity-icon">📈</span>
@@ -1857,20 +1875,12 @@
                     <span class="maturity-desc">Expanding solutions</span>
                   </div>
                 </div>
-                <div class="maturity-stage" data-value="optimizing" data-index="4">
+                <div class="maturity-stage" data-value="optimizing" data-index="5">
                   <div class="maturity-dot"></div>
                   <div class="maturity-label">
                     <span class="maturity-icon">⚡</span>
                     <span class="maturity-name">Optimizing</span>
                     <span class="maturity-desc">AI embedded</span>
-                  </div>
-                </div>
-                <div class="maturity-stage" data-value="dont-know" data-index="5">
-                  <div class="maturity-dot"></div>
-                  <div class="maturity-label">
-                    <span class="maturity-icon">🤷</span>
-                    <span class="maturity-name">I don't know</span>
-                    <span class="maturity-desc">Unsure of AI status</span>
                   </div>
                 </div>
               </div>
@@ -3213,23 +3223,27 @@
 
     function updateClientAIMaturityUI() {
       const stages = document.querySelectorAll('#maturityStages .maturity-stage');
-      const maturityValues = ['not-started', 'exploring', 'piloting', 'scaling', 'optimizing', 'dont-know'];
+      const maturityValues = ['dont-know', 'not-started', 'exploring', 'piloting', 'scaling', 'optimizing'];
       const selectedIndex = maturityValues.indexOf(clientAIMaturity);
-      
+
       stages.forEach((stage, index) => {
         stage.classList.remove('active', 'passed');
         if (index === selectedIndex) {
           stage.classList.add('active');
-        } else if (index < selectedIndex) {
+        } else if (selectedIndex > 0 && index > 0 && index < selectedIndex) {
           stage.classList.add('passed');
         }
       });
-      
-      // Update progress bar
+
+      // Update progress bar — "I don't know" (index 0) shows no progress
+      // Progress bar spans from "Not Started" (index 1) to "Optimizing" (index 5)
       const progress = document.getElementById('maturityProgress');
-      if (selectedIndex >= 0) {
-        const progressPercent = (selectedIndex / (maturityValues.length - 1)) * 100;
-        progress.style.width = `${progressPercent}%`;
+      const totalStages = maturityValues.length;
+      const startPct = (1 / (totalStages - 1)) * 100; // position of "Not Started"
+      progress.style.left = startPct + '%';
+      if (selectedIndex > 0) {
+        const endPct = (selectedIndex / (totalStages - 1)) * 100;
+        progress.style.width = (endPct - startPct) + '%';
       } else {
         progress.style.width = '0%';
       }
