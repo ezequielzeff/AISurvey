@@ -1419,6 +1419,78 @@
       color: #2BC6BF;
       font-size: 1.15rem;
     }
+    .role-usecase-section {
+      margin-bottom: 1.5rem;
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .role-usecase-header {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 1rem;
+    }
+    .usecase-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 0.4rem;
+      background: #fff;
+      font-size: 0.9rem;
+      color: #374151;
+    }
+    .usecase-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      color: #9ca3af;
+    }
+    .usecase-toggle-label.active {
+      color: #15803d;
+    }
+    .usecase-toggle-label input {
+      accent-color: #22c55e;
+    }
+    .role-ai-tools-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .role-ai-tool-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      background: #fff;
+      transition: all 0.15s;
+    }
+    .role-ai-tool-chip:hover {
+      border-color: #a5b4fc;
+    }
+    .role-ai-tool-chip.checked {
+      border-color: #284086;
+      background: #eef2ff;
+      color: #284086;
+      font-weight: 500;
+    }
+    .role-ai-tools-label {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body id="artifacts-component-root-html">
@@ -1927,15 +1999,15 @@
         </div>
       </div>
 
-      <!-- Step 3: AI Tool Usage by Role -->
+      <!-- Step 3: AI Use Cases by Role (merged Matrix + Use Cases) -->
       <div id="step3" class="step hidden">
         <div class="card-header">
           <div class="step-indicator">Step 3</div>
-          <h1 class="card-title">Who uses which AI tools?</h1>
-          <p class="card-subtitle">Check the boxes where a role uses a tool</p>
+          <h1 class="card-title">AI use cases by role</h1>
+          <p class="card-subtitle">Review the top AI use cases for each role and mark what you're already doing</p>
         </div>
-        <div class="card-body" id="matrixContainer">
-          <!-- Matrix will be populated by JS -->
+        <div class="card-body" id="mergedStep3Container">
+          <!-- Rendered by JS -->
         </div>
         <div class="card-footer">
           <button class="btn btn-secondary" id="step3Back">← Back</button>
@@ -1943,21 +2015,6 @@
         </div>
       </div>
 
-      <!-- Step 4: Use Cases / Account Needs -->
-      <div id="step4" class="step hidden">
-        <div class="card-header">
-          <div class="step-indicator">Step 4</div>
-          <h1 class="card-title">What are your AI use case needs?</h1>
-          <p class="card-subtitle">Move use cases between "Need" and "Already Doing" columns</p>
-        </div>
-        <div class="card-body" id="useCasesContainer">
-          <!-- Use cases will be populated by JS -->
-        </div>
-        <div class="card-footer">
-          <button class="btn btn-secondary" id="step4Back">← Back</button>
-          <button class="btn btn-primary" id="step4Next">Continue →</button>
-        </div>
-      </div>
 
       <!-- Step 7: Limiting Factors -->
       <div id="step7" class="step hidden">
@@ -2284,7 +2341,7 @@
     // Render flags
     let toolsRendered = false;
     let engagementRendered = false;
-    let useCasesRendered = false;
+
     let useCasesInitialized = false;
     let clientAIRendered = false;
 
@@ -2433,7 +2490,6 @@
 
         // Reset render flags so steps re-initialize
         toolsRendered = false;
-        useCasesRendered = false;
         useCasesInitialized = false;
         engagementRendered = false;
         clientAIRendered = false;
@@ -2680,16 +2736,12 @@
       }
       
       // Navigate to appropriate next step
-      const hasAITools = selectedTools['ai'] && selectedTools['ai'].size > 0 && 
-                         !selectedTools['ai'].has('dont-know') && !selectedTools['ai'].has('not-applicable');
       const hasRoles = selectedRoles.size > 0;
-      
-      if (hasAITools && hasRoles) {
-        goToStep(3); // Go to Matrix
-      } else if (hasRoles) {
-        goToStep(4); // Skip Matrix, go to Use Cases
+
+      if (hasRoles) {
+        goToStep(3); // Go to merged AI Use Cases by Role
       } else {
-        goToStep(5); // Skip Matrix and Use Cases, go to Engagement
+        goToStep(5); // Skip to Engagement
       }
     }
 
@@ -2785,7 +2837,7 @@
                          !selectedTools['ai'].has('dont-know') && !selectedTools['ai'].has('not-applicable');
       const hasRoles = selectedRoles.size > 0;
       // Steps: 1-Roles, 2-Tools, 3-Matrix(conditional), 4-UseCases(conditional), 5-Engagement, 6-ClientAI, 7-LimitingFactors
-      const totalSteps = (hasAITools && hasRoles) ? 7 : (hasRoles ? 6 : 5);
+      const totalSteps = hasRoles ? 6 : 5;
       
       // Show/hide progress container (hide for welcome page)
       const progressContainer = document.querySelector('.progress-container');
@@ -2796,7 +2848,7 @@
         // Update progress
         const progress = (step / totalSteps) * 100;
         document.getElementById('progressFill').style.width = `${progress}%`;
-        const stepLabels = {0:'Welcome',1:'Roles',2:'Tools',3:'AI Matrix',4:'Use Cases',5:'Engagement',6:'Client AI',7:'Limiting Factors',8:'Review'};
+        const stepLabels = {0:'Welcome',1:'Roles',2:'Tools',3:'AI Use Cases',5:'Engagement',6:'Client AI',7:'Limiting Factors',8:'Review'};
         document.getElementById('progressText').textContent = `Step ${step} of ${totalSteps} — ${stepLabels[step] || ''}`;
       }
       
@@ -2817,10 +2869,7 @@
         renderTools();
       }
       if (step === 3) {
-        renderMatrix();
-      }
-      if (step === 4) {
-        renderUseCases();
+        renderMergedStep3();
       }
       if (step === 5) {
         renderEngagement();
@@ -3264,56 +3313,111 @@
       return aiTools;
     }
 
-    function renderMatrix() {
-      const container = document.getElementById('matrixContainer');
-      const aiTools = getSelectedAITools();
+    function getTopUseCasesForRole(roleId, limit) {
+      const items = [];
+      for (const cat of useCases) {
+        if (cat.roles.includes(roleId)) {
+          for (const item of cat.items) {
+            items.push(item);
+            if (items.length >= limit) return items;
+          }
+        }
+      }
+      return items;
+    }
+
+    function renderMergedStep3() {
+      const container = document.getElementById('mergedStep3Container');
       const selectedRolesList = Array.from(selectedRoles);
-      
-      if (aiTools.length === 0 || selectedRolesList.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #6b7280;">No AI tools or roles selected. Go back to make selections.</p>';
+      const hasAITools = selectedTools['ai'] && selectedTools['ai'].size > 0 &&
+                         !selectedTools['ai'].has('dont-know') && !selectedTools['ai'].has('not-applicable');
+      const aiTools = hasAITools ? getSelectedAITools() : [];
+
+      if (selectedRolesList.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#6b7280;">No roles selected. Go back to select roles.</p>';
         return;
       }
-      
-      // Build the matrix table - Roles as rows, Tools as columns
-      let html = '<div class="matrix-container"><table class="matrix-table">';
-      
-      // Header row with tool names
-      html += '<thead><tr><th class="matrix-corner">Role</th>';
-      aiTools.forEach(tool => {
-        html += `<th class="tool-column-header">${tool.name}</th>`;
-      });
-      html += '</tr></thead>';
-      
-      // Body rows with roles
-      html += '<tbody>';
+
+      // Initialize: add ALL matching use cases to useCaseNeeds on first visit
+      if (!useCasesInitialized) {
+        useCases.forEach(cat => {
+          if (cat.roles.some(r => selectedRoles.has(r))) {
+            cat.items.forEach(item => {
+              if (!useCaseDoing.has(item.id)) {
+                useCaseNeeds.add(item.id);
+              }
+            });
+          }
+        });
+        useCasesInitialized = true;
+      }
+
+      let html = '';
+
       selectedRolesList.forEach(roleId => {
         const role = roles.find(r => r.id === roleId);
-        html += `<tr><th class="role-row-header">${role.name}</th>`;
-        aiTools.forEach(tool => {
-          const key = `${tool.id}-${roleId}`;
-          const isChecked = toolRoleMatrix[key] || false;
-          html += `<td>
-            <input type="checkbox" 
-              class="matrix-checkbox" 
-              data-tool="${tool.id}" 
-              data-role="${roleId}"
-              ${isChecked ? 'checked' : ''}
-            >
-          </td>`;
+        const topUseCases = getTopUseCasesForRole(roleId, 10);
+
+        html += `<div class="role-usecase-section">`;
+        html += `<div class="role-usecase-header">${role.icon} ${role.name}</div>`;
+
+        // AI Tool chips for this role
+        if (aiTools.length > 0) {
+          html += `<div class="role-ai-tools-label">AI tools used by this role:</div>`;
+          html += `<div class="role-ai-tools-row">`;
+          aiTools.forEach(tool => {
+            const key = `${tool.id}-${roleId}`;
+            const isChecked = toolRoleMatrix[key] || false;
+            html += `<div class="role-ai-tool-chip ${isChecked ? 'checked' : ''}" data-tool="${tool.id}" data-role="${roleId}">
+              <span>${tool.name}</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+
+        // Top 10 use cases with "Already using" toggle
+        topUseCases.forEach(item => {
+          const isDoing = useCaseDoing.has(item.id);
+          html += `<div class="usecase-toggle-row">
+            <span>${item.name}</span>
+            <label class="usecase-toggle-label ${isDoing ? 'active' : ''}">
+              <input type="checkbox" class="usecase-doing-toggle" data-usecase-id="${item.id}" ${isDoing ? 'checked' : ''}>
+              Already using
+            </label>
+          </div>`;
         });
-        html += '</tr>';
+
+        html += `</div>`;
       });
-      html += '</tbody></table></div>';
-      
+
       container.innerHTML = html;
-      
-      // Add checkbox event listeners
-      container.querySelectorAll('.matrix-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-          const toolId = e.target.dataset.tool;
-          const roleId = e.target.dataset.role;
+
+      // Event listeners for AI tool chips (toggle on click)
+      container.querySelectorAll('.role-ai-tool-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const toolId = chip.dataset.tool;
+          const roleId = chip.dataset.role;
           const key = `${toolId}-${roleId}`;
-          toolRoleMatrix[key] = e.target.checked;
+          toolRoleMatrix[key] = !toolRoleMatrix[key];
+          chip.classList.toggle('checked', toolRoleMatrix[key]);
+          autoSave();
+        });
+      });
+
+      // Event listeners for use case toggles
+      container.querySelectorAll('.usecase-doing-toggle').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          const id = e.target.dataset.usecaseId;
+          if (e.target.checked) {
+            useCaseNeeds.delete(id);
+            useCaseDoing.add(id);
+          } else {
+            useCaseDoing.delete(id);
+            useCaseNeeds.add(id);
+          }
+          // Update label styling
+          const label = e.target.closest('.usecase-toggle-label');
+          label.classList.toggle('active', e.target.checked);
           autoSave();
         });
       });
@@ -3479,7 +3583,7 @@
           return null;
         };
         html += `<div class="review-section">
-          <div class="review-section-header" onclick="goToStep(4)">
+          <div class="review-section-header" onclick="goToStep(3)">
             <span class="review-section-title">📋 AI Use Cases</span>
             <button class="review-edit-btn">Edit</button>
           </div>
@@ -3597,26 +3701,13 @@
       
       // Step 3: Matrix (conditional)
       document.getElementById('step3Back').addEventListener('click', () => goToStep(2));
-      document.getElementById('step3Next').addEventListener('click', () => goToStep(4)); // Go to Use Cases
-      
-      // Step 4: Use Cases (conditional)
-      document.getElementById('step4Back').addEventListener('click', () => {
-        const hasAITools = selectedTools['ai'] && selectedTools['ai'].size > 0 && 
-                           !selectedTools['ai'].has('dont-know') && !selectedTools['ai'].has('not-applicable');
-        const hasRoles = selectedRoles.size > 0;
-        if (hasAITools && hasRoles) {
-          goToStep(3); // Go back to Matrix
-        } else {
-          goToStep(2); // Go back to Tools
-        }
-      });
-      document.getElementById('step4Next').addEventListener('click', () => goToStep(5)); // Go to Engagement
+      document.getElementById('step3Next').addEventListener('click', () => goToStep(5)); // Go to Engagement
       
       // Step 5: Engagement
       document.getElementById('step5Back').addEventListener('click', () => {
         const hasRoles = selectedRoles.size > 0;
         if (hasRoles) {
-          goToStep(4); // Go back to Use Cases
+          goToStep(3); // Go back to AI Use Cases by Role
         } else {
           goToStep(2); // Go back to Tools
         }
@@ -3656,194 +3747,6 @@
       // Step 8: Review
       document.getElementById('step8Back').addEventListener('click', () => goToStep(7));
       document.getElementById('downloadAssessmentReview').addEventListener('click', () => downloadAssessment());
-    }
-
-    function renderUseCases() {
-      const container = document.getElementById('useCasesContainer');
-      
-      // Filter use cases by selected roles
-      const visibleCategories = useCases.filter(cat => {
-        return cat.roles.some(role => selectedRoles.has(role));
-      });
-
-      if (visibleCategories.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #6b7280;">No use cases available for the selected roles.</p>';
-        return;
-      }
-
-      // On first render, add all use cases to Need column
-      if (!useCasesInitialized) {
-        visibleCategories.forEach(cat => {
-          cat.items.forEach(item => {
-            if (!useCaseDoing.has(item.id)) {
-              useCaseNeeds.add(item.id);
-            }
-          });
-        });
-        useCasesInitialized = true;
-      }
-
-      const bannerHtml = `<div style="background:rgba(83,207,248,0.1);border-left:4px solid #284086;padding:0.75rem 1rem;margin-bottom:1.5rem;border-radius:4px;color:#284086;font-size:0.9rem;">
-  💡 All relevant use cases start in the "Need" column. Click to move items to "Already Doing" or click × to remove irrelevant ones.
-</div>`;
-
-      container.innerHTML = bannerHtml + visibleCategories.map(cat => {
-        const categoryKey = cat.category.replace(/\s+/g, '-').toLowerCase();
-        
-        // Get items for each column
-        const needItems = cat.items.filter(item => useCaseNeeds.has(item.id));
-        const doingItems = cat.items.filter(item => useCaseDoing.has(item.id));
-        const customNeed = (customUseCases[categoryKey] || []).filter(item => useCaseNeeds.has(item.id));
-        const customDoing = (customUseCases[categoryKey] || []).filter(item => useCaseDoing.has(item.id));
-        
-        return `
-          <div class="usecase-category" data-category="${categoryKey}">
-            <div class="usecase-category-header">
-              <div class="usecase-category-icon">${cat.icon}</div>
-              <div class="usecase-category-name">${cat.category}</div>
-            </div>
-            <div class="usecase-columns">
-              <div class="usecase-column need" data-column="need">
-                <div class="usecase-column-header">📋 Need</div>
-                <div class="usecase-column-items">
-                  ${needItems.length === 0 && customNeed.length === 0 ? '<div class="usecase-empty">No items - add custom use cases below</div>' : ''}
-                  ${needItems.map(item => `
-                    <div class="usecase-card" data-usecase-id="${item.id}" data-status="need">
-                      <button class="usecase-delete-btn" data-usecase-id="${item.id}" title="Remove">×</button>
-                      <div class="usecase-name">${item.name}</div>
-                      <div class="usecase-move-btn" title="Move to Already Doing">→</div>
-                    </div>
-                  `).join('')}
-                  ${customNeed.map(item => `
-                    <div class="usecase-card" data-usecase-id="${item.id}" data-status="need" data-custom="true">
-                      <button class="usecase-delete-btn" data-usecase-id="${item.id}" title="Remove">×</button>
-                      <div class="usecase-name">${item.name}</div>
-                      <div class="usecase-move-btn" title="Move to Already Doing">→</div>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-              <div class="usecase-column doing" data-column="doing">
-                <div class="usecase-column-header">✅ Already Doing</div>
-                <div class="usecase-column-items">
-                  ${doingItems.length === 0 && customDoing.length === 0 ? '<div class="usecase-empty">Move items here when already addressed</div>' : ''}
-                  ${doingItems.map(item => `
-                    <div class="usecase-card" data-usecase-id="${item.id}" data-status="doing">
-                      <button class="usecase-delete-btn" data-usecase-id="${item.id}" title="Remove">×</button>
-                      <div class="usecase-name">${item.name}</div>
-                      <div class="usecase-move-btn" title="Move to Need">←</div>
-                    </div>
-                  `).join('')}
-                  ${customDoing.map(item => `
-                    <div class="usecase-card" data-usecase-id="${item.id}" data-status="doing" data-custom="true">
-                      <button class="usecase-delete-btn" data-usecase-id="${item.id}" title="Remove">×</button>
-                      <div class="usecase-name">${item.name}</div>
-                      <div class="usecase-move-btn" title="Move to Need">←</div>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            </div>
-            <div class="usecase-add-input">
-              <input type="text" placeholder="Add use case..." data-category="${categoryKey}">
-              <button type="button" data-category="${categoryKey}" class="add-usecase-btn">Add</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      // Setup event delegation (only once)
-      if (!useCasesRendered) {
-        container.addEventListener('click', (e) => {
-          // Handle delete button click
-          const deleteBtn = e.target.closest('.usecase-delete-btn');
-          if (deleteBtn) {
-            e.stopPropagation();
-            const usecaseId = deleteBtn.dataset.usecaseId;
-            if (usecaseId) {
-              deleteUseCase(usecaseId);
-            }
-            return;
-          }
-          
-          // Handle clicking on move button or card (to move between columns)
-          const moveBtn = e.target.closest('.usecase-move-btn');
-          if (moveBtn) {
-            const usecaseCard = moveBtn.closest('.usecase-card');
-            if (usecaseCard) {
-              const usecaseId = usecaseCard.dataset.usecaseId;
-              const currentStatus = usecaseCard.dataset.status;
-              if (usecaseId && currentStatus) {
-                moveUseCase(usecaseId, currentStatus);
-              }
-            }
-            return;
-          }
-          
-          // Handle add custom use case button
-          const addBtn = e.target.closest('.add-usecase-btn');
-          if (addBtn) {
-            const categoryKey = addBtn.dataset.category;
-            addCustomUseCase(categoryKey);
-            return;
-          }
-        });
-
-        container.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
-            const categoryKey = e.target.dataset.category;
-            if (categoryKey) {
-              addCustomUseCase(categoryKey);
-            }
-          }
-        });
-        
-        useCasesRendered = true;
-      }
-    }
-
-    function deleteUseCase(usecaseId) {
-      useCaseNeeds.delete(usecaseId);
-      useCaseDoing.delete(usecaseId);
-      // Also remove from custom use cases if it's a custom one
-      Object.keys(customUseCases).forEach(catKey => {
-        customUseCases[catKey] = customUseCases[catKey].filter(item => item.id !== usecaseId);
-      });
-      renderUseCases();
-      autoSave();
-    }
-
-    function moveUseCase(usecaseId, currentStatus) {
-      if (currentStatus === 'need') {
-        useCaseNeeds.delete(usecaseId);
-        useCaseDoing.add(usecaseId);
-      } else {
-        useCaseDoing.delete(usecaseId);
-        useCaseNeeds.add(usecaseId);
-      }
-      renderUseCases();
-      autoSave();
-    }
-
-    function addCustomUseCase(categoryKey) {
-      const container = document.getElementById('useCasesContainer');
-      const input = container.querySelector(`input[data-category="${categoryKey}"]`);
-      const value = input.value.trim();
-      
-      if (!value) return;
-      
-      const customId = `custom-usecase-${Date.now()}`;
-      
-      if (!customUseCases[categoryKey]) {
-        customUseCases[categoryKey] = [];
-      }
-      
-      customUseCases[categoryKey].push({ id: customId, name: value });
-      useCaseNeeds.add(customId);
-      input.value = '';
-      
-      renderUseCases();
-      autoSave();
     }
 
     function generateJSON() {
