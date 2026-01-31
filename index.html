@@ -1865,6 +1865,14 @@
                     <span class="maturity-desc">AI embedded</span>
                   </div>
                 </div>
+                <div class="maturity-stage" data-value="dont-know" data-index="5">
+                  <div class="maturity-dot"></div>
+                  <div class="maturity-label">
+                    <span class="maturity-icon">🤷</span>
+                    <span class="maturity-name">I don't know</span>
+                    <span class="maturity-desc">Unsure of AI status</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1926,6 +1934,11 @@
                 <div class="option-card-title">High Priority</div>
                 <div class="option-card-desc">Executive sponsorship</div>
               </div>
+              <div class="option-card" data-value="dont-know">
+                <div class="option-card-icon">🤷</div>
+                <div class="option-card-title">I Don't Know</div>
+                <div class="option-card-desc">Unsure of AI priority</div>
+              </div>
             </div>
           </div>
 
@@ -1952,6 +1965,11 @@
                 <div class="option-card-icon">✅</div>
                 <div class="option-card-title">Established</div>
                 <div class="option-card-desc">Formal AI governance</div>
+              </div>
+              <div class="option-card" data-value="dont-know">
+                <div class="option-card-icon">🤷</div>
+                <div class="option-card-title">I Don't Know</div>
+                <div class="option-card-desc">Unsure of governance</div>
               </div>
             </div>
           </div>
@@ -1989,6 +2007,11 @@
                 <div class="option-card-icon">🏗️</div>
                 <div class="option-card-title">Infrastructure</div>
                 <div class="option-card-desc">Technology readiness</div>
+              </div>
+              <div class="option-card" data-value="dont-know">
+                <div class="option-card-icon">🤷</div>
+                <div class="option-card-title">I Don't Know</div>
+                <div class="option-card-desc">Unsure of challenges</div>
               </div>
             </div>
           </div>
@@ -3069,7 +3092,8 @@
         'exploring': 'Exploring',
         'piloting': 'Piloting',
         'scaling': 'Scaling',
-        'optimizing': 'Optimizing'
+        'optimizing': 'Optimizing',
+        'dont-know': "I Don't Know"
       },
       usage: {
         'not-using': 'Not Using AI',
@@ -3082,13 +3106,15 @@
         'not-priority': 'Not a Priority',
         'low': 'Low Priority',
         'medium': 'Medium Priority',
-        'high': 'High Priority'
+        'high': 'High Priority',
+        'dont-know': "I Don't Know"
       },
       governance: {
         'none': 'No Governance',
         'informal': 'Informal',
         'developing': 'Developing',
-        'established': 'Established'
+        'established': 'Established',
+        'dont-know': "I Don't Know"
       },
       challenge: {
         'unclear-roi': 'Unclear ROI',
@@ -3096,7 +3122,8 @@
         'data': 'Data Issues',
         'security': 'Security/Compliance',
         'budget': 'Budget/Buy-in',
-        'infrastructure': 'Infrastructure'
+        'infrastructure': 'Infrastructure',
+        'dont-know': "I Don't Know"
       }
     };
 
@@ -3180,7 +3207,7 @@
 
     function updateClientAIMaturityUI() {
       const stages = document.querySelectorAll('#maturityStages .maturity-stage');
-      const maturityValues = ['not-started', 'exploring', 'piloting', 'scaling', 'optimizing'];
+      const maturityValues = ['not-started', 'exploring', 'piloting', 'scaling', 'optimizing', 'dont-know'];
       const selectedIndex = maturityValues.indexOf(clientAIMaturity);
       
       stages.forEach((stage, index) => {
