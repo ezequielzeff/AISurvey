@@ -1579,7 +1579,7 @@
       <!-- Step 1: Roles -->
       <div id="step1" class="step hidden">
         <div class="card-header">
-          <div class="step-indicator">Step 1</div>
+          <div class="step-indicator">Step 3</div>
           <h1 class="card-title">Tell us about your project</h1>
           <p class="card-subtitle">Select the team roles involved in this project</p>
         </div>
@@ -1643,6 +1643,7 @@
           <div class="validation-error" id="step1Error" role="alert"></div>
         </div>
         <div class="card-footer">
+          <button class="btn btn-secondary" id="step1Back">← Back</button>
           <div class="selection-count" id="roleCount">1 roles selected</div>
           <button class="btn btn-primary" id="step1Next">Continue →</button>
         </div>
@@ -1651,7 +1652,7 @@
       <!-- Step 2: Tools & Infrastructure -->
       <div id="step2" class="step hidden">
         <div class="card-header">
-          <div class="step-indicator">Step 2</div>
+          <div class="step-indicator">Step 4</div>
           <h1 class="card-title">What tools and infrastructure does your team use?</h1>
           <p class="card-subtitle">Select all tools and platforms used in your project</p>
         </div>
@@ -1667,7 +1668,7 @@
       <!-- Step 5: Customer Engagement -->
       <div id="step5" class="step hidden">
         <div class="card-header">
-          <div class="step-indicator">Step 5</div>
+          <div class="step-indicator">Step 1</div>
           <h1 class="card-title">What's your engagement model?</h1>
           <p class="card-subtitle">Define your relationship and responsibilities with the customer</p>
         </div>
@@ -1811,7 +1812,7 @@
       <!-- Step 6: Client AI Landscape -->
       <div id="step6" class="step hidden">
         <div class="card-header">
-          <div class="step-indicator">Step 6</div>
+          <div class="step-indicator">Step 2</div>
           <h1 class="card-title">What is the client's AI landscape?</h1>
           <p class="card-subtitle">Help us understand where the client stands with AI</p>
         </div>
@@ -2002,7 +2003,7 @@
       <!-- Step 3: AI Use Cases by Role (merged Matrix + Use Cases) -->
       <div id="step3" class="step hidden">
         <div class="card-header">
-          <div class="step-indicator">Step 3</div>
+          <div class="step-indicator">Step 5</div>
           <h1 class="card-title">AI use cases by role</h1>
           <p class="card-subtitle">Review the top AI use cases for each role and mark what you're already doing</p>
         </div>
@@ -2019,7 +2020,7 @@
       <!-- Step 7: Limiting Factors -->
       <div id="step7" class="step hidden">
         <div class="card-header">
-          <div class="step-indicator">Step 7</div>
+          <div class="step-indicator">Step 6</div>
           <h1 class="card-title">What are the main factors limiting your ability to adopt or use AI more effectively in your current work?</h1>
           <p class="card-subtitle">Select up to 2 options</p>
         </div>
@@ -2556,7 +2557,7 @@
         document.getElementById('accountNameInput').value = accountName;
         // Restore to saved step (remap removed step 4 to step 3)
         if (currentStep === 4) currentStep = 3;
-        goToStep(currentStep > 0 ? currentStep : 1);
+        goToStep(currentStep > 0 ? currentStep : 5);
       } else {
         goToStep(0); // Start at welcome page
       }
@@ -2742,7 +2743,7 @@
       if (hasRoles) {
         goToStep(3); // Go to merged AI Use Cases by Role
       } else {
-        goToStep(5); // Skip to Engagement
+        goToStep(7); // Skip to Limiting Factors (Engagement already done)
       }
     }
 
@@ -2835,26 +2836,26 @@
       if (step === 4) step = 3;
       currentStep = step;
       
-      // Determine total steps based on AI tool and role selection
-      const hasAITools = selectedTools['ai'] && selectedTools['ai'].size > 0 && 
-                         !selectedTools['ai'].has('dont-know') && !selectedTools['ai'].has('not-applicable');
+      // Display order mapping (internal IDs in display sequence)
       const hasRoles = selectedRoles.size > 0;
-      // Steps: 1-Roles, 2-Tools, 3-Matrix(conditional), 4-UseCases(conditional), 5-Engagement, 6-ClientAI, 7-LimitingFactors
-      const totalSteps = hasRoles ? 6 : 5;
-      
+      const activeOrder = hasRoles ? [5, 6, 1, 2, 3, 7, 8] : [5, 6, 1, 2, 7, 8];
+      const stepLabels = {0:'Welcome', 5:'Engagement', 6:'Client AI', 1:'Roles', 2:'Tools', 3:'AI Use Cases', 7:'Limiting Factors', 8:'Review'};
+      const totalDisplaySteps = activeOrder.length - 1; // exclude review from count
+
       // Show/hide progress container (hide for welcome page)
       const progressContainer = document.querySelector('.progress-container');
       if (step === 0) {
         progressContainer.style.display = 'none';
       } else {
         progressContainer.style.display = 'block';
-        // Update progress
-        const progress = (step / totalSteps) * 100;
+        const displayIdx = activeOrder.indexOf(step);
+        const displayNum = displayIdx + 1;
+        const progress = step === 8 ? 100 : (displayNum / totalDisplaySteps) * 100;
         document.getElementById('progressFill').style.width = `${progress}%`;
-        const stepLabels = {0:'Welcome',1:'Roles',2:'Tools',3:'AI Use Cases',5:'Engagement',6:'Client AI',7:'Limiting Factors',8:'Review'};
-        document.getElementById('progressText').textContent = `Step ${step} of ${totalSteps} — ${stepLabels[step] || ''}`;
+        document.getElementById('progressText').textContent =
+          step === 8 ? 'Review' : `Step ${displayNum} of ${totalDisplaySteps} — ${stepLabels[step] || ''}`;
       }
-      
+
       // Show/hide steps
       document.querySelectorAll('.step').forEach(el => el.classList.add('hidden'));
       document.getElementById(`step${step}`).classList.remove('hidden');
@@ -3694,28 +3695,12 @@
     }
 
     function setupEventListeners() {
-      // Welcome page
-      document.getElementById('startAssessment').addEventListener('click', () => { if (validateStep(0)) goToStep(1); });
-      
-      // Step 1: Roles
-      document.getElementById('step1Next').addEventListener('click', () => { if (validateStep(1)) goToStep(2); });
-      document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
-      document.getElementById('step2Next').addEventListener('click', () => handleStep2Continue());
-      
-      // Step 3: Matrix (conditional)
-      document.getElementById('step3Back').addEventListener('click', () => goToStep(2));
-      document.getElementById('step3Next').addEventListener('click', () => goToStep(5)); // Go to Engagement
-      
-      // Step 5: Engagement
-      document.getElementById('step5Back').addEventListener('click', () => {
-        const hasRoles = selectedRoles.size > 0;
-        if (hasRoles) {
-          goToStep(3); // Go back to AI Use Cases by Role
-        } else {
-          goToStep(2); // Go back to Tools
-        }
-      });
-      document.getElementById('step5Next').addEventListener('click', () => { if (validateStep(5)) goToStep(6); }); // Go to Client AI
+      // Welcome page → Engagement (step5)
+      document.getElementById('startAssessment').addEventListener('click', () => { if (validateStep(0)) goToStep(5); });
+
+      // Step 5 (Engagement) — displayed as Step 1
+      document.getElementById('step5Back').addEventListener('click', () => goToStep(0));
+      document.getElementById('step5Next').addEventListener('click', () => { if (validateStep(5)) goToStep(6); });
       // Service Revenue & AI Investment
       document.getElementById('serviceRevenueInput').addEventListener('input', (e) => {
         serviceRevenue = parseFloat(e.target.value) || 0;
@@ -3728,12 +3713,31 @@
         autoSave();
       });
 
-      // Step 6: Client AI Landscape
+      // Step 6 (Client AI) — displayed as Step 2
       document.getElementById('step6Back').addEventListener('click', () => goToStep(5));
-      document.getElementById('step6Next').addEventListener('click', () => { if (validateStep(6)) goToStep(7); }); // Go to Limiting Factors
-      
-      // Step 7: Limiting Factors
-      document.getElementById('step7Back').addEventListener('click', () => goToStep(6));
+      document.getElementById('step6Next').addEventListener('click', () => { if (validateStep(6)) goToStep(1); });
+
+      // Step 1 (Roles) — displayed as Step 3
+      document.getElementById('step1Back').addEventListener('click', () => goToStep(6));
+      document.getElementById('step1Next').addEventListener('click', () => { if (validateStep(1)) goToStep(2); });
+
+      // Step 2 (Tools) — displayed as Step 4
+      document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
+      document.getElementById('step2Next').addEventListener('click', () => handleStep2Continue());
+
+      // Step 3 (AI Use Cases by Role) — displayed as Step 5
+      document.getElementById('step3Back').addEventListener('click', () => goToStep(2));
+      document.getElementById('step3Next').addEventListener('click', () => goToStep(7));
+
+      // Step 7 (Limiting Factors) — displayed as Step 6
+      document.getElementById('step7Back').addEventListener('click', () => {
+        const hasRoles = selectedRoles.size > 0;
+        if (hasRoles) {
+          goToStep(3);
+        } else {
+          goToStep(2);
+        }
+      });
       document.getElementById('step7Next').addEventListener('click', () => { if (validateStep(7)) goToStep(8); });
 
       // Step 7: Limiting Factors click handler
@@ -3747,7 +3751,7 @@
         autoSave();
       });
 
-      // Step 8: Review
+      // Step 8 (Review)
       document.getElementById('step8Back').addEventListener('click', () => goToStep(7));
       document.getElementById('downloadAssessmentReview').addEventListener('click', () => downloadAssessment());
     }
