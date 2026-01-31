@@ -2554,7 +2554,8 @@
         updateRoleUI();
         // Restore account name
         document.getElementById('accountNameInput').value = accountName;
-        // Restore to saved step (but at least step 1 if they had progress)
+        // Restore to saved step (remap removed step 4 to step 3)
+        if (currentStep === 4) currentStep = 3;
         goToStep(currentStep > 0 ? currentStep : 1);
       } else {
         goToStep(0); // Start at welcome page
@@ -2830,6 +2831,8 @@
     }
 
     function goToStep(step) {
+      // Step 4 was removed (merged into step 3) — remap for backward compat
+      if (step === 4) step = 3;
       currentStep = step;
       
       // Determine total steps based on AI tool and role selection
