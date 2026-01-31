@@ -1882,6 +1882,11 @@
             <div class="engagement-label">How is the client currently using AI?</div>
             <div class="engagement-hint">Select all that apply</div>
             <div class="option-cards client-ai-options" id="clientUsageOptions">
+              <div class="option-card" data-value="dont-know">
+                <div class="option-card-icon">🤷</div>
+                <div class="option-card-title">I Don't Know</div>
+                <div class="option-card-desc">Unsure of AI usage</div>
+              </div>
               <div class="option-card" data-value="not-using">
                 <div class="option-card-icon">❌</div>
                 <div class="option-card-title">Not Using AI</div>
@@ -1914,6 +1919,11 @@
           <div class="engagement-section">
             <div class="engagement-label">Is AI a strategic priority for the client?</div>
             <div class="option-cards client-ai-options" id="clientPriorityOptions">
+              <div class="option-card" data-value="dont-know">
+                <div class="option-card-icon">🤷</div>
+                <div class="option-card-title">I Don't Know</div>
+                <div class="option-card-desc">Unsure of AI priority</div>
+              </div>
               <div class="option-card" data-value="not-priority">
                 <div class="option-card-icon">➖</div>
                 <div class="option-card-title">Not a Priority</div>
@@ -1934,11 +1944,6 @@
                 <div class="option-card-title">High Priority</div>
                 <div class="option-card-desc">Executive sponsorship</div>
               </div>
-              <div class="option-card" data-value="dont-know">
-                <div class="option-card-icon">🤷</div>
-                <div class="option-card-title">I Don't Know</div>
-                <div class="option-card-desc">Unsure of AI priority</div>
-              </div>
             </div>
           </div>
 
@@ -1946,6 +1951,11 @@
           <div class="engagement-section">
             <div class="engagement-label">Does the client have AI governance in place?</div>
             <div class="option-cards client-ai-options" id="clientGovernanceOptions">
+              <div class="option-card" data-value="dont-know">
+                <div class="option-card-icon">🤷</div>
+                <div class="option-card-title">I Don't Know</div>
+                <div class="option-card-desc">Unsure of governance</div>
+              </div>
               <div class="option-card" data-value="none">
                 <div class="option-card-icon">🚫</div>
                 <div class="option-card-title">No Governance</div>
@@ -1966,11 +1976,6 @@
                 <div class="option-card-title">Established</div>
                 <div class="option-card-desc">Formal AI governance</div>
               </div>
-              <div class="option-card" data-value="dont-know">
-                <div class="option-card-icon">🤷</div>
-                <div class="option-card-title">I Don't Know</div>
-                <div class="option-card-desc">Unsure of governance</div>
-              </div>
             </div>
           </div>
 
@@ -1978,6 +1983,11 @@
           <div class="engagement-section">
             <div class="engagement-label">What is the client's biggest AI challenge?</div>
             <div class="option-cards client-ai-options" id="clientChallengeOptions">
+              <div class="option-card" data-value="dont-know">
+                <div class="option-card-icon">🤷</div>
+                <div class="option-card-title">I Don't Know</div>
+                <div class="option-card-desc">Unsure of challenges</div>
+              </div>
               <div class="option-card" data-value="unclear-roi">
                 <div class="option-card-icon">❓</div>
                 <div class="option-card-title">Unclear ROI</div>
@@ -2007,11 +2017,6 @@
                 <div class="option-card-icon">🏗️</div>
                 <div class="option-card-title">Infrastructure</div>
                 <div class="option-card-desc">Technology readiness</div>
-              </div>
-              <div class="option-card" data-value="dont-know">
-                <div class="option-card-icon">🤷</div>
-                <div class="option-card-title">I Don't Know</div>
-                <div class="option-card-desc">Unsure of challenges</div>
               </div>
             </div>
           </div>
@@ -3096,6 +3101,7 @@
         'dont-know': "I Don't Know"
       },
       usage: {
+        'dont-know': "I Don't Know",
         'not-using': 'Not Using AI',
         'internal-tools': 'Internal Tools',
         'customer-facing': 'Customer-Facing',
@@ -3150,20 +3156,20 @@
           const card = e.target.closest('.option-card');
           if (card) {
             const value = card.dataset.value;
-            if (value === 'not-using') {
-              // "Not using" is exclusive
+            if (value === 'not-using' || value === 'dont-know') {
+              // Exclusive options
               clientAIUsage.clear();
-              clientAIUsage.add('not-using');
+              clientAIUsage.add(value);
             } else {
               clientAIUsage.delete('not-using');
+              clientAIUsage.delete('dont-know');
               if (clientAIUsage.has(value)) {
                 clientAIUsage.delete(value);
               } else {
                 clientAIUsage.add(value);
               }
-              // If nothing selected, default to not-using
               if (clientAIUsage.size === 0) {
-                clientAIUsage.add('not-using');
+                clientAIUsage.add('dont-know');
               }
             }
             updateClientAIUsageUI();
@@ -3689,9 +3695,11 @@
       if (clientAIPriority) html += `<strong>Priority:</strong> ${clientAILabels.priority[clientAIPriority]}<br>`;
       if (clientAIGovernance) html += `<strong>Governance:</strong> ${clientAILabels.governance[clientAIGovernance]}<br>`;
       if (clientAIChallenge) html += `<strong>Challenge:</strong> ${clientAILabels.challenge[clientAIChallenge]}<br>`;
-      const usageItems = Array.from(clientAIUsage).filter(id => id !== 'not-using');
+      const usageItems = Array.from(clientAIUsage).filter(id => id !== 'not-using' && id !== 'dont-know');
       if (usageItems.length > 0) {
         html += '<strong>Usage:</strong> ' + usageItems.map(id => clientAILabels.usage[id]).join(', ');
+      } else if (clientAIUsage.has('dont-know')) {
+        html += "<strong>Usage:</strong> I Don't Know";
       } else if (clientAIUsage.has('not-using')) {
         html += '<strong>Usage:</strong> Not using AI';
       }
@@ -4038,13 +4046,15 @@
         md += `**AI Maturity Stage:** ${clientAILabels.maturity[clientAIMaturity]}\n\n`;
       }
       
-      const usageItems = Array.from(clientAIUsage).filter(id => id !== 'not-using');
+      const usageItems = Array.from(clientAIUsage).filter(id => id !== 'not-using' && id !== 'dont-know');
       if (usageItems.length > 0) {
         md += `**Current AI Usage:**\n`;
         usageItems.forEach(id => {
           md += `- ${clientAILabels.usage[id]}\n`;
         });
         md += `\n`;
+      } else if (clientAIUsage.has('dont-know')) {
+        md += `**Current AI Usage:** I Don't Know\n\n`;
       } else if (clientAIUsage.has('not-using')) {
         md += `**Current AI Usage:** Not using AI yet\n\n`;
       }
