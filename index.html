@@ -1306,128 +1306,12 @@
       .ownership-options {
         grid-template-columns: 1fr;
       }
-      .revenue-ai-row {
-        grid-template-columns: 1fr;
-      }
       .card-header {
         padding: 1.5rem;
       }
       .card-body {
         padding: 1.25rem;
       }
-    }
-    .revenue-ai-card {
-      background: #F8FAFA;
-      border: 2px solid #E2E6E9;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-top: 0.5rem;
-    }
-    .revenue-ai-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      align-items: start;
-    }
-    .revenue-ai-field label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 0.4rem;
-    }
-    .revenue-input-group {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .revenue-input {
-      width: 100%;
-      padding: 0.65rem 0.75rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: border-color 0.2s;
-    }
-    .revenue-input:focus {
-      outline: none;
-      border-color: #284086;
-    }
-    .revenue-currency {
-      font-weight: 600;
-      color: #284086;
-      font-size: 1rem;
-      white-space: nowrap;
-    }
-    .ai-slider-container {
-      margin-top: 0;
-    }
-    .ai-slider-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 0.5rem;
-    }
-    .ai-slider-value {
-      font-weight: 600;
-      color: #284086;
-      font-size: 1.1rem;
-    }
-    .ai-slider-amount {
-      font-size: 0.9rem;
-      color: #2BC6BF;
-      font-weight: 600;
-    }
-    .ai-slider {
-      width: 100%;
-      height: 8px;
-      -webkit-appearance: none;
-      appearance: none;
-      background: linear-gradient(to right, #284086 0%, #284086 0%, #e5e7eb 0%, #e5e7eb 100%);
-      border-radius: 4px;
-      outline: none;
-    }
-    .ai-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: #284086;
-      cursor: pointer;
-      border: 3px solid #fff;
-      box-shadow: 0 0 0 2px #284086;
-    }
-    .ai-slider::-moz-range-thumb {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: #284086;
-      cursor: pointer;
-      border: 3px solid #fff;
-      box-shadow: 0 0 0 2px #284086;
-    }
-    .ai-slider-ticks {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 0.25rem;
-      font-size: 0.7rem;
-      color: #9ca3af;
-    }
-    .revenue-ai-summary {
-      margin-top: 1.25rem;
-      padding-top: 1rem;
-      border-top: 1px solid #E2E6E9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      font-size: 0.95rem;
-      color: #374151;
-    }
-    .revenue-ai-summary-amount {
-      font-weight: 700;
-      color: #2BC6BF;
-      font-size: 1.15rem;
     }
     .role-usecase-section {
       margin-bottom: 1.5rem;
@@ -1801,40 +1685,6 @@
             <div class="compliance-add-input">
               <input type="text" placeholder="Add other compliance requirement..." id="customComplianceInput">
               <button type="button" id="addComplianceBtn">Add</button>
-            </div>
-          </div>
-
-          <!-- Question 4 & 5: Service Revenue & AI Investment -->
-          <div class="engagement-section">
-            <div class="engagement-label">2026 Service revenue and AI investment</div>
-            <div class="revenue-ai-card">
-              <div class="revenue-ai-row">
-                <div class="revenue-ai-field">
-                  <label for="serviceRevenueInput">Expected service revenue (2026)</label>
-                  <div class="revenue-input-group">
-                    <span class="revenue-currency">$</span>
-                    <input type="number" id="serviceRevenueInput" class="revenue-input"
-                           placeholder="e.g. 500,000" min="0" step="1000">
-                  </div>
-                </div>
-                <div class="revenue-ai-field">
-                  <label>AI investment percentage</label>
-                  <div class="ai-slider-container">
-                    <div class="ai-slider-header">
-                      <span class="ai-slider-value" id="aiPctLabel">0%</span>
-                      <span class="ai-slider-amount" id="aiAmountLabel">$0</span>
-                    </div>
-                    <input type="range" id="aiInvestmentSlider" class="ai-slider"
-                           min="0" max="20" step="0.5" value="0">
-                    <div class="ai-slider-ticks">
-                      <span>0%</span><span>5%</span><span>10%</span><span>15%</span><span>20%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="revenue-ai-summary" id="revenueAiSummary" style="display:none;">
-                Estimated AI investment: <span class="revenue-ai-summary-amount" id="aiSummaryAmount">$0</span>
-              </div>
             </div>
           </div>
 
@@ -2396,8 +2246,6 @@
     let selectedLimitingFactors = new Set();  // Max 2; values: time, knowledge, unclear-value, client, access, other
     let limitingFactorsOrder = [];     // Ordered list for primary/secondary
     let limitingFactorOther = '';      // "Other" free text when other is selected
-    let serviceRevenue = 0;
-    let aiInvestmentPct = 0;
     
     // Client AI Landscape
     let clientAIMaturity = null;       // not-started, exploring, piloting, scaling, optimizing
@@ -2466,8 +2314,6 @@
         clientAIPriority,
         clientAIGovernance,
         clientAIChallenge,
-        serviceRevenue,
-        aiInvestmentPct,
         savedAt: new Date().toISOString()
       };
       
@@ -2516,9 +2362,6 @@
         clientAIPriority = state.clientAIPriority || null;
         clientAIGovernance = state.clientAIGovernance || null;
         clientAIChallenge = state.clientAIChallenge || null;
-        serviceRevenue = state.serviceRevenue || 0;
-        aiInvestmentPct = state.aiInvestmentPct || 0;
-
         // If we have use case data, mark as initialized
         if (state.useCaseNeeds?.length > 0 || state.useCaseDoing?.length > 0) {
           useCasesInitialized = true;
@@ -2559,8 +2402,6 @@
         clientAIPriority = null;
         clientAIGovernance = null;
         clientAIChallenge = null;
-        serviceRevenue = 0;
-        aiInvestmentPct = 0;
 
         // Reset render flags so steps re-initialize
         toolsRendered = false;
@@ -2975,40 +2816,6 @@
       updatePaymentUI();
       updateComplianceUI();
       renderCustomComplianceChips();
-      // Restore revenue & investment
-      const revInput = document.getElementById('serviceRevenueInput');
-      if (serviceRevenue > 0) revInput.value = serviceRevenue;
-      const slider = document.getElementById('aiInvestmentSlider');
-      slider.value = aiInvestmentPct;
-      updateAIInvestmentDisplay();
-    }
-
-    function updateAIInvestmentDisplay() {
-      const pctLabel = document.getElementById('aiPctLabel');
-      const amountLabel = document.getElementById('aiAmountLabel');
-      const summaryRow = document.getElementById('revenueAiSummary');
-      const summaryAmount = document.getElementById('aiSummaryAmount');
-      const slider = document.getElementById('aiInvestmentSlider');
-
-      // Format percentage (support 0.5 steps)
-      const pctText = aiInvestmentPct % 1 === 0 ? `${aiInvestmentPct}%` : `${aiInvestmentPct.toFixed(1)}%`;
-      pctLabel.textContent = pctText;
-
-      const amount = (serviceRevenue * aiInvestmentPct) / 100;
-      const amountFormatted = `$${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-      amountLabel.textContent = serviceRevenue > 0 ? amountFormatted : '';
-
-      // Update slider fill gradient
-      const pct = (aiInvestmentPct / 20) * 100;
-      slider.style.background = `linear-gradient(to right, #284086 0%, #284086 ${pct}%, #e5e7eb ${pct}%, #e5e7eb 100%)`;
-
-      // Show/hide summary
-      if (serviceRevenue > 0 && aiInvestmentPct > 0) {
-        summaryRow.style.display = 'flex';
-        summaryAmount.textContent = amountFormatted;
-      } else {
-        summaryRow.style.display = 'none';
-      }
     }
 
     function updateOwnershipUI() {
@@ -3658,10 +3465,6 @@
           return cust?.name || id;
         }).join(', ');
       }
-      if (serviceRevenue > 0) {
-        html += `<br><strong>Service Revenue (2026):</strong> $${serviceRevenue.toLocaleString('en-US')}<br>`;
-        html += `<strong>AI Investment:</strong> ${aiInvestmentPct}% ($${((serviceRevenue * aiInvestmentPct) / 100).toLocaleString('en-US')})`;
-      }
       html += '</div></div>';
 
       // Client AI Landscape
@@ -3716,18 +3519,6 @@
       // Step 5 (Engagement) — displayed as Step 1
       document.getElementById('step5Back').addEventListener('click', () => goToStep(0));
       document.getElementById('step5Next').addEventListener('click', () => { if (validateStep(5)) goToStep(6); });
-      // Service Revenue & AI Investment
-      document.getElementById('serviceRevenueInput').addEventListener('input', (e) => {
-        serviceRevenue = parseFloat(e.target.value) || 0;
-        updateAIInvestmentDisplay();
-        autoSave();
-      });
-      document.getElementById('aiInvestmentSlider').addEventListener('input', (e) => {
-        aiInvestmentPct = parseFloat(e.target.value) || 0;
-        updateAIInvestmentDisplay();
-        autoSave();
-      });
-
       // Engagement — Ownership options (multi-select)
       document.getElementById('ownershipOptions').addEventListener('click', (e) => {
         const card = e.target.closest('.option-card');
@@ -3900,9 +3691,6 @@
               const custom = customCompliance.find(c => c.id === id);
               return { id, name: custom?.name || id, custom: true };
             }),
-            serviceRevenue: serviceRevenue,
-            aiInvestmentPct: aiInvestmentPct,
-            aiInvestmentAmount: (serviceRevenue * aiInvestmentPct) / 100,
           },
           aiToolsByRole: {},
           useCases: {
@@ -4024,11 +3812,6 @@
       
       const paymentLabel = aiToolPayment === 'us' ? 'We Will Pay' : aiToolPayment === 'customer' ? 'Customer Will Pay' : aiToolPayment === 'mix' ? 'It Is a Mix' : aiToolPayment === 'tbd' ? 'To Be Determined' : '_Not selected_';
       md += `**AI Tool Payment:** ${paymentLabel}\n\n`;
-      if (serviceRevenue > 0) {
-        md += `**Service Revenue (2026):** $${serviceRevenue.toLocaleString('en-US')}\n\n`;
-        const aiAmount = (serviceRevenue * aiInvestmentPct) / 100;
-        md += `**AI Investment:** ${aiInvestmentPct}% ($${aiAmount.toLocaleString('en-US')})\n\n`;
-      }
 
       // Compliance Requirements
       md += `**Compliance Requirements:**\n`;
