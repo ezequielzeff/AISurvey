@@ -1747,6 +1747,11 @@
                 <div class="option-card-title">Customer Is/Will</div>
                 <div class="option-card-desc">Customer pays for tools</div>
               </div>
+              <div class="option-card" data-value="mix">
+                <div class="option-card-icon">🔀</div>
+                <div class="option-card-title">It Is a Mix</div>
+                <div class="option-card-desc">Shared between both</div>
+              </div>
               <div class="option-card" data-value="tbd">
                 <div class="option-card-icon">💭</div>
                 <div class="option-card-title">To Be Determined</div>
@@ -2381,7 +2386,7 @@
     let selectedTools = {};
     let customTools = {};
     let selectedOwnership = new Set();   // Multi-select: staff, project, program, outcome
-    let aiToolPayment = null;            // 'us', 'customer', 'tbd'
+    let aiToolPayment = null;            // 'us', 'customer', 'mix', 'tbd'
     let selectedCompliance = new Set();  // Selected compliance requirements
     let customCompliance = [];           // Custom compliance requirements [{id, name}]
     let toolRoleMatrix = {};
@@ -3723,7 +3728,7 @@
       if (selectedOwnership.size > 0) {
         html += '<strong>Ownership:</strong> ' + Array.from(selectedOwnership).map(id => ownershipLabels[id]?.name || id).join(', ') + '<br>';
       }
-      const payLabel = aiToolPayment === 'us' ? 'We Are/Will' : aiToolPayment === 'customer' ? 'Customer Is/Will' : aiToolPayment === 'tbd' ? 'To Be Determined' : 'Not selected';
+      const payLabel = aiToolPayment === 'us' ? 'We Are/Will' : aiToolPayment === 'customer' ? 'Customer Is/Will' : aiToolPayment === 'mix' ? 'It Is a Mix' : aiToolPayment === 'tbd' ? 'To Be Determined' : 'Not selected';
       html += `<strong>AI Tool Payment:</strong> ${payLabel}<br>`;
       if (selectedCompliance.size > 0) {
         html += '<strong>Compliance:</strong> ' + Array.from(selectedCompliance).map(id => {
@@ -3899,7 +3904,7 @@
               name: ownershipLabels[id]?.name || id
             })),
             aiToolPayment: aiToolPayment,
-            aiToolPaymentLabel: aiToolPayment === 'us' ? 'We Will Pay' : aiToolPayment === 'customer' ? 'Customer Will Pay' : aiToolPayment === 'tbd' ? 'To Be Determined' : 'Not Selected',
+            aiToolPaymentLabel: aiToolPayment === 'us' ? 'We Will Pay' : aiToolPayment === 'customer' ? 'Customer Will Pay' : aiToolPayment === 'mix' ? 'It Is a Mix' : aiToolPayment === 'tbd' ? 'To Be Determined' : 'Not Selected',
             compliance: Array.from(selectedCompliance).map(id => {
               const predefined = complianceOptions.find(c => c.id === id);
               if (predefined) {
@@ -4030,7 +4035,7 @@
         md += `**Ownership Level:** _Not selected_\n\n`;
       }
       
-      const paymentLabel = aiToolPayment === 'us' ? 'We Will Pay' : aiToolPayment === 'customer' ? 'Customer Will Pay' : aiToolPayment === 'tbd' ? 'To Be Determined' : '_Not selected_';
+      const paymentLabel = aiToolPayment === 'us' ? 'We Will Pay' : aiToolPayment === 'customer' ? 'Customer Will Pay' : aiToolPayment === 'mix' ? 'It Is a Mix' : aiToolPayment === 'tbd' ? 'To Be Determined' : '_Not selected_';
       md += `**AI Tool Payment:** ${paymentLabel}\n\n`;
       if (serviceRevenue > 0) {
         md += `**Service Revenue (2026):** $${serviceRevenue.toLocaleString('en-US')}\n\n`;
