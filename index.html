@@ -1665,11 +1665,6 @@
                 <div class="option-card-title">Yes</div>
                 <div class="option-card-desc">There is an AI champion</div>
               </div>
-              <div class="option-card" data-value="dont-know">
-                <div class="option-card-icon">🤷</div>
-                <div class="option-card-title">I Don't Know</div>
-                <div class="option-card-desc">Unsure</div>
-              </div>
             </div>
             <div id="aiChampionNameSection" style="display: none; margin-top: 1rem;">
               <label class="account-name-label" for="aiChampionName">Please specify who:</label>
@@ -2380,7 +2375,7 @@
     // State
     let currentStep = 1;
     let accountName = '';
-    let aiChampion = null;        // 'yes', 'no', 'dont-know'
+    let aiChampion = null;        // 'yes', 'no'
     let aiChampionName = '';
     let selectedRoles = new Set();
     let selectedTools = {};
@@ -3606,7 +3601,7 @@
         html += '<span class="review-empty">No roles selected</span>';
       }
       if (aiChampion) {
-        const championLabel = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}` : aiChampion === 'no' ? 'No' : "I Don't Know";
+        const championLabel = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}` : 'No';
         html += `<br><strong>AI Champion:</strong> ${championLabel}`;
       }
       html += '</div></div>';
@@ -4018,7 +4013,7 @@
       }
       md += `\n`;
       if (aiChampion) {
-        const label = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}` : aiChampion === 'no' ? 'No' : "I Don't Know";
+        const label = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}` : 'No';
         md += `**AI Champion:** ${label}\n\n`;
       }
 
