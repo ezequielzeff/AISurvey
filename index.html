@@ -1650,6 +1650,33 @@
           <div class="role-name">Solutions Architects</div>
         </div>
       </div>
+
+          <!-- AI Champion Question -->
+          <div class="engagement-section" style="margin-top: 2rem;">
+            <div class="engagement-label">Is there someone responsible for driving and championing AI adoption within the account?</div>
+            <div class="option-cards client-ai-options" id="aiChampionOptions">
+              <div class="option-card" data-value="no">
+                <div class="option-card-icon">❌</div>
+                <div class="option-card-title">No</div>
+                <div class="option-card-desc">No AI champion identified</div>
+              </div>
+              <div class="option-card" data-value="yes">
+                <div class="option-card-icon">✅</div>
+                <div class="option-card-title">Yes</div>
+                <div class="option-card-desc">There is an AI champion</div>
+              </div>
+              <div class="option-card" data-value="dont-know">
+                <div class="option-card-icon">🤷</div>
+                <div class="option-card-title">I Don't Know</div>
+                <div class="option-card-desc">Unsure</div>
+              </div>
+            </div>
+            <div id="aiChampionNameSection" style="display: none; margin-top: 1rem;">
+              <label class="account-name-label" for="aiChampionName">Please specify who:</label>
+              <input type="text" id="aiChampionName" class="account-name-input" placeholder="e.g., John Smith, VP of Engineering" maxlength="200">
+            </div>
+          </div>
+
           <div class="validation-error" id="step1Error" role="alert"></div>
         </div>
         <div class="card-footer">
@@ -2353,6 +2380,8 @@
     // State
     let currentStep = 1;
     let accountName = '';
+    let aiChampion = null;        // 'yes', 'no', 'dont-know'
+    let aiChampionName = '';
     let selectedRoles = new Set();
     let selectedTools = {};
     let customTools = {};
@@ -2414,6 +2443,8 @@
       const state = {
         currentStep,
         accountName,
+        aiChampion,
+        aiChampionName,
         selectedRoles: Array.from(selectedRoles),
         selectedTools: Object.fromEntries(
           Object.entries(selectedTools).map(([k, v]) => [k, Array.from(v)])
@@ -2462,6 +2493,8 @@
         
         currentStep = state.currentStep || 1;
         accountName = state.accountName || '';
+        aiChampion = state.aiChampion || null;
+        aiChampionName = state.aiChampionName || '';
         selectedRoles = new Set(state.selectedRoles || []);
         selectedTools = Object.fromEntries(
           Object.entries(state.selectedTools || {}).map(([k, v]) => [k, new Set(v)])
@@ -2505,6 +2538,8 @@
         // Reset all state
         currentStep = 1;
         accountName = '';
+        aiChampion = null;
+        aiChampionName = '';
         selectedRoles = new Set();
         selectedTools = {};
         customTools = {};
@@ -2638,6 +2673,13 @@
           }
         });
       });
+
+      // Restore AI champion state
+      document.querySelectorAll('#aiChampionOptions .option-card').forEach(c => {
+        c.classList.toggle('selected', c.dataset.value === aiChampion);
+      });
+      document.getElementById('aiChampionNameSection').style.display = aiChampion === 'yes' ? 'block' : 'none';
+      document.getElementById('aiChampionName').value = aiChampionName;
     }
 
     function toggleRole(roleId) {
@@ -3563,6 +3605,10 @@
       } else {
         html += '<span class="review-empty">No roles selected</span>';
       }
+      if (aiChampion) {
+        const championLabel = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}` : aiChampion === 'no' ? 'No' : "I Don't Know";
+        html += `<br><strong>AI Champion:</strong> ${championLabel}`;
+      }
       html += '</div></div>';
 
       // Tools
@@ -3770,6 +3816,23 @@
       document.getElementById('step1Back').addEventListener('click', () => goToStep(6));
       document.getElementById('step1Next').addEventListener('click', () => { if (validateStep(1)) goToStep(2); });
 
+      // AI Champion question
+      document.getElementById('aiChampionOptions').addEventListener('click', (e) => {
+        const card = e.target.closest('.option-card');
+        if (card) {
+          aiChampion = card.dataset.value;
+          document.querySelectorAll('#aiChampionOptions .option-card').forEach(c => {
+            c.classList.toggle('selected', c.dataset.value === aiChampion);
+          });
+          document.getElementById('aiChampionNameSection').style.display = aiChampion === 'yes' ? 'block' : 'none';
+          autoSave();
+        }
+      });
+      document.getElementById('aiChampionName').addEventListener('input', (e) => {
+        aiChampionName = e.target.value;
+        autoSave();
+      });
+
       // Step 2 (Tools) — displayed as Step 4
       document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
       document.getElementById('step2Next').addEventListener('click', () => handleStep2Continue());
@@ -3833,6 +3896,7 @@
             const role = roles.find(r => r.id === id);
             return { id, name: role?.name || id };
           }),
+          aiChampion: aiChampion ? { answer: aiChampion, name: aiChampion === 'yes' ? aiChampionName : null } : null,
           tools: {},
           engagement: {
             ownership: Array.from(selectedOwnership).map(id => ({
@@ -3953,6 +4017,10 @@
         md += `_No roles selected_\n`;
       }
       md += `\n`;
+      if (aiChampion) {
+        const label = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}` : aiChampion === 'no' ? 'No' : "I Don't Know";
+        md += `**AI Champion:** ${label}\n\n`;
+      }
 
       // Engagement Model
       md += `## 🤝 Engagement Model\n\n`;
