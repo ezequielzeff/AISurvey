@@ -2408,7 +2408,7 @@
 
     // Render flags
     let toolsRendered = false;
-    let engagementRendered = false;
+    // engagementRendered removed — listeners now in setupEventListeners()
 
     let useCasesInitialized = false;
     let clientAIRendered = false;
@@ -2565,7 +2565,6 @@
         // Reset render flags so steps re-initialize
         toolsRendered = false;
         useCasesInitialized = false;
-        engagementRendered = false;
         clientAIRendered = false;
         
         // Reset UI elements
@@ -2982,85 +2981,6 @@
       const slider = document.getElementById('aiInvestmentSlider');
       slider.value = aiInvestmentPct;
       updateAIInvestmentDisplay();
-
-      // Setup event listeners (only once)
-      if (!engagementRendered) {
-        // Ownership options (multi-select)
-        document.getElementById('ownershipOptions').addEventListener('click', (e) => {
-          const card = e.target.closest('.option-card');
-          if (card) {
-            const value = card.dataset.value;
-            if (selectedOwnership.has(value)) {
-              selectedOwnership.delete(value);
-            } else {
-              selectedOwnership.add(value);
-            }
-            updateOwnershipUI();
-            autoSave();
-          }
-        });
-        
-        // Payment options
-        document.getElementById('paymentOptions').addEventListener('click', (e) => {
-          const card = e.target.closest('.option-card');
-          if (card) {
-            aiToolPayment = card.dataset.value;
-            updatePaymentUI();
-            autoSave();
-          }
-        });
-        
-        // Compliance options (predefined)
-        document.getElementById('complianceOptions').addEventListener('click', (e) => {
-          const chip = e.target.closest('.compliance-chip');
-          if (chip) {
-            const value = chip.dataset.value;
-            if (selectedCompliance.has(value)) {
-              selectedCompliance.delete(value);
-            } else {
-              selectedCompliance.add(value);
-            }
-            updateComplianceUI();
-            autoSave();
-          }
-        });
-        
-        // Custom compliance chips (click to toggle or delete)
-        document.getElementById('customComplianceChips').addEventListener('click', (e) => {
-          const deleteBtn = e.target.closest('.compliance-delete');
-          if (deleteBtn) {
-            const chip = deleteBtn.closest('.compliance-chip');
-            const id = chip.dataset.value;
-            selectedCompliance.delete(id);
-            customCompliance = customCompliance.filter(c => c.id !== id);
-            renderCustomComplianceChips();
-            autoSave();
-            return;
-          }
-          
-          const chip = e.target.closest('.compliance-chip');
-          if (chip) {
-            const value = chip.dataset.value;
-            if (selectedCompliance.has(value)) {
-              selectedCompliance.delete(value);
-            } else {
-              selectedCompliance.add(value);
-            }
-            updateCustomComplianceUI();
-            autoSave();
-          }
-        });
-        
-        // Add custom compliance
-        document.getElementById('addComplianceBtn').addEventListener('click', addCustomCompliance);
-        document.getElementById('customComplianceInput').addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') {
-            addCustomCompliance();
-          }
-        });
-        
-        engagementRendered = true;
-      }
     }
 
     function updateAIInvestmentDisplay() {
@@ -3806,6 +3726,73 @@
         aiInvestmentPct = parseFloat(e.target.value) || 0;
         updateAIInvestmentDisplay();
         autoSave();
+      });
+
+      // Engagement — Ownership options (multi-select)
+      document.getElementById('ownershipOptions').addEventListener('click', (e) => {
+        const card = e.target.closest('.option-card');
+        if (card) {
+          const value = card.dataset.value;
+          if (selectedOwnership.has(value)) {
+            selectedOwnership.delete(value);
+          } else {
+            selectedOwnership.add(value);
+          }
+          updateOwnershipUI();
+          autoSave();
+        }
+      });
+      // Engagement — Payment options
+      document.getElementById('paymentOptions').addEventListener('click', (e) => {
+        const card = e.target.closest('.option-card');
+        if (card) {
+          aiToolPayment = card.dataset.value;
+          updatePaymentUI();
+          autoSave();
+        }
+      });
+      // Engagement — Compliance options (predefined)
+      document.getElementById('complianceOptions').addEventListener('click', (e) => {
+        const chip = e.target.closest('.compliance-chip');
+        if (chip) {
+          const value = chip.dataset.value;
+          if (selectedCompliance.has(value)) {
+            selectedCompliance.delete(value);
+          } else {
+            selectedCompliance.add(value);
+          }
+          updateComplianceUI();
+          autoSave();
+        }
+      });
+      // Engagement — Custom compliance chips
+      document.getElementById('customComplianceChips').addEventListener('click', (e) => {
+        const deleteBtn = e.target.closest('.compliance-delete');
+        if (deleteBtn) {
+          const chip = deleteBtn.closest('.compliance-chip');
+          const id = chip.dataset.value;
+          selectedCompliance.delete(id);
+          customCompliance = customCompliance.filter(c => c.id !== id);
+          renderCustomComplianceChips();
+          autoSave();
+          return;
+        }
+        const chip = e.target.closest('.compliance-chip');
+        if (chip) {
+          const value = chip.dataset.value;
+          if (selectedCompliance.has(value)) {
+            selectedCompliance.delete(value);
+          } else {
+            selectedCompliance.add(value);
+          }
+          updateCustomComplianceUI();
+          autoSave();
+        }
+      });
+      // Engagement — Add custom compliance
+      document.getElementById('addComplianceBtn').addEventListener('click', addCustomCompliance);
+      document.getElementById('customComplianceInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addCustomCompliance();
       });
 
       // Step 6 (Client AI) — displayed as Step 2
