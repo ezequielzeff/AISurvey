@@ -255,8 +255,17 @@
       margin-top: 0.5rem;
     }
 
+    .welcome-account-section .account-name-label {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #284086;
+      margin-bottom: 0.75rem;
+    }
+
     .welcome-account-input {
-      font-size: 1rem;
+      font-size: 1.15rem;
+      padding: 1rem 1.25rem;
+      max-width: 600px;
     }
 
     .welcome-footer {
@@ -1313,78 +1322,6 @@
         padding: 1.25rem;
       }
     }
-    .role-usecase-section {
-      margin-bottom: 1.5rem;
-      background: #f9fafb;
-      border-radius: 12px;
-      padding: 1.5rem;
-    }
-    .role-usecase-header {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 1rem;
-    }
-    .usecase-toggle-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.6rem 0.75rem;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      margin-bottom: 0.4rem;
-      background: #fff;
-      font-size: 0.9rem;
-      color: #374151;
-    }
-    .usecase-toggle-label {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      cursor: pointer;
-      font-size: 0.8rem;
-      white-space: nowrap;
-      color: #9ca3af;
-    }
-    .usecase-toggle-label.active {
-      color: #15803d;
-    }
-    .usecase-toggle-label input {
-      accent-color: #22c55e;
-    }
-    .role-ai-tools-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    .role-ai-tool-chip {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.4rem 0.75rem;
-      border: 1px solid #e5e7eb;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      background: #fff;
-      transition: all 0.15s;
-    }
-    .role-ai-tool-chip:hover {
-      border-color: #a5b4fc;
-    }
-    .role-ai-tool-chip.checked {
-      border-color: #284086;
-      background: #eef2ff;
-      color: #284086;
-      font-weight: 500;
-    }
-    .role-ai-tools-label {
-      font-size: 0.8rem;
-      color: #6b7280;
-      margin-bottom: 0.4rem;
-      font-weight: 500;
-    }
   </style>
 </head>
 <body id="artifacts-component-root-html">
@@ -1428,14 +1365,6 @@
               <div class="welcome-section-item">
                 <span class="welcome-section-icon">🛠️</span>
                 <span class="welcome-section-text">Tools & infrastructure</span>
-              </div>
-              <div class="welcome-section-item">
-                <span class="welcome-section-icon">📊</span>
-                <span class="welcome-section-text">AI tool usage patterns</span>
-              </div>
-              <div class="welcome-section-item">
-                <span class="welcome-section-icon">🎯</span>
-                <span class="welcome-section-text">Use case needs & priorities</span>
               </div>
               <div class="welcome-section-item">
                 <span class="welcome-section-icon">🤝</span>
@@ -1552,7 +1481,32 @@
             </div>
             <div id="aiChampionNameSection" style="display: none; margin-top: 1rem;">
               <label class="account-name-label" for="aiChampionName">Please specify who:</label>
-              <input type="text" id="aiChampionName" class="account-name-input" placeholder="e.g., John Smith, VP of Engineering" maxlength="200">
+              <input type="text" id="aiChampionName" class="account-name-input" placeholder="e.g., John Smith, Solutions Architect" maxlength="200">
+            </div>
+          </div>
+
+          <!-- AI Success Stories -->
+          <div class="engagement-section" style="margin-top: 2rem;">
+            <div class="engagement-label">Do you have an AI Success Story you'd like to share?</div>
+            <div class="option-cards client-ai-options" id="aiSuccessStoryToggle">
+              <div class="option-card" data-value="no">
+                <div class="option-card-icon">❌</div>
+                <div class="option-card-title">No</div>
+                <div class="option-card-desc">No stories to share</div>
+              </div>
+              <div class="option-card" data-value="yes">
+                <div class="option-card-icon">✅</div>
+                <div class="option-card-title">Yes</div>
+                <div class="option-card-desc">I have stories to share</div>
+              </div>
+            </div>
+            <div id="aiSuccessStoriesSection" style="display: none; margin-top: 1rem;">
+              <div id="aiSuccessStoriesList"></div>
+              <div style="margin-top: 0.75rem;">
+                <label class="account-name-label">Add a success story:</label>
+                <textarea id="aiSuccessStoryInput" class="account-name-input" style="max-width:100%;min-height:80px;resize:vertical;" placeholder="Describe the AI success story..."></textarea>
+                <button class="btn btn-secondary" id="addSuccessStoryBtn" style="margin-top: 0.5rem;">+ Add Story</button>
+              </div>
             </div>
           </div>
 
@@ -1915,27 +1869,11 @@
         </div>
       </div>
 
-      <!-- Step 3: AI Use Cases by Role (merged Matrix + Use Cases) -->
-      <div id="step3" class="step hidden">
-        <div class="card-header">
-          <div class="step-indicator">Step 5</div>
-          <h1 class="card-title">AI use cases by role</h1>
-          <p class="card-subtitle">Review the top AI use cases for each role and mark what you're already doing</p>
-        </div>
-        <div class="card-body" id="mergedStep3Container">
-          <!-- Rendered by JS -->
-        </div>
-        <div class="card-footer">
-          <button class="btn btn-secondary" id="step3Back">← Back</button>
-          <button class="btn btn-primary" id="step3Next">Continue →</button>
-        </div>
-      </div>
-
 
       <!-- Step 7: Limiting Factors -->
       <div id="step7" class="step hidden">
         <div class="card-header">
-          <div class="step-indicator">Step 6</div>
+          <div class="step-indicator">Step 5</div>
           <h1 class="card-title">What are the main factors limiting your ability to adopt or use AI more effectively in your current work?</h1>
           <p class="card-subtitle">Select up to 2 options</p>
         </div>
@@ -2112,126 +2050,13 @@
       },
     ];
 
-    // Use cases organized by category, filtered by roles
-    const useCases = [
-      {
-        category: 'Code Development',
-        icon: '💻',
-        roles: ['swe', 'devops', 'qaa', 'data', 'arch'],
-        items: [
-          { id: 'code-completion', name: 'Code completion and suggestions' },
-          { id: 'code-generation', name: 'Generate code from natural language' },
-          { id: 'code-refactoring', name: 'Code refactoring and optimization' },
-          { id: 'code-review', name: 'Automated code review assistance' },
-          { id: 'debugging', name: 'Debugging and error resolution' },
-          { id: 'code-explanation', name: 'Code explanation and documentation' },
-        ]
-      },
-      {
-        category: 'Testing & QA',
-        icon: '🧪',
-        roles: ['qa', 'qaa', 'swe'],
-        items: [
-          { id: 'test-generation', name: 'Test case generation' },
-          { id: 'test-automation', name: 'Test automation script creation' },
-          { id: 'test-data', name: 'Test data generation' },
-          { id: 'bug-analysis', name: 'Bug analysis and reproduction steps' },
-          { id: 'edge-cases', name: 'Edge case identification' },
-          { id: 'test-coverage', name: 'Test coverage analysis' },
-        ]
-      },
-      {
-        category: 'Documentation',
-        icon: '📝',
-        roles: ['swe', 'ba', 'pm', 'arch', 'devops', 'qa', 'qaa', 'data', 'ux'],
-        items: [
-          { id: 'api-docs', name: 'API documentation generation' },
-          { id: 'readme-generation', name: 'README and setup guides' },
-          { id: 'technical-specs', name: 'Technical specification writing' },
-          { id: 'inline-comments', name: 'Code comments and docstrings' },
-          { id: 'release-notes', name: 'Release notes generation' },
-        ]
-      },
-      {
-        category: 'Requirements & Analysis',
-        icon: '📊',
-        roles: ['ba', 'pm', 'arch'],
-        items: [
-          { id: 'user-stories', name: 'User story creation and refinement' },
-          { id: 'requirements-analysis', name: 'Requirements gap analysis' },
-          { id: 'acceptance-criteria', name: 'Acceptance criteria generation' },
-          { id: 'impact-analysis', name: 'Impact analysis for changes' },
-          { id: 'backlog-refinement', name: 'Backlog grooming assistance' },
-        ]
-      },
-      {
-        category: 'Project Management',
-        icon: '📋',
-        roles: ['pm', 'ba'],
-        items: [
-          { id: 'meeting-summaries', name: 'Meeting summaries and action items' },
-          { id: 'status-reports', name: 'Status report generation' },
-          { id: 'risk-identification', name: 'Risk identification and mitigation' },
-          { id: 'estimation', name: 'Effort estimation assistance' },
-          { id: 'stakeholder-comms', name: 'Stakeholder communication drafts' },
-        ]
-      },
-      {
-        category: 'Design & UX',
-        icon: '🎨',
-        roles: ['ux'],
-        items: [
-          { id: 'design-feedback', name: 'Design critique and feedback' },
-          { id: 'copy-writing', name: 'UI copy and microcopy writing' },
-          { id: 'accessibility', name: 'Accessibility recommendations' },
-          { id: 'user-research', name: 'User research analysis' },
-          { id: 'persona-creation', name: 'Persona and journey mapping' },
-        ]
-      },
-      {
-        category: 'DevOps & Infrastructure',
-        icon: '⚙️',
-        roles: ['devops', 'arch', 'swe'],
-        items: [
-          { id: 'iac-generation', name: 'Infrastructure as Code generation' },
-          { id: 'cicd-config', name: 'CI/CD pipeline configuration' },
-          { id: 'troubleshooting', name: 'Infrastructure troubleshooting' },
-          { id: 'security-scanning', name: 'Security configuration review' },
-          { id: 'monitoring-setup', name: 'Monitoring and alerting setup' },
-          { id: 'cost-optimization', name: 'Cloud cost optimization' },
-        ]
-      },
-      {
-        category: 'Data & Analytics',
-        icon: '📈',
-        roles: ['data', 'ba', 'arch'],
-        items: [
-          { id: 'sql-generation', name: 'SQL query generation' },
-          { id: 'data-transformation', name: 'Data transformation scripts' },
-          { id: 'data-analysis', name: 'Data analysis and insights' },
-          { id: 'pipeline-development', name: 'Data pipeline development' },
-          { id: 'data-quality', name: 'Data quality checks' },
-        ]
-      },
-      {
-        category: 'Architecture',
-        icon: '🏗️',
-        roles: ['arch', 'swe', 'devops'],
-        items: [
-          { id: 'design-patterns', name: 'Design pattern recommendations' },
-          { id: 'architecture-review', name: 'Architecture review and feedback' },
-          { id: 'adr-creation', name: 'Architecture Decision Records (ADRs)' },
-          { id: 'scalability', name: 'Scalability analysis' },
-          { id: 'tech-evaluation', name: 'Technology evaluation and comparison' },
-        ]
-      },
-    ];
-
     // State
     let currentStep = 1;
     let accountName = '';
     let aiChampion = null;        // 'yes', 'no'
     let aiChampionName = '';
+    let hasSuccessStories = null;  // 'yes', 'no'
+    let successStories = [];       // array of strings
     let selectedRoles = new Set();
     let selectedTools = {};
     let customTools = {};
@@ -2239,10 +2064,6 @@
     let aiToolPayment = null;            // 'us', 'customer', 'mix', 'tbd'
     let selectedCompliance = new Set();  // Selected compliance requirements
     let customCompliance = [];           // Custom compliance requirements [{id, name}]
-    let toolRoleMatrix = {};
-    let useCaseNeeds = new Set();      // Use cases in "Need" column
-    let useCaseDoing = new Set();      // Use cases in "Already Doing" column
-    let customUseCases = {};           // Custom use cases by category
     let selectedLimitingFactors = new Set();  // Max 2; values: time, knowledge, unclear-value, client, access, other
     let limitingFactorsOrder = [];     // Ordered list for primary/secondary
     let limitingFactorOther = '';      // "Other" free text when other is selected
@@ -2258,7 +2079,6 @@
     let toolsRendered = false;
     // engagementRendered removed — listeners now in setupEventListeners()
 
-    let useCasesInitialized = false;
     let clientAIRendered = false;
 
     // Compliance options data
@@ -2293,6 +2113,8 @@
         accountName,
         aiChampion,
         aiChampionName,
+        hasSuccessStories,
+        successStories,
         selectedRoles: Array.from(selectedRoles),
         selectedTools: Object.fromEntries(
           Object.entries(selectedTools).map(([k, v]) => [k, Array.from(v)])
@@ -2302,10 +2124,6 @@
         aiToolPayment,
         selectedCompliance: Array.from(selectedCompliance),
         customCompliance,
-        toolRoleMatrix,
-        useCaseNeeds: Array.from(useCaseNeeds),
-        useCaseDoing: Array.from(useCaseDoing),
-        customUseCases,
         selectedLimitingFactors: Array.from(selectedLimitingFactors),
         limitingFactorsOrder,
         limitingFactorOther,
@@ -2341,6 +2159,8 @@
         accountName = state.accountName || '';
         aiChampion = state.aiChampion || null;
         aiChampionName = state.aiChampionName || '';
+        hasSuccessStories = state.hasSuccessStories || null;
+        successStories = state.successStories || [];
         selectedRoles = new Set(state.selectedRoles || []);
         selectedTools = Object.fromEntries(
           Object.entries(state.selectedTools || {}).map(([k, v]) => [k, new Set(v)])
@@ -2350,10 +2170,6 @@
         aiToolPayment = state.aiToolPayment || null;
         selectedCompliance = new Set(state.selectedCompliance || []);
         customCompliance = state.customCompliance || [];
-        toolRoleMatrix = state.toolRoleMatrix || {};
-        useCaseNeeds = new Set(state.useCaseNeeds || []);
-        useCaseDoing = new Set(state.useCaseDoing || []);
-        customUseCases = state.customUseCases || {};
         selectedLimitingFactors = new Set(state.selectedLimitingFactors || []);
         limitingFactorsOrder = Array.isArray(state.limitingFactorsOrder) ? state.limitingFactorsOrder : [];
         limitingFactorOther = state.limitingFactorOther || '';
@@ -2362,11 +2178,7 @@
         clientAIPriority = state.clientAIPriority || null;
         clientAIGovernance = state.clientAIGovernance || null;
         clientAIChallenge = state.clientAIChallenge || null;
-        // If we have use case data, mark as initialized
-        if (state.useCaseNeeds?.length > 0 || state.useCaseDoing?.length > 0) {
-          useCasesInitialized = true;
-        }
-        
+
         return true;
       } catch (e) {
         console.error('Failed to load from localStorage:', e);
@@ -2383,6 +2195,8 @@
         accountName = '';
         aiChampion = null;
         aiChampionName = '';
+        hasSuccessStories = null;
+        successStories = [];
         selectedRoles = new Set();
         selectedTools = {};
         customTools = {};
@@ -2390,10 +2204,6 @@
         aiToolPayment = null;
         selectedCompliance = new Set();
         customCompliance = [];
-        toolRoleMatrix = {};
-        useCaseNeeds = new Set();
-        useCaseDoing = new Set();
-        customUseCases = {};
         selectedLimitingFactors = new Set();
         limitingFactorsOrder = [];
         limitingFactorOther = '';
@@ -2405,7 +2215,6 @@
 
         // Reset render flags so steps re-initialize
         toolsRendered = false;
-        useCasesInitialized = false;
         clientAIRendered = false;
         
         // Reset UI elements
@@ -2520,6 +2329,34 @@
       });
       document.getElementById('aiChampionNameSection').style.display = aiChampion === 'yes' ? 'block' : 'none';
       document.getElementById('aiChampionName').value = aiChampionName;
+
+      // Restore success stories state
+      document.querySelectorAll('#aiSuccessStoryToggle .option-card').forEach(c => {
+        c.classList.toggle('selected', c.dataset.value === hasSuccessStories);
+      });
+      document.getElementById('aiSuccessStoriesSection').style.display = hasSuccessStories === 'yes' ? 'block' : 'none';
+      renderSuccessStories();
+    }
+
+    function renderSuccessStories() {
+      const list = document.getElementById('aiSuccessStoriesList');
+      if (successStories.length === 0) {
+        list.innerHTML = '';
+        return;
+      }
+      list.innerHTML = successStories.map((story, i) => `
+        <div style="background:#F8FAFA;border:1px solid #E2E6E9;border-radius:8px;padding:0.75rem 1rem;margin-bottom:0.5rem;display:flex;align-items:flex-start;gap:0.75rem;">
+          <div style="flex:1;font-size:0.9rem;color:#374151;white-space:pre-wrap;">${story.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+          <button class="remove-story-btn" data-index="${i}" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.1rem;padding:0 0.25rem;" title="Remove story">✕</button>
+        </div>
+      `).join('');
+      list.querySelectorAll('.remove-story-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          successStories.splice(parseInt(btn.dataset.index), 1);
+          renderSuccessStories();
+          autoSave();
+        });
+      });
     }
 
     function toggleRole(roleId) {
@@ -2660,11 +2497,7 @@
       // Navigate to appropriate next step
       const hasRoles = selectedRoles.size > 0;
 
-      if (hasRoles) {
-        goToStep(3); // Go to merged AI Use Cases by Role
-      } else {
-        goToStep(7); // Skip to Limiting Factors (Engagement already done)
-      }
+      goToStep(7); // Go to Limiting Factors
     }
 
     function toggleTool(categoryId, toolId) {
@@ -2752,14 +2585,14 @@
     }
 
     function goToStep(step) {
-      // Step 4 was removed (merged into step 3) — remap for backward compat
-      if (step === 4) step = 3;
+      // Remap removed steps for backward compat
+      if (step === 3 || step === 4) step = 2;
       currentStep = step;
-      
+
       // Display order mapping (internal IDs in display sequence)
       const hasRoles = selectedRoles.size > 0;
-      const activeOrder = hasRoles ? [5, 6, 1, 2, 3, 7, 8] : [5, 6, 1, 2, 7, 8];
-      const stepLabels = {0:'Welcome', 5:'Engagement', 6:'Client AI', 1:'Roles', 2:'Tools', 3:'AI Use Cases', 7:'Limiting Factors', 8:'Review'};
+      const activeOrder = hasRoles ? [5, 6, 1, 2, 7, 8] : [5, 6, 1, 2, 7, 8];
+      const stepLabels = {0:'Welcome', 5:'Engagement', 6:'Client AI', 1:'Roles', 2:'Tools', 7:'Limiting Factors', 8:'Review'};
       const totalDisplaySteps = activeOrder.length - 1; // exclude review from count
 
       // Show/hide progress container (hide for welcome page)
@@ -2791,9 +2624,6 @@
       // Render content for step
       if (step === 2) {
         renderTools();
-      }
-      if (step === 3) {
-        renderMergedStep3();
       }
       if (step === 5) {
         renderEngagement();
@@ -3133,116 +2963,6 @@
       return aiTools;
     }
 
-    function getTopUseCasesForRole(roleId, limit) {
-      const items = [];
-      for (const cat of useCases) {
-        if (cat.roles.includes(roleId)) {
-          for (const item of cat.items) {
-            items.push(item);
-            if (items.length >= limit) return items;
-          }
-        }
-      }
-      return items;
-    }
-
-    function renderMergedStep3() {
-      const container = document.getElementById('mergedStep3Container');
-      const selectedRolesList = Array.from(selectedRoles);
-      const hasAITools = selectedTools['ai'] && selectedTools['ai'].size > 0 &&
-                         !selectedTools['ai'].has('dont-know') && !selectedTools['ai'].has('not-applicable');
-      const aiTools = hasAITools ? getSelectedAITools() : [];
-
-      if (selectedRolesList.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#6b7280;">No roles selected. Go back to select roles.</p>';
-        return;
-      }
-
-      // Initialize: add ALL matching use cases to useCaseNeeds on first visit
-      if (!useCasesInitialized) {
-        useCases.forEach(cat => {
-          if (cat.roles.some(r => selectedRoles.has(r))) {
-            cat.items.forEach(item => {
-              if (!useCaseDoing.has(item.id)) {
-                useCaseNeeds.add(item.id);
-              }
-            });
-          }
-        });
-        useCasesInitialized = true;
-      }
-
-      let html = '';
-
-      selectedRolesList.forEach(roleId => {
-        const role = roles.find(r => r.id === roleId);
-        const topUseCases = getTopUseCasesForRole(roleId, 10);
-
-        html += `<div class="role-usecase-section">`;
-        html += `<div class="role-usecase-header">${role.icon} ${role.name}</div>`;
-
-        // AI Tool chips for this role
-        if (aiTools.length > 0) {
-          html += `<div class="role-ai-tools-label">AI tools used by this role:</div>`;
-          html += `<div class="role-ai-tools-row">`;
-          aiTools.forEach(tool => {
-            const key = `${tool.id}-${roleId}`;
-            const isChecked = toolRoleMatrix[key] || false;
-            html += `<div class="role-ai-tool-chip ${isChecked ? 'checked' : ''}" data-tool="${tool.id}" data-role="${roleId}">
-              <span>${tool.name}</span>
-            </div>`;
-          });
-          html += `</div>`;
-        }
-
-        // Top 10 use cases with "Already using" toggle
-        topUseCases.forEach(item => {
-          const isDoing = useCaseDoing.has(item.id);
-          html += `<div class="usecase-toggle-row">
-            <span>${item.name}</span>
-            <label class="usecase-toggle-label ${isDoing ? 'active' : ''}">
-              <input type="checkbox" class="usecase-doing-toggle" data-usecase-id="${item.id}" ${isDoing ? 'checked' : ''}>
-              Already using
-            </label>
-          </div>`;
-        });
-
-        html += `</div>`;
-      });
-
-      container.innerHTML = html;
-
-      // Event listeners for AI tool chips (toggle on click)
-      container.querySelectorAll('.role-ai-tool-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-          const toolId = chip.dataset.tool;
-          const roleId = chip.dataset.role;
-          const key = `${toolId}-${roleId}`;
-          toolRoleMatrix[key] = !toolRoleMatrix[key];
-          chip.classList.toggle('checked', toolRoleMatrix[key]);
-          autoSave();
-        });
-      });
-
-      // Event listeners for use case toggles
-      container.querySelectorAll('.usecase-doing-toggle').forEach(cb => {
-        cb.addEventListener('change', (e) => {
-          const id = e.target.dataset.usecaseId;
-          if (e.target.checked) {
-            useCaseNeeds.delete(id);
-            useCaseDoing.add(id);
-          } else {
-            useCaseDoing.delete(id);
-            useCaseNeeds.add(id);
-          }
-          // Update label styling
-          const label = e.target.closest('.usecase-toggle-label');
-          label.classList.toggle('active', e.target.checked);
-          autoSave();
-        });
-      });
-    }
-
     function validateStep(step) {
       // Hide all errors first
       document.querySelectorAll('.validation-error').forEach(el => {
@@ -3336,6 +3056,9 @@
         const championLabel = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}` : 'No';
         html += `<br><strong>AI Champion:</strong> ${championLabel}`;
       }
+      if (successStories.length > 0) {
+        html += '<br><strong>AI Success Stories:</strong><ul>' + successStories.map(s => `<li>${s.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</li>`).join('') + '</ul>';
+      }
       html += '</div></div>';
 
       // Tools
@@ -3363,87 +3086,6 @@
       });
       if (!hasAnyTools) html += '<span class="review-empty">No tools selected</span>';
       html += '</div></div>';
-
-      // AI Matrix (Step 3) - which roles are leveraging AI
-      const hasMatrix = Object.values(toolRoleMatrix).some(v => v);
-      if (hasMatrix) {
-        html += `<div class="review-section">
-          <div class="review-section-header" onclick="goToStep(3)">
-            <span class="review-section-title">🤖 AI Tools by Role</span>
-            <button class="review-edit-btn">Edit</button>
-          </div>
-          <div class="review-content">`;
-        const aiTools = getSelectedAITools();
-        Array.from(selectedRoles).forEach(roleId => {
-          const role = roles.find(r => r.id === roleId);
-          const roleTools = aiTools.filter(tool => toolRoleMatrix[`${tool.id}-${roleId}`]);
-          if (roleTools.length > 0) {
-            html += `<strong>${role?.name || roleId}:</strong> ${roleTools.map(t => t.name).join(', ')}<br>`;
-          } else {
-            html += `<strong>${role?.name || roleId}:</strong> <em style="color:#9ca3af">No AI tools assigned</em><br>`;
-          }
-        });
-        html += '</div></div>';
-      }
-
-      // Use Cases (Step 4)
-      if (useCaseNeeds.size > 0 || useCaseDoing.size > 0) {
-        const findUCName = (id) => {
-          for (const cat of useCases) {
-            const item = cat.items.find(i => i.id === id);
-            if (item) return item.name;
-          }
-          for (const [k, items] of Object.entries(customUseCases)) {
-            const item = items.find(i => i.id === id);
-            if (item) return item.name;
-          }
-          return id;
-        };
-        // Find which use case category each "doing" item belongs to, then map to roles
-        const findUCCategory = (id) => {
-          for (const cat of useCases) {
-            if (cat.items.find(i => i.id === id)) return cat;
-          }
-          return null;
-        };
-        html += `<div class="review-section">
-          <div class="review-section-header" onclick="goToStep(3)">
-            <span class="review-section-title">📋 AI Use Cases</span>
-            <button class="review-edit-btn">Edit</button>
-          </div>
-          <div class="review-content">`;
-        if (useCaseDoing.size > 0) {
-          html += '<strong>Already Doing:</strong><ul>' + Array.from(useCaseDoing).map(id => `<li>${findUCName(id)}</li>`).join('') + '</ul>';
-
-          // Build role-to-doing-use-cases map
-          const roleDoing = {};
-          Array.from(useCaseDoing).forEach(ucId => {
-            const cat = findUCCategory(ucId);
-            if (cat) {
-              cat.roles.forEach(roleId => {
-                if (selectedRoles.has(roleId)) {
-                  if (!roleDoing[roleId]) roleDoing[roleId] = [];
-                  roleDoing[roleId].push(findUCName(ucId));
-                }
-              });
-            }
-          });
-          const roleEntries = Object.entries(roleDoing);
-          if (roleEntries.length > 0) {
-            html += '<div style="margin-top:0.75rem;padding:0.75rem 1rem;background:#F8FAFA;border-radius:8px;border-left:4px solid #2BC6BF;">';
-            html += '<strong style="color:#284086;">Roles already leveraging AI:</strong><br>';
-            roleEntries.forEach(([roleId, ucNames]) => {
-              const role = roles.find(r => r.id === roleId);
-              html += `<span style="display:inline-block;margin:0.25rem 0;"><strong>${role?.name || roleId}</strong> — ${ucNames.join(', ')}</span><br>`;
-            });
-            html += '</div>';
-          }
-        }
-        if (useCaseNeeds.size > 0) {
-          html += '<strong>Needs:</strong><ul>' + Array.from(useCaseNeeds).map(id => `<li>${findUCName(id)}</li>`).join('') + '</ul>';
-        }
-        html += '</div></div>';
-      }
 
       // Engagement
       html += `<div class="review-section">
@@ -3611,23 +3253,35 @@
         autoSave();
       });
 
+      // AI Success Stories
+      document.getElementById('aiSuccessStoryToggle').addEventListener('click', (e) => {
+        const card = e.target.closest('.option-card');
+        if (card) {
+          hasSuccessStories = card.dataset.value;
+          document.querySelectorAll('#aiSuccessStoryToggle .option-card').forEach(c => {
+            c.classList.toggle('selected', c.dataset.value === hasSuccessStories);
+          });
+          document.getElementById('aiSuccessStoriesSection').style.display = hasSuccessStories === 'yes' ? 'block' : 'none';
+          autoSave();
+        }
+      });
+      document.getElementById('addSuccessStoryBtn').addEventListener('click', () => {
+        const input = document.getElementById('aiSuccessStoryInput');
+        const text = input.value.trim();
+        if (text) {
+          successStories.push(text);
+          input.value = '';
+          renderSuccessStories();
+          autoSave();
+        }
+      });
+
       // Step 2 (Tools) — displayed as Step 4
       document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
       document.getElementById('step2Next').addEventListener('click', () => handleStep2Continue());
 
-      // Step 3 (AI Use Cases by Role) — displayed as Step 5
-      document.getElementById('step3Back').addEventListener('click', () => goToStep(2));
-      document.getElementById('step3Next').addEventListener('click', () => goToStep(7));
-
-      // Step 7 (Limiting Factors) — displayed as Step 6
-      document.getElementById('step7Back').addEventListener('click', () => {
-        const hasRoles = selectedRoles.size > 0;
-        if (hasRoles) {
-          goToStep(3);
-        } else {
-          goToStep(2);
-        }
-      });
+      // Step 7 (Limiting Factors) — displayed as Step 5
+      document.getElementById('step7Back').addEventListener('click', () => goToStep(2));
       document.getElementById('step7Next').addEventListener('click', () => { if (validateStep(7)) goToStep(8); });
 
       // Step 7: Limiting Factors click handler
@@ -3647,24 +3301,6 @@
     }
 
     function generateJSON() {
-      // Helper to find use case name
-      const findUseCaseName = (id) => {
-        for (const cat of useCases) {
-          const item = cat.items.find(i => i.id === id);
-          if (item) {
-            return { id, name: item.name, category: cat.category };
-          }
-        }
-        // Check custom use cases
-        for (const [catKey, items] of Object.entries(customUseCases)) {
-          const item = items.find(i => i.id === id);
-          if (item) {
-            return { id, name: item.name, category: catKey, custom: true };
-          }
-        }
-        return { id, name: id };
-      };
-
       // Build the results object
       const results = {
         timestamp: new Date().toISOString(),
@@ -3675,6 +3311,7 @@
             return { id, name: role?.name || id };
           }),
           aiChampion: aiChampion ? { answer: aiChampion, name: aiChampion === 'yes' ? aiChampionName : null } : null,
+          successStories: successStories.length > 0 ? successStories : null,
           tools: {},
           engagement: {
             ownership: Array.from(selectedOwnership).map(id => ({
@@ -3691,11 +3328,6 @@
               const custom = customCompliance.find(c => c.id === id);
               return { id, name: custom?.name || id, custom: true };
             }),
-          },
-          aiToolsByRole: {},
-          useCases: {
-            needs: Array.from(useCaseNeeds).map(findUseCaseName),
-            alreadyDoing: Array.from(useCaseDoing).map(findUseCaseName)
           },
           clientAILandscape: {
             maturity: clientAIMaturity ? { id: clientAIMaturity, name: clientAILabels.maturity[clientAIMaturity] } : null,
@@ -3734,47 +3366,10 @@
         }
       });
 
-      // Add AI tools by role matrix
-      Object.keys(toolRoleMatrix).forEach(key => {
-        if (toolRoleMatrix[key]) {
-          const [toolId, roleId] = key.split('-');
-          const role = roles.find(r => r.id === roleId);
-          const roleName = role?.name || roleId;
-          
-          if (!results.assessment.aiToolsByRole[roleName]) {
-            results.assessment.aiToolsByRole[roleName] = [];
-          }
-          
-          const aiCategory = toolCategories.find(c => c.id === 'ai');
-          const tool = aiCategory.tools.find(t => t.id === toolId);
-          const customTool = customTools['ai']?.find(t => t.id === toolId);
-          const toolName = tool?.name || customTool?.name || toolId;
-          
-          results.assessment.aiToolsByRole[roleName].push(toolName);
-        }
-      });
-
       return JSON.stringify(results, null, 2);
     }
 
     function generateMarkdown() {
-      // Helper to find use case name
-      const findUseCaseName = (id) => {
-        for (const cat of useCases) {
-          const item = cat.items.find(i => i.id === id);
-          if (item) {
-            return { name: item.name, category: cat.category };
-          }
-        }
-        for (const [catKey, items] of Object.entries(customUseCases)) {
-          const item = items.find(i => i.id === id);
-          if (item) {
-            return { name: item.name, category: catKey, custom: true };
-          }
-        }
-        return { name: id, category: 'Unknown' };
-      };
-
       const displayName = accountName || 'Unnamed Account';
       let md = `# AI Adoption Assessment Report\n\n`;
       md += `**Account:** ${displayName}\n\n`;
@@ -3795,6 +3390,13 @@
       if (aiChampion) {
         const label = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}` : 'No';
         md += `**AI Champion:** ${label}\n\n`;
+      }
+      if (successStories.length > 0) {
+        md += `**AI Success Stories:**\n`;
+        successStories.forEach((story, i) => {
+          md += `${i + 1}. ${story}\n`;
+        });
+        md += `\n`;
       }
 
       // Engagement Model
@@ -3856,41 +3458,6 @@
         md += `_No tools selected_\n\n`;
       }
 
-      // AI Tools by Role
-      const hasMatrix = Object.values(toolRoleMatrix).some(v => v);
-      if (hasMatrix) {
-        md += `## 🤖 AI Tool Usage by Role\n\n`;
-        
-        const aiTools = getSelectedAITools();
-        const rolesList = Array.from(selectedRoles);
-        
-        // Build table header
-        md += `| Role |`;
-        aiTools.forEach(tool => {
-          md += ` ${tool.name} |`;
-        });
-        md += `\n`;
-        
-        // Build separator
-        md += `|------|`;
-        aiTools.forEach(() => {
-          md += `:---:|`;
-        });
-        md += `\n`;
-        
-        // Build rows
-        rolesList.forEach(roleId => {
-          const role = roles.find(r => r.id === roleId);
-          md += `| ${role?.name || roleId} |`;
-          aiTools.forEach(tool => {
-            const key = `${tool.id}-${roleId}`;
-            md += toolRoleMatrix[key] ? ` ✅ |` : ` |`;
-          });
-          md += `\n`;
-        });
-        md += `\n`;
-      }
-
       // Client AI Landscape
       md += `## 🏢 Client AI Landscape\n\n`;
       
@@ -3923,50 +3490,6 @@
         md += `**Biggest AI Challenge:** ${clientAILabels.challenge[clientAIChallenge]}\n\n`;
       }
 
-      // Use Cases
-      md += `## 📋 AI Use Cases\n\n`;
-      
-      if (useCaseNeeds.size > 0) {
-        md += `### 🎯 Needs (To Be Addressed)\n\n`;
-        const needsByCategory = {};
-        Array.from(useCaseNeeds).forEach(id => {
-          const info = findUseCaseName(id);
-          if (!needsByCategory[info.category]) {
-            needsByCategory[info.category] = [];
-          }
-          needsByCategory[info.category].push(info.name + (info.custom ? ' *(custom)*' : ''));
-        });
-        Object.entries(needsByCategory).forEach(([cat, items]) => {
-          md += `**${cat}:**\n`;
-          items.forEach(item => {
-            md += `- ${item}\n`;
-          });
-          md += `\n`;
-        });
-      }
-
-      if (useCaseDoing.size > 0) {
-        md += `### ✅ Already Doing\n\n`;
-        const doingByCategory = {};
-        Array.from(useCaseDoing).forEach(id => {
-          const info = findUseCaseName(id);
-          if (!doingByCategory[info.category]) {
-            doingByCategory[info.category] = [];
-          }
-          doingByCategory[info.category].push(info.name + (info.custom ? ' *(custom)*' : ''));
-        });
-        Object.entries(doingByCategory).forEach(([cat, items]) => {
-          md += `**${cat}:**\n`;
-          items.forEach(item => {
-            md += `- ${item}\n`;
-          });
-          md += `\n`;
-        });
-      }
-
-      if (useCaseNeeds.size === 0 && useCaseDoing.size === 0) {
-        md += `_No use cases selected_\n\n`;
-      }
 
       md += `## 🚧 Factors Limiting AI Adoption\n\n`;
       const orderedFactors = limitingFactorsOrder.length ? limitingFactorsOrder : Array.from(selectedLimitingFactors);
