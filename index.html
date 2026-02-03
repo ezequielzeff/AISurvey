@@ -2995,7 +2995,7 @@
 
     // Initialize use case data structure
     function initializeUseCaseData() {
-      if (useCasesInitialized) return;
+      // Always check all categories to handle newly added ones even if data was restored
       useCaseCategories.forEach(cat => {
         if (!useCaseData[cat.id]) {
           useCaseData[cat.id] = {
