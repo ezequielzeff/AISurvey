@@ -1337,7 +1337,7 @@
     <div class="progress-bar">
       <div class="progress-fill" id="progressFill" style="width: 20%;"></div>
     </div>
-    <div class="progress-text" id="progressText" aria-live="polite">Step 1 of 5</div>
+    <div class="progress-text" id="progressText" aria-live="polite">Step 1 of 6</div>
   </div>
 
   <div class="main-container">
@@ -1870,10 +1870,26 @@
       </div>
 
 
+      <!-- Step 3: AI Use Cases -->
+      <div id="step3" class="step hidden">
+        <div class="card-header">
+          <div class="step-indicator">Step 5</div>
+          <h1 class="card-title">What are your AI use case needs?</h1>
+          <p class="card-subtitle">Move use cases between "Need" and "Already Doing" columns</p>
+        </div>
+        <div class="card-body" id="useCasesContainer">
+          <!-- Use cases will be populated by JS -->
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" id="step3Back">← Back</button>
+          <button class="btn btn-primary" id="step3Next">Continue →</button>
+        </div>
+      </div>
+
       <!-- Step 7: Limiting Factors -->
       <div id="step7" class="step hidden">
         <div class="card-header">
-          <div class="step-indicator">Step 5</div>
+          <div class="step-indicator">Step 6</div>
           <h1 class="card-title">What are the main factors limiting your ability to adopt or use AI more effectively in your current work?</h1>
           <p class="card-subtitle">Select up to 2 options</p>
         </div>
@@ -2050,6 +2066,71 @@
       },
     ];
 
+    // Use case categories
+    const useCaseCategories = [
+      {
+        id: 'code-dev',
+        name: 'Code Development',
+        icon: '💻',
+        items: [
+          'Code completion and suggestions',
+          'Generate code from natural language',
+          'Code refactoring and optimization',
+          'Automated code review assistance',
+          'Debugging and error resolution',
+          'Code explanation and documentation'
+        ]
+      },
+      {
+        id: 'documentation',
+        name: 'Documentation',
+        icon: '📄',
+        items: [
+          'API documentation generation',
+          'README and setup guides',
+          'Technical specification writing',
+          'Code comments and docstrings',
+          'Release notes generation'
+        ]
+      },
+      {
+        id: 'requirements',
+        name: 'Requirements & Analysis',
+        icon: '📊',
+        items: [
+          'User story creation and refinement',
+          'Requirements gap analysis',
+          'Acceptance criteria generation',
+          'Impact analysis for changes',
+          'Backlog grooming assistance'
+        ]
+      },
+      {
+        id: 'pm',
+        name: 'Project Management',
+        icon: '📋',
+        items: [
+          'Meeting summaries and action items',
+          'Status report generation',
+          'Risk identification and mitigation',
+          'Effort estimation assistance',
+          'Stakeholder communication drafts'
+        ]
+      },
+      {
+        id: 'design-ux',
+        name: 'Design & UX',
+        icon: '🎨',
+        items: [
+          'Design critique and feedback',
+          'UI copy and microcopy writing',
+          'Accessibility recommendations',
+          'User research analysis',
+          'Persona and journey mapping'
+        ]
+      }
+    ];
+
     // State
     let currentStep = 1;
     let accountName = '';
@@ -2074,6 +2155,10 @@
     let clientAIPriority = null;       // not-priority, low, medium, high
     let clientAIGovernance = null;     // none, informal, developing, established
     let clientAIChallenge = null;      // unclear-roi, skills, data, security, budget, infrastructure
+
+    // Use Cases state - stores items by category: { categoryId: { need: Set, doing: Set, custom: [] } }
+    let useCaseData = {};
+    let useCasesInitialized = false;
 
     // Render flags
     let toolsRendered = false;
@@ -2132,6 +2217,13 @@
         clientAIPriority,
         clientAIGovernance,
         clientAIChallenge,
+        useCaseData: Object.fromEntries(
+          Object.entries(useCaseData).map(([catId, data]) => [catId, {
+            need: Array.from(data.need || []),
+            doing: Array.from(data.doing || []),
+            custom: data.custom || []
+          }])
+        ),
         savedAt: new Date().toISOString()
       };
       
@@ -2179,6 +2271,18 @@
         clientAIGovernance = state.clientAIGovernance || null;
         clientAIChallenge = state.clientAIChallenge || null;
 
+        // Restore use case data
+        if (state.useCaseData) {
+          useCaseData = Object.fromEntries(
+            Object.entries(state.useCaseData).map(([catId, data]) => [catId, {
+              need: new Set(data.need || []),
+              doing: new Set(data.doing || []),
+              custom: data.custom || []
+            }])
+          );
+          useCasesInitialized = true;
+        }
+
         return true;
       } catch (e) {
         console.error('Failed to load from localStorage:', e);
@@ -2212,6 +2316,8 @@
         clientAIPriority = null;
         clientAIGovernance = null;
         clientAIChallenge = null;
+        useCaseData = {};
+        useCasesInitialized = false;
 
         // Reset render flags so steps re-initialize
         toolsRendered = false;
@@ -2497,7 +2603,7 @@
       // Navigate to appropriate next step
       const hasRoles = selectedRoles.size > 0;
 
-      goToStep(7); // Go to Limiting Factors
+      goToStep(3); // Go to Use Cases
     }
 
     function toggleTool(categoryId, toolId) {
@@ -2586,13 +2692,13 @@
 
     function goToStep(step) {
       // Remap removed steps for backward compat
-      if (step === 3 || step === 4) step = 2;
+      if (step === 4) step = 3;
       currentStep = step;
 
       // Display order mapping (internal IDs in display sequence)
       const hasRoles = selectedRoles.size > 0;
-      const activeOrder = hasRoles ? [5, 6, 1, 2, 7, 8] : [5, 6, 1, 2, 7, 8];
-      const stepLabels = {0:'Welcome', 5:'Engagement', 6:'Client AI', 1:'Roles', 2:'Tools', 7:'Limiting Factors', 8:'Review'};
+      const activeOrder = hasRoles ? [5, 6, 1, 2, 3, 7, 8] : [5, 6, 1, 2, 3, 7, 8];
+      const stepLabels = {0:'Welcome', 5:'Engagement', 6:'Client AI', 1:'Roles', 2:'Tools', 3:'Use Cases', 7:'Limiting Factors', 8:'Review'};
       const totalDisplaySteps = activeOrder.length - 1; // exclude review from count
 
       // Show/hide progress container (hide for welcome page)
@@ -2624,6 +2730,9 @@
       // Render content for step
       if (step === 2) {
         renderTools();
+      }
+      if (step === 3) {
+        renderUseCases();
       }
       if (step === 5) {
         renderEngagement();
@@ -2870,6 +2979,159 @@
       document.querySelectorAll('#clientChallengeOptions .option-card').forEach(card => {
         card.classList.toggle('selected', card.dataset.value === clientAIChallenge);
       });
+    }
+
+    // Initialize use case data structure
+    function initializeUseCaseData() {
+      if (useCasesInitialized) return;
+      useCaseCategories.forEach(cat => {
+        if (!useCaseData[cat.id]) {
+          useCaseData[cat.id] = {
+            need: new Set(cat.items),  // All items start in "Need" column
+            doing: new Set(),
+            custom: []
+          };
+        }
+      });
+      useCasesInitialized = true;
+    }
+
+    function renderUseCases() {
+      initializeUseCaseData();
+      const container = document.getElementById('useCasesContainer');
+
+      container.innerHTML = useCaseCategories.map(cat => {
+        const catData = useCaseData[cat.id];
+        const needItems = Array.from(catData.need);
+        const doingItems = Array.from(catData.doing);
+        const customItems = catData.custom || [];
+
+        return `
+          <div class="usecase-category" data-category-id="${cat.id}">
+            <div class="usecase-category-header">
+              <div class="usecase-category-icon">${cat.icon}</div>
+              <div class="usecase-category-name">${cat.name}</div>
+            </div>
+            <div class="usecase-columns">
+              <div class="usecase-column need">
+                <div class="usecase-column-header">
+                  <span>📋</span> Need
+                </div>
+                <div class="usecase-column-items" data-category="${cat.id}" data-column="need">
+                  ${needItems.length > 0 ? needItems.map(item => `
+                    <div class="usecase-card" data-item="${item.replace(/"/g, '&quot;')}">
+                      <span class="usecase-delete-btn" title="Remove">×</span>
+                      <span class="usecase-name">${item}</span>
+                      <span class="usecase-move-btn" title="Move to Already Doing">→</span>
+                    </div>
+                  `).join('') : '<div class="usecase-empty">Move items here when needed</div>'}
+                </div>
+              </div>
+              <div class="usecase-column doing">
+                <div class="usecase-column-header">
+                  <span>✅</span> Already Doing
+                </div>
+                <div class="usecase-column-items" data-category="${cat.id}" data-column="doing">
+                  ${doingItems.length > 0 ? doingItems.map(item => `
+                    <div class="usecase-card" data-item="${item.replace(/"/g, '&quot;')}">
+                      <span class="usecase-move-btn" title="Move to Need">←</span>
+                      <span class="usecase-name">${item}</span>
+                      <span class="usecase-delete-btn" title="Remove">×</span>
+                    </div>
+                  `).join('') : '<div class="usecase-empty">Move items here when already addressed</div>'}
+                </div>
+              </div>
+            </div>
+            <div class="usecase-add-input">
+              <input type="text" placeholder="Add use case..." data-category="${cat.id}">
+              <button type="button" data-category="${cat.id}" class="add-usecase-btn">Add</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Attach event listeners
+      container.querySelectorAll('.usecase-card').forEach(card => {
+        const moveBtn = card.querySelector('.usecase-move-btn');
+        const deleteBtn = card.querySelector('.usecase-delete-btn');
+
+        moveBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const columnEl = card.closest('.usecase-column-items');
+          const catId = columnEl.dataset.category;
+          const fromColumn = columnEl.dataset.column;
+          const item = card.dataset.item;
+          moveUseCaseItem(catId, item, fromColumn);
+        });
+
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const columnEl = card.closest('.usecase-column-items');
+          const catId = columnEl.dataset.category;
+          const fromColumn = columnEl.dataset.column;
+          const item = card.dataset.item;
+          removeUseCaseItem(catId, item, fromColumn);
+        });
+      });
+
+      container.querySelectorAll('.add-usecase-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const catId = btn.dataset.category;
+          addCustomUseCase(catId);
+        });
+      });
+
+      container.querySelectorAll('.usecase-add-input input').forEach(input => {
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            const catId = input.dataset.category;
+            addCustomUseCase(catId);
+          }
+        });
+      });
+    }
+
+    function moveUseCaseItem(categoryId, item, fromColumn) {
+      const catData = useCaseData[categoryId];
+      const toColumn = fromColumn === 'need' ? 'doing' : 'need';
+
+      catData[fromColumn].delete(item);
+      catData[toColumn].add(item);
+
+      renderUseCases();
+      autoSave();
+    }
+
+    function removeUseCaseItem(categoryId, item, fromColumn) {
+      const catData = useCaseData[categoryId];
+      catData[fromColumn].delete(item);
+      // Also remove from custom if it's a custom item
+      catData.custom = catData.custom.filter(c => c !== item);
+
+      renderUseCases();
+      autoSave();
+    }
+
+    function addCustomUseCase(categoryId) {
+      const container = document.getElementById('useCasesContainer');
+      const input = container.querySelector(`input[data-category="${categoryId}"]`);
+      const value = input.value.trim();
+
+      if (!value) return;
+
+      const catData = useCaseData[categoryId];
+      // Check for duplicates
+      if (catData.need.has(value) || catData.doing.has(value)) {
+        alert('This use case already exists in this category.');
+        return;
+      }
+
+      catData.need.add(value);
+      catData.custom.push(value);
+      input.value = '';
+
+      renderUseCases();
+      autoSave();
     }
 
     const LIMITING_FACTORS_MAX = 2;
@@ -3130,6 +3392,33 @@
       }
       html += '</div></div>';
 
+      // AI Use Cases
+      html += `<div class="review-section">
+        <div class="review-section-header" onclick="goToStep(3)">
+          <span class="review-section-title">📋 AI Use Case Needs</span>
+          <button class="review-edit-btn">Edit</button>
+        </div>
+        <div class="review-content">`;
+      let hasUseCases = false;
+      useCaseCategories.forEach(cat => {
+        const catData = useCaseData[cat.id];
+        if (!catData) return;
+        const needItems = Array.from(catData.need || []);
+        const doingItems = Array.from(catData.doing || []);
+        if (needItems.length > 0 || doingItems.length > 0) {
+          hasUseCases = true;
+          html += `<strong>${cat.icon} ${cat.name}:</strong><br>`;
+          if (needItems.length > 0) {
+            html += `&nbsp;&nbsp;• Need: ${needItems.join(', ')}<br>`;
+          }
+          if (doingItems.length > 0) {
+            html += `&nbsp;&nbsp;• Already Doing: ${doingItems.join(', ')}<br>`;
+          }
+        }
+      });
+      if (!hasUseCases) html += '<span class="review-empty">No use cases defined</span>';
+      html += '</div></div>';
+
       // Limiting Factors
       html += `<div class="review-section">
         <div class="review-section-header" onclick="goToStep(7)">
@@ -3280,8 +3569,12 @@
       document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
       document.getElementById('step2Next').addEventListener('click', () => handleStep2Continue());
 
-      // Step 7 (Limiting Factors) — displayed as Step 5
-      document.getElementById('step7Back').addEventListener('click', () => goToStep(2));
+      // Step 3 (Use Cases) — displayed as Step 5
+      document.getElementById('step3Back').addEventListener('click', () => goToStep(2));
+      document.getElementById('step3Next').addEventListener('click', () => goToStep(7));
+
+      // Step 7 (Limiting Factors) — displayed as Step 6
+      document.getElementById('step7Back').addEventListener('click', () => goToStep(3));
       document.getElementById('step7Next').addEventListener('click', () => { if (validateStep(7)) goToStep(8); });
 
       // Step 7: Limiting Factors click handler
@@ -3340,7 +3633,15 @@
             id,
             name: id === 'other' ? (limitingFactorOther || limitingFactorLabels.other) : limitingFactorLabels[id],
             rank: index === 0 ? 'primary' : index === 1 ? 'secondary' : undefined
-          }))
+          })),
+          useCases: useCaseCategories.map(cat => {
+            const catData = useCaseData[cat.id] || { need: new Set(), doing: new Set() };
+            return {
+              category: cat.name,
+              need: Array.from(catData.need || []),
+              alreadyDoing: Array.from(catData.doing || [])
+            };
+          }).filter(cat => cat.need.length > 0 || cat.alreadyDoing.length > 0)
         }
       };
 
@@ -3490,6 +3791,36 @@
         md += `**Biggest AI Challenge:** ${clientAILabels.challenge[clientAIChallenge]}\n\n`;
       }
 
+      // AI Use Case Needs
+      md += `## 📋 AI Use Case Needs\n\n`;
+      let hasAnyUseCases = false;
+      useCaseCategories.forEach(cat => {
+        const catData = useCaseData[cat.id];
+        if (!catData) return;
+        const needItems = Array.from(catData.need || []);
+        const doingItems = Array.from(catData.doing || []);
+        if (needItems.length > 0 || doingItems.length > 0) {
+          hasAnyUseCases = true;
+          md += `### ${cat.icon} ${cat.name}\n\n`;
+          if (needItems.length > 0) {
+            md += `**Need:**\n`;
+            needItems.forEach(item => {
+              md += `- ${item}\n`;
+            });
+            md += `\n`;
+          }
+          if (doingItems.length > 0) {
+            md += `**Already Doing:**\n`;
+            doingItems.forEach(item => {
+              md += `- ${item}\n`;
+            });
+            md += `\n`;
+          }
+        }
+      });
+      if (!hasAnyUseCases) {
+        md += `_No use cases defined_\n\n`;
+      }
 
       md += `## 🚧 Factors Limiting AI Adoption\n\n`;
       const orderedFactors = limitingFactorsOrder.length ? limitingFactorsOrder : Array.from(selectedLimitingFactors);
