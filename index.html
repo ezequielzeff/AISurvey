@@ -887,105 +887,7 @@
     }
 
     /* Maturity Slider Styles */
-    .maturity-slider-container {
-      padding: 1rem 0;
-    }
 
-    .maturity-track {
-      position: relative;
-      height: 6px;
-      background: linear-gradient(to right, #e5e7eb 0%, #e5e7eb 100%);
-      border-radius: 3px;
-      margin: 0 40px;
-    }
-
-    .maturity-progress {
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-      background: linear-gradient(to right, #ef4444, #f59e0b, #fbbf24, #84cc16, #22c55e);
-      border-radius: 3px;
-      transition: width 0.3s ease;
-      width: 0%;
-    }
-
-    .maturity-stages {
-      display: flex;
-      justify-content: space-between;
-      margin-top: -12px;
-      position: relative;
-    }
-
-    .maturity-stage {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-      flex: 1;
-      position: relative;
-    }
-
-    .maturity-dot {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: #fff;
-      border: 3px solid #e5e7eb;
-      transition: all 0.2s ease;
-      z-index: 1;
-    }
-
-    .maturity-stage:hover .maturity-dot {
-      border-color: #a5b4fc;
-      transform: scale(1.1);
-    }
-
-    .maturity-stage.active .maturity-dot {
-      border-color: #4f46e5;
-      background: #4f46e5;
-      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
-    }
-
-    .maturity-stage.passed .maturity-dot {
-      border-color: #6b7280;
-      background: #6b7280;
-    }
-
-    .maturity-label {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 0.75rem;
-      text-align: center;
-      transition: all 0.2s ease;
-    }
-
-    .maturity-icon {
-      font-size: 1.5rem;
-      margin-bottom: 0.25rem;
-    }
-
-    .maturity-name {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #6b7280;
-    }
-
-    .maturity-stage.active .maturity-name,
-    .maturity-stage.passed .maturity-name {
-      color: #1f2937;
-    }
-
-    .maturity-stage.active .maturity-name {
-      color: #4f46e5;
-    }
-
-    .maturity-desc {
-      font-size: 0.7rem;
-      color: #9ca3af;
-      margin-top: 0.15rem;
-    }
 
     .maturity-stage.active .maturity-desc {
       color: #6b7280;
@@ -1655,65 +1557,42 @@
         <div class="card-header">
           <div class="step-indicator">Step 2</div>
           <h1 class="card-title">What is the client doing around AI?</h1>
-          <p class="card-subtitle">(whether we are / are not involved)</p>
+          <p class="card-subtitle">(irrespective of DataArt's involvement)</p>
         </div>
         <div class="card-body">
-          <!-- Question 1: AI Maturity (Slider) -->
+          <!-- Question 1: AI Maturity (Cards) -->
           <div class="engagement-section">
             <div class="engagement-label">What is the client's AI maturity stage?</div>
-            <div class="maturity-slider-container">
-              <div class="maturity-track">
-                <div class="maturity-progress" id="maturityProgress"></div>
+            <div class="option-cards client-ai-options" id="maturityStages">
+              <div class="option-card" data-value="dont-know" style="flex:0 1 auto;min-width:100px;">
+                <div class="option-card-icon">🤷</div>
+                <div class="option-card-title">I Don't Know</div>
+                <div class="option-card-desc">Unsure</div>
               </div>
-              <div class="maturity-stages" id="maturityStages">
-                <div class="maturity-stage" data-value="dont-know" data-index="0">
-                  <div class="maturity-dot"></div>
-                  <div class="maturity-label">
-                    <span class="maturity-icon">🤷</span>
-                    <span class="maturity-name">I don't know</span>
-                    <span class="maturity-desc">Unsure of AI status</span>
-                  </div>
-                </div>
-                <div class="maturity-stage" data-value="not-started" data-index="1">
-                  <div class="maturity-dot"></div>
-                  <div class="maturity-label">
-                    <span class="maturity-icon">🚫</span>
-                    <span class="maturity-name">Not Started</span>
-                    <span class="maturity-desc">No AI initiatives</span>
-                  </div>
-                </div>
-                <div class="maturity-stage" data-value="exploring" data-index="2">
-                  <div class="maturity-dot"></div>
-                  <div class="maturity-label">
-                    <span class="maturity-icon">🔍</span>
-                    <span class="maturity-name">Exploring</span>
-                    <span class="maturity-desc">Researching & learning</span>
-                  </div>
-                </div>
-                <div class="maturity-stage" data-value="piloting" data-index="3">
-                  <div class="maturity-dot"></div>
-                  <div class="maturity-label">
-                    <span class="maturity-icon">🧪</span>
-                    <span class="maturity-name">Piloting</span>
-                    <span class="maturity-desc">Running POCs</span>
-                  </div>
-                </div>
-                <div class="maturity-stage" data-value="scaling" data-index="4">
-                  <div class="maturity-dot"></div>
-                  <div class="maturity-label">
-                    <span class="maturity-icon">📈</span>
-                    <span class="maturity-name">Scaling</span>
-                    <span class="maturity-desc">Expanding solutions</span>
-                  </div>
-                </div>
-                <div class="maturity-stage" data-value="optimizing" data-index="5">
-                  <div class="maturity-dot"></div>
-                  <div class="maturity-label">
-                    <span class="maturity-icon">⚡</span>
-                    <span class="maturity-name">Optimizing</span>
-                    <span class="maturity-desc">AI embedded</span>
-                  </div>
-                </div>
+              <div class="option-card" data-value="not-started" style="flex:0 1 auto;min-width:100px;">
+                <div class="option-card-icon">🚫</div>
+                <div class="option-card-title">Not Started</div>
+                <div class="option-card-desc">No AI initiatives</div>
+              </div>
+              <div class="option-card" data-value="exploring" style="flex:0 1 auto;min-width:100px;">
+                <div class="option-card-icon">🔍</div>
+                <div class="option-card-title">Exploring</div>
+                <div class="option-card-desc">Researching & learning</div>
+              </div>
+              <div class="option-card" data-value="piloting" style="flex:0 1 auto;min-width:100px;">
+                <div class="option-card-icon">🧪</div>
+                <div class="option-card-title">Piloting</div>
+                <div class="option-card-desc">Running POCs</div>
+              </div>
+              <div class="option-card" data-value="scaling" style="flex:0 1 auto;min-width:100px;">
+                <div class="option-card-icon">📈</div>
+                <div class="option-card-title">Scaling</div>
+                <div class="option-card-desc">Expanding solutions</div>
+              </div>
+              <div class="option-card" data-value="optimizing" style="flex:0 1 auto;min-width:100px;">
+                <div class="option-card-icon">⚡</div>
+                <div class="option-card-title">Optimizing</div>
+                <div class="option-card-desc">AI fully embedded</div>
               </div>
             </div>
           </div>
@@ -1733,25 +1612,30 @@
                 <div class="option-card-title">Not Using AI</div>
                 <div class="option-card-desc">No AI adoption yet</div>
               </div>
-              <div class="option-card" data-value="internal-tools">
-                <div class="option-card-icon">🛠️</div>
-                <div class="option-card-title">Internal Tools</div>
-                <div class="option-card-desc">Copilot, ChatGPT, etc.</div>
+              <div class="option-card" data-value="off-the-shelf">
+                <div class="option-card-icon">📦</div>
+                <div class="option-card-title">Off-the-Shelf Tools</div>
+                <div class="option-card-desc">Copilot, ChatGPT, Gemini, etc.</div>
               </div>
-              <div class="option-card" data-value="customer-facing">
-                <div class="option-card-icon">👥</div>
-                <div class="option-card-title">Customer-Facing</div>
-                <div class="option-card-desc">AI in customer apps</div>
+              <div class="option-card" data-value="business-apps">
+                <div class="option-card-icon">💼</div>
+                <div class="option-card-title">AI in Business Apps</div>
+                <div class="option-card-desc">AI features in existing platforms</div>
+              </div>
+              <div class="option-card" data-value="custom-solutions">
+                <div class="option-card-icon">🔧</div>
+                <div class="option-card-title">Custom AI Solutions</div>
+                <div class="option-card-desc">In-house built AI/ML models</div>
               </div>
               <div class="option-card" data-value="business-processes">
                 <div class="option-card-icon">⚙️</div>
-                <div class="option-card-title">Business Processes</div>
-                <div class="option-card-desc">Automation & workflows</div>
+                <div class="option-card-title">Process Automation</div>
+                <div class="option-card-desc">AI-driven workflows & RPA</div>
               </div>
-              <div class="option-card" data-value="ai-products">
-                <div class="option-card-icon">🚀</div>
-                <div class="option-card-title">AI Products</div>
-                <div class="option-card-desc">AI-driven products/services</div>
+              <div class="option-card" data-value="customer-facing">
+                <div class="option-card-icon">👥</div>
+                <div class="option-card-title">Customer-Facing AI</div>
+                <div class="option-card-desc">Chatbots, recommendations, etc.</div>
               </div>
             </div>
           </div>
@@ -1882,8 +1766,47 @@
               </div>
             </div>
             <div id="approvedToolsDetailSection" style="display: none; margin-top: 1rem;">
-              <label class="account-name-label" for="approvedToolsDetail">Which tools are on the approved list?</label>
-              <input type="text" id="approvedToolsDetail" class="account-name-input" placeholder="e.g., GitHub Copilot, ChatGPT Enterprise..." maxlength="500">
+              <label class="account-name-label">Which tools are on the approved list?</label>
+              <div class="engagement-hint">Select all that apply</div>
+              <div class="compliance-chips" id="approvedToolsChips">
+                <div class="compliance-chip" data-value="github-copilot">
+                  <span class="compliance-icon">🤖</span>
+                  <span class="compliance-name">GitHub Copilot</span>
+                </div>
+                <div class="compliance-chip" data-value="chatgpt">
+                  <span class="compliance-icon">💬</span>
+                  <span class="compliance-name">ChatGPT / OpenAI</span>
+                </div>
+                <div class="compliance-chip" data-value="claude">
+                  <span class="compliance-icon">🧠</span>
+                  <span class="compliance-name">Claude / Anthropic</span>
+                </div>
+                <div class="compliance-chip" data-value="gemini">
+                  <span class="compliance-icon">✨</span>
+                  <span class="compliance-name">Gemini / Google</span>
+                </div>
+                <div class="compliance-chip" data-value="cursor">
+                  <span class="compliance-icon">📝</span>
+                  <span class="compliance-name">Cursor</span>
+                </div>
+                <div class="compliance-chip" data-value="amazon-q">
+                  <span class="compliance-icon">📦</span>
+                  <span class="compliance-name">Amazon Q</span>
+                </div>
+                <div class="compliance-chip" data-value="ms-copilot">
+                  <span class="compliance-icon">🪟</span>
+                  <span class="compliance-name">Microsoft Copilot</span>
+                </div>
+                <div class="compliance-chip" data-value="atlassian-rovo">
+                  <span class="compliance-icon">🔵</span>
+                  <span class="compliance-name">Atlassian Rovo</span>
+                </div>
+              </div>
+              <div id="customApprovedToolsChips" class="compliance-chips custom-compliance"></div>
+              <div class="compliance-add-input">
+                <input type="text" placeholder="Add other approved tool..." id="customApprovedToolInput">
+                <button type="button" id="addApprovedToolBtn">Add</button>
+              </div>
             </div>
           </div>
 
@@ -2189,12 +2112,13 @@
     
     // Client AI Landscape
     let clientAIMaturity = null;       // not-started, exploring, piloting, scaling, optimizing
-    let clientAIUsage = new Set();     // Multi-select: not-using, internal-tools, customer-facing, business-processes, ai-products
+    let clientAIUsage = new Set();     // Multi-select: not-using, off-the-shelf, business-apps, custom-solutions, business-processes, customer-facing
     let clientAIPriority = null;       // not-priority, low, medium, high
     let clientAIGovernance = null;     // none, informal, developing, established
     let clientAIChallenge = null;      // unclear-roi, skills, data, security, budget, infrastructure
     let clientApprovedTools = null;    // dont-know, no, yes
-    let approvedToolsDetail = '';      // free text when yes
+    let selectedApprovedTools = new Set(); // selected approved tool chips
+    let customApprovedTools = [];      // custom approved tools [{id, name}]
 
     // Use Cases state - stores items by category: { categoryId: { need: Set, doing: Set, custom: [] } }
     let useCaseData = {};
@@ -2258,7 +2182,8 @@
         clientAIGovernance,
         clientAIChallenge,
         clientApprovedTools,
-        approvedToolsDetail,
+        selectedApprovedTools: Array.from(selectedApprovedTools),
+        customApprovedTools,
         useCaseData: Object.fromEntries(
           Object.entries(useCaseData).map(([catId, data]) => [catId, {
             need: Array.from(data.need || []),
@@ -2313,7 +2238,8 @@
         clientAIGovernance = state.clientAIGovernance || null;
         clientAIChallenge = state.clientAIChallenge || null;
         clientApprovedTools = state.clientApprovedTools || null;
-        approvedToolsDetail = state.approvedToolsDetail || '';
+        selectedApprovedTools = new Set(state.selectedApprovedTools || []);
+        customApprovedTools = state.customApprovedTools || [];
 
         // Restore use case data
         if (state.useCaseData) {
@@ -2361,7 +2287,8 @@
         clientAIGovernance = null;
         clientAIChallenge = null;
         clientApprovedTools = null;
-        approvedToolsDetail = '';
+        selectedApprovedTools = new Set();
+        customApprovedTools = [];
         useCaseData = {};
         useCasesInitialized = false;
 
@@ -2867,10 +2794,11 @@
       usage: {
         'dont-know': "I Don't Know",
         'not-using': 'Not Using AI',
-        'internal-tools': 'Internal Tools',
-        'customer-facing': 'Customer-Facing',
-        'business-processes': 'Business Processes',
-        'ai-products': 'AI Products'
+        'off-the-shelf': 'Off-the-Shelf Tools',
+        'business-apps': 'AI in Business Apps',
+        'custom-solutions': 'Custom AI Solutions',
+        'business-processes': 'Process Automation',
+        'customer-facing': 'Customer-Facing AI'
       },
       priority: {
         'not-priority': 'Not a Priority',
@@ -2906,11 +2834,11 @@
       updateClientApprovedToolsUI();
 
       if (!clientAIRendered) {
-        // Maturity (slider)
+        // Maturity (single select cards)
         document.getElementById('maturityStages').addEventListener('click', (e) => {
-          const stage = e.target.closest('.maturity-stage');
-          if (stage) {
-            clientAIMaturity = stage.dataset.value;
+          const card = e.target.closest('.option-card');
+          if (card) {
+            clientAIMaturity = card.dataset.value;
             updateClientAIMaturityUI();
             autoSave();
           }
@@ -2981,9 +2909,48 @@
             autoSave();
           }
         });
-        document.getElementById('approvedToolsDetail').addEventListener('input', (e) => {
-          approvedToolsDetail = e.target.value;
-          autoSave();
+        // Approved tools chips (predefined)
+        document.getElementById('approvedToolsChips').addEventListener('click', (e) => {
+          const chip = e.target.closest('.compliance-chip');
+          if (chip) {
+            const value = chip.dataset.value;
+            if (selectedApprovedTools.has(value)) {
+              selectedApprovedTools.delete(value);
+            } else {
+              selectedApprovedTools.add(value);
+            }
+            updateApprovedToolsChipsUI();
+            autoSave();
+          }
+        });
+        // Custom approved tools chips
+        document.getElementById('customApprovedToolsChips').addEventListener('click', (e) => {
+          const deleteBtn = e.target.closest('.compliance-delete');
+          if (deleteBtn) {
+            const chip = deleteBtn.closest('.compliance-chip');
+            const id = chip.dataset.value;
+            selectedApprovedTools.delete(id);
+            customApprovedTools = customApprovedTools.filter(t => t.id !== id);
+            renderCustomApprovedToolsChips();
+            autoSave();
+            return;
+          }
+          const chip = e.target.closest('.compliance-chip');
+          if (chip) {
+            const value = chip.dataset.value;
+            if (selectedApprovedTools.has(value)) {
+              selectedApprovedTools.delete(value);
+            } else {
+              selectedApprovedTools.add(value);
+            }
+            updateCustomApprovedToolsChipUI();
+            autoSave();
+          }
+        });
+        // Add custom approved tool
+        document.getElementById('addApprovedToolBtn').addEventListener('click', addCustomApprovedTool);
+        document.getElementById('customApprovedToolInput').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') addCustomApprovedTool();
         });
 
         clientAIRendered = true;
@@ -2991,31 +2958,9 @@
     }
 
     function updateClientAIMaturityUI() {
-      const stages = document.querySelectorAll('#maturityStages .maturity-stage');
-      const maturityValues = ['dont-know', 'not-started', 'exploring', 'piloting', 'scaling', 'optimizing'];
-      const selectedIndex = maturityValues.indexOf(clientAIMaturity);
-
-      stages.forEach((stage, index) => {
-        stage.classList.remove('active', 'passed');
-        if (index === selectedIndex) {
-          stage.classList.add('active');
-        } else if (selectedIndex > 0 && index > 0 && index < selectedIndex) {
-          stage.classList.add('passed');
-        }
+      document.querySelectorAll('#maturityStages .option-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.value === clientAIMaturity);
       });
-
-      // Update progress bar — "I don't know" (index 0) shows no progress
-      // Progress bar spans from "Not Started" (index 1) to "Optimizing" (index 5)
-      const progress = document.getElementById('maturityProgress');
-      const totalStages = maturityValues.length;
-      const startPct = (1 / (totalStages - 1)) * 100; // position of "Not Started"
-      progress.style.left = startPct + '%';
-      if (selectedIndex > 0) {
-        const endPct = (selectedIndex / (totalStages - 1)) * 100;
-        progress.style.width = (endPct - startPct) + '%';
-      } else {
-        progress.style.width = '0%';
-      }
     }
 
     function updateClientAIUsageUI() {
@@ -3047,7 +2992,63 @@
         card.classList.toggle('selected', card.dataset.value === clientApprovedTools);
       });
       document.getElementById('approvedToolsDetailSection').style.display = clientApprovedTools === 'yes' ? 'block' : 'none';
-      document.getElementById('approvedToolsDetail').value = approvedToolsDetail;
+      if (clientApprovedTools === 'yes') {
+        updateApprovedToolsChipsUI();
+        renderCustomApprovedToolsChips();
+      }
+    }
+
+    function updateApprovedToolsChipsUI() {
+      document.querySelectorAll('#approvedToolsChips .compliance-chip').forEach(chip => {
+        chip.classList.toggle('selected', selectedApprovedTools.has(chip.dataset.value));
+      });
+    }
+
+    function updateCustomApprovedToolsChipUI() {
+      document.querySelectorAll('#customApprovedToolsChips .compliance-chip').forEach(chip => {
+        chip.classList.toggle('selected', selectedApprovedTools.has(chip.dataset.value));
+      });
+    }
+
+    function renderCustomApprovedToolsChips() {
+      const container = document.getElementById('customApprovedToolsChips');
+      container.innerHTML = customApprovedTools.map(t => `
+        <div class="compliance-chip ${selectedApprovedTools.has(t.id) ? 'selected' : ''}" data-value="${t.id}">
+          <span class="compliance-name">${t.name}</span>
+          <span class="compliance-delete" title="Remove">×</span>
+        </div>
+      `).join('');
+    }
+
+    const approvedToolLabels = {
+      'github-copilot': 'GitHub Copilot',
+      'chatgpt': 'ChatGPT / OpenAI',
+      'claude': 'Claude / Anthropic',
+      'gemini': 'Gemini / Google',
+      'cursor': 'Cursor',
+      'amazon-q': 'Amazon Q',
+      'ms-copilot': 'Microsoft Copilot',
+      'atlassian-rovo': 'Atlassian Rovo'
+    };
+
+    function getApprovedToolNames() {
+      return Array.from(selectedApprovedTools).map(id => {
+        if (approvedToolLabels[id]) return approvedToolLabels[id];
+        const custom = customApprovedTools.find(t => t.id === id);
+        return custom?.name || id;
+      });
+    }
+
+    function addCustomApprovedTool() {
+      const input = document.getElementById('customApprovedToolInput');
+      const name = input.value.trim();
+      if (!name) return;
+      const id = 'custom-' + Date.now();
+      customApprovedTools.push({ id, name });
+      selectedApprovedTools.add(id);
+      input.value = '';
+      renderCustomApprovedToolsChips();
+      autoSave();
     }
 
     // Initialize use case data structure
@@ -3452,7 +3453,13 @@
       if (clientAIGovernance) html += `<strong>Governance:</strong> ${clientAILabels.governance[clientAIGovernance]}<br>`;
       if (clientAIChallenge) html += `<strong>Challenge:</strong> ${clientAILabels.challenge[clientAIChallenge]}<br>`;
       if (clientApprovedTools) {
-        const approvedLabel = clientApprovedTools === 'yes' ? `Yes${approvedToolsDetail ? ' — ' + approvedToolsDetail : ''}` : clientApprovedTools === 'no' ? 'No' : "I Don't Know";
+        let approvedLabel;
+        if (clientApprovedTools === 'yes') {
+          const toolNames = getApprovedToolNames();
+          approvedLabel = 'Yes' + (toolNames.length > 0 ? ' — ' + toolNames.join(', ') : '');
+        } else {
+          approvedLabel = clientApprovedTools === 'no' ? 'No' : "I Don't Know";
+        }
         html += `<strong>Approved AI Tools List:</strong> ${approvedLabel}<br>`;
       }
       const usageItems = Array.from(clientAIUsage).filter(id => id !== 'not-using' && id !== 'dont-know');
@@ -3701,7 +3708,7 @@
             priority: clientAIPriority ? { id: clientAIPriority, name: clientAILabels.priority[clientAIPriority] } : null,
             governance: clientAIGovernance ? { id: clientAIGovernance, name: clientAILabels.governance[clientAIGovernance] } : null,
             challenge: clientAIChallenge ? { id: clientAIChallenge, name: clientAILabels.challenge[clientAIChallenge] } : null,
-            approvedToolsList: clientApprovedTools ? { answer: clientApprovedTools, detail: clientApprovedTools === 'yes' ? approvedToolsDetail : null } : null
+            approvedToolsList: clientApprovedTools ? { answer: clientApprovedTools, tools: clientApprovedTools === 'yes' ? getApprovedToolNames() : null } : null
           },
           limitingFactors: (limitingFactorsOrder.length ? limitingFactorsOrder : Array.from(selectedLimitingFactors)).map((id, index) => ({
             id,
@@ -3866,8 +3873,14 @@
       }
 
       if (clientApprovedTools) {
-        const approvedLabel = clientApprovedTools === 'yes' ? `Yes${approvedToolsDetail ? ' — ' + approvedToolsDetail : ''}` : clientApprovedTools === 'no' ? 'No' : "I Don't Know";
-        md += `**Approved AI Tools List:** ${approvedLabel}\n\n`;
+        let approvedMdLabel;
+        if (clientApprovedTools === 'yes') {
+          const toolNames = getApprovedToolNames();
+          approvedMdLabel = 'Yes' + (toolNames.length > 0 ? '\n' + toolNames.map(t => `- ${t}`).join('\n') : '');
+        } else {
+          approvedMdLabel = clientApprovedTools === 'no' ? 'No' : "I Don't Know";
+        }
+        md += `**Approved AI Tools List:** ${approvedMdLabel}\n\n`;
       }
 
       // AI Use Case Needs
