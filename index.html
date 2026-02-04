@@ -623,6 +623,85 @@
       display: none;
     }
 
+    /* Role-Tool Matrix styles */
+    .role-tool-matrix {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e2e6e9;
+      font-size: 0.9rem;
+    }
+
+    .role-tool-matrix thead th {
+      background: #fef9c3;
+      color: #1f2937;
+      font-weight: 600;
+      padding: 0.85rem 0.75rem;
+      text-align: center;
+      border-bottom: 2px solid #e2e6e9;
+      border-right: 1px solid #e2e6e9;
+      font-size: 0.85rem;
+    }
+
+    .role-tool-matrix thead th:first-child {
+      text-align: left;
+      min-width: 200px;
+      background: #f3f4f6;
+    }
+
+    .role-tool-matrix thead th:last-child {
+      border-right: none;
+    }
+
+    .role-tool-matrix tbody tr {
+      transition: background-color 0.15s;
+    }
+
+    .role-tool-matrix tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    .role-tool-matrix tbody tr:hover {
+      background: #f0f4ff;
+    }
+
+    .role-tool-matrix tbody td {
+      padding: 0.85rem 0.75rem;
+      border-bottom: 1px solid #e2e6e9;
+      border-right: 1px solid #e2e6e9;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .role-tool-matrix tbody td:first-child {
+      text-align: left;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .role-tool-matrix tbody td:last-child {
+      border-right: none;
+    }
+
+    .role-tool-matrix tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .matrix-checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: #4f46e5;
+    }
+
+    .matrix-empty {
+      text-align: center;
+      padding: 2rem;
+      color: #9ca3af;
+      font-style: italic;
+    }
+
     /* Use cases styles */
     .usecase-category {
       margin-bottom: 2.5rem;
@@ -1239,7 +1318,7 @@
     <div class="progress-bar">
       <div class="progress-fill" id="progressFill" style="width: 20%;"></div>
     </div>
-    <div class="progress-text" id="progressText" aria-live="polite">Step 1 of 6</div>
+    <div class="progress-text" id="progressText" aria-live="polite">Step 1 of 7</div>
   </div>
 
   <div class="main-container">
@@ -1819,10 +1898,28 @@
       </div>
 
 
+      <!-- Step 4: Role-Tool Matrix -->
+      <div id="step4" class="step hidden">
+        <div class="card-header">
+          <div class="step-indicator">Step 5</div>
+          <h1 class="card-title">Who uses which AI tools?</h1>
+          <p class="card-subtitle">Check the boxes where a role uses a tool</p>
+        </div>
+        <div class="card-body">
+          <div id="roleToolMatrixContainer">
+            <!-- Matrix will be populated by JS -->
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" id="step4Back">← Back</button>
+          <button class="btn btn-primary" id="step4Next">Continue →</button>
+        </div>
+      </div>
+
       <!-- Step 3: AI Use Cases -->
       <div id="step3" class="step hidden">
         <div class="card-header">
-          <div class="step-indicator">Step 5</div>
+          <div class="step-indicator">Step 6</div>
           <h1 class="card-title">What are your AI use case needs?</h1>
           <p class="card-subtitle">Move use cases between "Need" and "Already Doing" columns</p>
         </div>
@@ -1838,7 +1935,7 @@
       <!-- Step 7: Limiting Factors -->
       <div id="step7" class="step hidden">
         <div class="card-header">
-          <div class="step-indicator">Step 6</div>
+          <div class="step-indicator">Step 7</div>
           <h1 class="card-title">What are the main factors limiting your ability to adopt or use AI more effectively in your current work?</h1>
           <p class="card-subtitle">Select up to 2 options</p>
         </div>
@@ -2120,6 +2217,9 @@
     let selectedApprovedTools = new Set(); // selected approved tool chips
     let customApprovedTools = [];      // custom approved tools [{id, name}]
 
+    // Role-Tool Matrix: { "roleId:toolId": true }
+    let roleToolMatrix = {};
+
     // Use Cases state - stores items by category: { categoryId: { need: Set, doing: Set, custom: [] } }
     let useCaseData = {};
     let useCasesInitialized = false;
@@ -2184,6 +2284,7 @@
         clientApprovedTools,
         selectedApprovedTools: Array.from(selectedApprovedTools),
         customApprovedTools,
+        roleToolMatrix,
         useCaseData: Object.fromEntries(
           Object.entries(useCaseData).map(([catId, data]) => [catId, {
             need: Array.from(data.need || []),
@@ -2240,6 +2341,7 @@
         clientApprovedTools = state.clientApprovedTools || null;
         selectedApprovedTools = new Set(state.selectedApprovedTools || []);
         customApprovedTools = state.customApprovedTools || [];
+        roleToolMatrix = state.roleToolMatrix || {};
 
         // Restore use case data
         if (state.useCaseData) {
@@ -2289,6 +2391,7 @@
         clientApprovedTools = null;
         selectedApprovedTools = new Set();
         customApprovedTools = [];
+        roleToolMatrix = {};
         useCaseData = {};
         useCasesInitialized = false;
 
@@ -2356,8 +2459,7 @@
         updateRoleUI();
         // Restore account name
         document.getElementById('accountNameInput').value = accountName;
-        // Restore to saved step (remap removed step 4 to step 3)
-        if (currentStep === 4) currentStep = 3;
+        // Restore to saved step
         goToStep(currentStep > 0 ? currentStep : 5);
       } else {
         goToStep(0); // Start at welcome page
@@ -2576,7 +2678,7 @@
       // Navigate to appropriate next step
       const hasRoles = selectedRoles.size > 0;
 
-      goToStep(3); // Go to Use Cases
+      goToStep(4); // Go to Role-Tool Matrix
     }
 
     function toggleTool(categoryId, toolId) {
@@ -2664,14 +2766,12 @@
     }
 
     function goToStep(step) {
-      // Remap removed steps for backward compat
-      if (step === 4) step = 3;
       currentStep = step;
 
       // Display order mapping (internal IDs in display sequence)
       const hasRoles = selectedRoles.size > 0;
-      const activeOrder = hasRoles ? [5, 6, 1, 2, 3, 7, 8] : [5, 6, 1, 2, 3, 7, 8];
-      const stepLabels = {0:'Welcome', 5:'Engagement', 6:'Client AI', 1:'Roles', 2:'Tools', 3:'Use Cases', 7:'Limiting Factors', 8:'Review'};
+      const activeOrder = [5, 6, 1, 2, 4, 3, 7, 8];
+      const stepLabels = {0:'Welcome', 5:'Engagement', 6:'Client AI', 1:'Roles', 2:'Tools', 4:'Role-Tool Matrix', 3:'Use Cases', 7:'Limiting Factors', 8:'Review'};
       const totalDisplaySteps = activeOrder.length - 1; // exclude review from count
 
       // Show/hide progress container (hide for welcome page)
@@ -2706,6 +2806,9 @@
       }
       if (step === 3) {
         renderUseCases();
+      }
+      if (step === 4) {
+        renderRoleToolMatrix();
       }
       if (step === 5) {
         renderEngagement();
@@ -3204,6 +3307,78 @@
       autoSave();
     }
 
+    // Role-Tool Matrix
+    function getSelectedAITools() {
+      const aiCategory = toolCategories.find(c => c.id === 'ai');
+      if (!aiCategory) return [];
+      const selected = selectedTools['ai'];
+      if (!selected) return [];
+      const toolIds = Array.from(selected).filter(id => id !== 'dont-know' && id !== 'not-applicable');
+      return toolIds.map(id => {
+        const tool = aiCategory.tools.find(t => t.id === id);
+        if (tool) return { id, name: tool.name };
+        const custom = customTools['ai']?.find(t => t.id === id);
+        return { id, name: custom?.name || id };
+      });
+    }
+
+    function getSelectedRolesList() {
+      return Array.from(selectedRoles).map(id => {
+        const role = roles.find(r => r.id === id);
+        return { id, name: role?.name || id };
+      });
+    }
+
+    function renderRoleToolMatrix() {
+      const container = document.getElementById('roleToolMatrixContainer');
+      const aiTools = getSelectedAITools();
+      const rolesList = getSelectedRolesList();
+
+      if (aiTools.length === 0 || rolesList.length === 0) {
+        container.innerHTML = `<div class="matrix-empty">
+          ${aiTools.length === 0 ? 'No AI tools were selected in the previous step.' : 'No roles were selected.'}
+          <br>Please go back and select at least one AI tool and one role.
+        </div>`;
+        return;
+      }
+
+      let html = `<table class="role-tool-matrix">
+        <thead>
+          <tr>
+            <th>Role</th>
+            ${aiTools.map(t => `<th>${t.name}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>`;
+
+      rolesList.forEach(role => {
+        html += `<tr>
+          <td>${role.name}</td>`;
+        aiTools.forEach(tool => {
+          const key = `${role.id}:${tool.id}`;
+          const checked = roleToolMatrix[key] ? 'checked' : '';
+          html += `<td><input type="checkbox" class="matrix-checkbox" data-role="${role.id}" data-tool="${tool.id}" ${checked}></td>`;
+        });
+        html += `</tr>`;
+      });
+
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+
+      // Attach event listeners
+      container.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          const key = `${e.target.dataset.role}:${e.target.dataset.tool}`;
+          if (e.target.checked) {
+            roleToolMatrix[key] = true;
+          } else {
+            delete roleToolMatrix[key];
+          }
+          autoSave();
+        });
+      });
+    }
+
     const LIMITING_FACTORS_MAX = 2;
     const limitingFactorLabels = {
       time: 'Lack of time / competing priorities',
@@ -3417,6 +3592,34 @@
         }
       });
       if (!hasAnyTools) html += '<span class="review-empty">No tools selected</span>';
+      html += '</div></div>';
+
+      // Role-Tool Matrix
+      const matrixAITools = getSelectedAITools();
+      const matrixRoles = getSelectedRolesList();
+      const matrixEntries = Object.keys(roleToolMatrix).filter(k => roleToolMatrix[k]);
+      html += `<div class="review-section">
+        <div class="review-section-header" onclick="goToStep(4)">
+          <span class="review-section-title">🔗 Who Uses Which AI Tools</span>
+          <button class="review-edit-btn">Edit</button>
+        </div>
+        <div class="review-content">`;
+      if (matrixEntries.length > 0 && matrixAITools.length > 0 && matrixRoles.length > 0) {
+        matrixRoles.forEach(role => {
+          const toolsForRole = matrixEntries
+            .filter(k => k.startsWith(role.id + ':'))
+            .map(k => {
+              const toolId = k.split(':')[1];
+              const tool = matrixAITools.find(t => t.id === toolId);
+              return tool?.name || toolId;
+            });
+          if (toolsForRole.length > 0) {
+            html += `<strong>${role.name}:</strong> ${toolsForRole.join(', ')}<br>`;
+          }
+        });
+      } else {
+        html += '<span class="review-empty">No role-tool mappings defined</span>';
+      }
       html += '</div></div>';
 
       // Engagement
@@ -3649,11 +3852,15 @@
       document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
       document.getElementById('step2Next').addEventListener('click', () => handleStep2Continue());
 
-      // Step 3 (Use Cases) — displayed as Step 5
-      document.getElementById('step3Back').addEventListener('click', () => goToStep(2));
+      // Step 4 (Role-Tool Matrix) — displayed as Step 5
+      document.getElementById('step4Back').addEventListener('click', () => goToStep(2));
+      document.getElementById('step4Next').addEventListener('click', () => goToStep(3));
+
+      // Step 3 (Use Cases) — displayed as Step 6
+      document.getElementById('step3Back').addEventListener('click', () => goToStep(4));
       document.getElementById('step3Next').addEventListener('click', () => goToStep(7));
 
-      // Step 7 (Limiting Factors) — displayed as Step 6
+      // Step 7 (Limiting Factors) — displayed as Step 7
       document.getElementById('step7Back').addEventListener('click', () => goToStep(3));
       document.getElementById('step7Next').addEventListener('click', () => { if (validateStep(7)) goToStep(8); });
 
@@ -3748,6 +3955,24 @@
         }
       });
 
+      // Add role-tool matrix
+      const matrixKeys = Object.keys(roleToolMatrix).filter(k => roleToolMatrix[k]);
+      if (matrixKeys.length > 0) {
+        results.assessment.roleToolMatrix = {};
+        matrixKeys.forEach(key => {
+          const [roleId, toolId] = key.split(':');
+          const role = roles.find(r => r.id === roleId);
+          const aiCat = toolCategories.find(c => c.id === 'ai');
+          const tool = aiCat?.tools.find(t => t.id === toolId) || customTools['ai']?.find(t => t.id === toolId);
+          const roleName = role?.name || roleId;
+          const toolName = tool?.name || toolId;
+          if (!results.assessment.roleToolMatrix[roleName]) {
+            results.assessment.roleToolMatrix[roleName] = [];
+          }
+          results.assessment.roleToolMatrix[roleName].push(toolName);
+        });
+      }
+
       return JSON.stringify(results, null, 2);
     }
 
@@ -3838,6 +4063,26 @@
       });
       if (!hasTools) {
         md += `_No tools selected_\n\n`;
+      }
+
+      // Role-Tool Matrix
+      const mdMatrixKeys = Object.keys(roleToolMatrix).filter(k => roleToolMatrix[k]);
+      if (mdMatrixKeys.length > 0) {
+        md += `## 🔗 Who Uses Which AI Tools\n\n`;
+        const matrixByRole = {};
+        mdMatrixKeys.forEach(key => {
+          const [roleId, toolId] = key.split(':');
+          const role = roles.find(r => r.id === roleId);
+          const aiCat = toolCategories.find(c => c.id === 'ai');
+          const tool = aiCat?.tools.find(t => t.id === toolId) || customTools['ai']?.find(t => t.id === toolId);
+          const roleName = role?.name || roleId;
+          const toolName = tool?.name || toolId;
+          if (!matrixByRole[roleName]) matrixByRole[roleName] = [];
+          matrixByRole[roleName].push(toolName);
+        });
+        Object.entries(matrixByRole).forEach(([roleName, tools]) => {
+          md += `**${roleName}:** ${tools.join(', ')}\n\n`;
+        });
       }
 
       // Client AI Landscape
