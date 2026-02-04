@@ -1654,8 +1654,8 @@
       <div id="step6" class="step hidden">
         <div class="card-header">
           <div class="step-indicator">Step 2</div>
-          <h1 class="card-title">What is the client's AI landscape?</h1>
-          <p class="card-subtitle">Help us understand where the client stands with AI</p>
+          <h1 class="card-title">What is the client doing around AI?</h1>
+          <p class="card-subtitle">(whether we are / are not involved)</p>
         </div>
         <div class="card-body">
           <!-- Question 1: AI Maturity (Slider) -->
@@ -1861,6 +1861,32 @@
               </div>
             </div>
           </div>
+          <!-- Question 6: Approved AI Tools List -->
+          <div class="engagement-section">
+            <div class="engagement-label">Is there an approved list of AI tools?</div>
+            <div class="option-cards client-ai-options" id="clientApprovedToolsOptions">
+              <div class="option-card" data-value="dont-know">
+                <div class="option-card-icon">🤷</div>
+                <div class="option-card-title">I Don't Know</div>
+                <div class="option-card-desc">Unsure if list exists</div>
+              </div>
+              <div class="option-card" data-value="no">
+                <div class="option-card-icon">❌</div>
+                <div class="option-card-title">No</div>
+                <div class="option-card-desc">No approved list</div>
+              </div>
+              <div class="option-card" data-value="yes">
+                <div class="option-card-icon">✅</div>
+                <div class="option-card-title">Yes</div>
+                <div class="option-card-desc">Approved list exists</div>
+              </div>
+            </div>
+            <div id="approvedToolsDetailSection" style="display: none; margin-top: 1rem;">
+              <label class="account-name-label" for="approvedToolsDetail">Which tools are on the approved list?</label>
+              <input type="text" id="approvedToolsDetail" class="account-name-input" placeholder="e.g., GitHub Copilot, ChatGPT Enterprise..." maxlength="500">
+            </div>
+          </div>
+
           <div class="validation-error" id="step6Error" role="alert"></div>
         </div>
         <div class="card-footer">
@@ -2167,6 +2193,8 @@
     let clientAIPriority = null;       // not-priority, low, medium, high
     let clientAIGovernance = null;     // none, informal, developing, established
     let clientAIChallenge = null;      // unclear-roi, skills, data, security, budget, infrastructure
+    let clientApprovedTools = null;    // dont-know, no, yes
+    let approvedToolsDetail = '';      // free text when yes
 
     // Use Cases state - stores items by category: { categoryId: { need: Set, doing: Set, custom: [] } }
     let useCaseData = {};
@@ -2229,6 +2257,8 @@
         clientAIPriority,
         clientAIGovernance,
         clientAIChallenge,
+        clientApprovedTools,
+        approvedToolsDetail,
         useCaseData: Object.fromEntries(
           Object.entries(useCaseData).map(([catId, data]) => [catId, {
             need: Array.from(data.need || []),
@@ -2282,6 +2312,8 @@
         clientAIPriority = state.clientAIPriority || null;
         clientAIGovernance = state.clientAIGovernance || null;
         clientAIChallenge = state.clientAIChallenge || null;
+        clientApprovedTools = state.clientApprovedTools || null;
+        approvedToolsDetail = state.approvedToolsDetail || '';
 
         // Restore use case data
         if (state.useCaseData) {
@@ -2328,6 +2360,8 @@
         clientAIPriority = null;
         clientAIGovernance = null;
         clientAIChallenge = null;
+        clientApprovedTools = null;
+        approvedToolsDetail = '';
         useCaseData = {};
         useCasesInitialized = false;
 
@@ -2869,6 +2903,7 @@
       updateClientAIPriorityUI();
       updateClientAIGovernanceUI();
       updateClientAIChallengeUI();
+      updateClientApprovedToolsUI();
 
       if (!clientAIRendered) {
         // Maturity (slider)
@@ -2937,6 +2972,20 @@
           }
         });
 
+        // Approved AI Tools (single select)
+        document.getElementById('clientApprovedToolsOptions').addEventListener('click', (e) => {
+          const card = e.target.closest('.option-card');
+          if (card) {
+            clientApprovedTools = card.dataset.value;
+            updateClientApprovedToolsUI();
+            autoSave();
+          }
+        });
+        document.getElementById('approvedToolsDetail').addEventListener('input', (e) => {
+          approvedToolsDetail = e.target.value;
+          autoSave();
+        });
+
         clientAIRendered = true;
       }
     }
@@ -2991,6 +3040,14 @@
       document.querySelectorAll('#clientChallengeOptions .option-card').forEach(card => {
         card.classList.toggle('selected', card.dataset.value === clientAIChallenge);
       });
+    }
+
+    function updateClientApprovedToolsUI() {
+      document.querySelectorAll('#clientApprovedToolsOptions .option-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.value === clientApprovedTools);
+      });
+      document.getElementById('approvedToolsDetailSection').style.display = clientApprovedTools === 'yes' ? 'block' : 'none';
+      document.getElementById('approvedToolsDetail').value = approvedToolsDetail;
     }
 
     // Initialize use case data structure
@@ -3394,6 +3451,10 @@
       if (clientAIPriority) html += `<strong>Priority:</strong> ${clientAILabels.priority[clientAIPriority]}<br>`;
       if (clientAIGovernance) html += `<strong>Governance:</strong> ${clientAILabels.governance[clientAIGovernance]}<br>`;
       if (clientAIChallenge) html += `<strong>Challenge:</strong> ${clientAILabels.challenge[clientAIChallenge]}<br>`;
+      if (clientApprovedTools) {
+        const approvedLabel = clientApprovedTools === 'yes' ? `Yes${approvedToolsDetail ? ' — ' + approvedToolsDetail : ''}` : clientApprovedTools === 'no' ? 'No' : "I Don't Know";
+        html += `<strong>Approved AI Tools List:</strong> ${approvedLabel}<br>`;
+      }
       const usageItems = Array.from(clientAIUsage).filter(id => id !== 'not-using' && id !== 'dont-know');
       if (usageItems.length > 0) {
         html += '<strong>Usage:</strong> ' + usageItems.map(id => clientAILabels.usage[id]).join(', ');
@@ -3639,7 +3700,8 @@
             usage: Array.from(clientAIUsage).filter(id => id !== 'not-using').map(id => ({ id, name: clientAILabels.usage[id] })),
             priority: clientAIPriority ? { id: clientAIPriority, name: clientAILabels.priority[clientAIPriority] } : null,
             governance: clientAIGovernance ? { id: clientAIGovernance, name: clientAILabels.governance[clientAIGovernance] } : null,
-            challenge: clientAIChallenge ? { id: clientAIChallenge, name: clientAILabels.challenge[clientAIChallenge] } : null
+            challenge: clientAIChallenge ? { id: clientAIChallenge, name: clientAILabels.challenge[clientAIChallenge] } : null,
+            approvedToolsList: clientApprovedTools ? { answer: clientApprovedTools, detail: clientApprovedTools === 'yes' ? approvedToolsDetail : null } : null
           },
           limitingFactors: (limitingFactorsOrder.length ? limitingFactorsOrder : Array.from(selectedLimitingFactors)).map((id, index) => ({
             id,
@@ -3801,6 +3863,11 @@
       
       if (clientAIChallenge) {
         md += `**Biggest AI Challenge:** ${clientAILabels.challenge[clientAIChallenge]}\n\n`;
+      }
+
+      if (clientApprovedTools) {
+        const approvedLabel = clientApprovedTools === 'yes' ? `Yes${approvedToolsDetail ? ' — ' + approvedToolsDetail : ''}` : clientApprovedTools === 'no' ? 'No' : "I Don't Know";
+        md += `**Approved AI Tools List:** ${approvedLabel}\n\n`;
       }
 
       // AI Use Case Needs
