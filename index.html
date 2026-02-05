@@ -2425,13 +2425,13 @@
     const roles = [
       { id: 'pm', name: 'Project Managers / Scrum Masters', icon: '📋' },
       { id: 'ba', name: 'Business Analysts / Product Managers', icon: '📊' },
-      { id: 'ux', name: 'UI/UX Designers', icon: '🎨' },
-      { id: 'devops', name: 'DevOps Engineers', icon: '⚙️' },
+      { id: 'arch', name: 'Solutions Architects', icon: '🏗️' },
       { id: 'swe', name: 'Software Engineers', icon: '💻' },
       { id: 'qa', name: 'Manual QA', icon: '🔍' },
       { id: 'qaa', name: 'QA Automation Engineers', icon: '🤖' },
       { id: 'data', name: 'Data Engineers / Scientists', icon: '📈' },
-      { id: 'arch', name: 'Solutions Architects', icon: '🏗️' },
+      { id: 'devops', name: 'DevOps Engineers', icon: '⚙️' },
+      { id: 'ux', name: 'UI/UX Designers', icon: '🎨' },
     ];
 
     const toolCategories = [
@@ -3862,8 +3862,12 @@
       });
     }
 
+    function getSelectedRolesOrdered() {
+      return roles.filter(r => selectedRoles.has(r.id)).map(r => r.id);
+    }
+
     function getSelectedRolesList() {
-      return Array.from(selectedRoles).map(id => {
+      return getSelectedRolesOrdered().map(id => {
         const role = roles.find(r => r.id === id);
         return { id, name: role?.name || id };
       });
@@ -3926,13 +3930,13 @@
     }
 
     function getRoleFullName(roleId) {
-      const map = { pm:'Project Manager', swe:'Developer', qa:'QA Manual', qaa:'QA Automation', ba:'Business Analyst', ux:'UX Designer', devops:'DevOps', arch:'Architect', data:'Data Engineer' };
+      const map = { pm:'Project Manager', swe:'Developer', qa:'QA Manual', qaa:'QA Automation', ba:'Business Analyst', ux:'UX Designer', devops:'DevOps', arch:'Sol. Architect', data:'Data Engineer' };
       return map[roleId] || roleId;
     }
 
     function renderWorkflowMaturity() {
       const container = document.getElementById('workflowMaturityContainer');
-      const activeRoles = Array.from(selectedRoles).filter(id => wfmRoleDescriptions[id]);
+      const activeRoles = getSelectedRolesOrdered().filter(id => wfmRoleDescriptions[id]);
 
       if (activeRoles.length === 0) {
         container.innerHTML = '<div class="matrix-empty">No applicable roles selected. Go back to Step 3 to select roles.</div>';
@@ -4175,7 +4179,7 @@
         </div>
         <div class="review-content">`;
       if (selectedRoles.size > 0) {
-        html += '<ul>' + Array.from(selectedRoles).map(id => {
+        html += '<ul>' + getSelectedRolesOrdered().map(id => {
           const role = roles.find(r => r.id === id);
           return `<li>${role?.name || id}</li>`;
         }).join('') + '</ul>';
@@ -4353,7 +4357,7 @@
           <button class="review-edit-btn">Edit</button>
         </div>
         <div class="review-content">`;
-      const wfmActiveRoles = Array.from(selectedRoles).filter(id => wfmRoleDescriptions[id]);
+      const wfmActiveRoles = getSelectedRolesOrdered().filter(id => wfmRoleDescriptions[id]);
       if (wfmActiveRoles.length > 0 && Object.keys(workflowMaturity).length > 0) {
         html += '<ul>';
         wfmActiveRoles.forEach(roleId => {
@@ -4541,7 +4545,7 @@
         timestamp: new Date().toISOString(),
         accountName: accountName || 'Unnamed Account',
         assessment: {
-          roles: Array.from(selectedRoles).map(id => {
+          roles: getSelectedRolesOrdered().map(id => {
             const role = roles.find(r => r.id === id);
             return { id, name: role?.name || id };
           }),
@@ -4657,7 +4661,7 @@
       // Team Roles
       md += `## 👥 Team Roles\n\n`;
       if (selectedRoles.size > 0) {
-        Array.from(selectedRoles).forEach(roleId => {
+        getSelectedRolesOrdered().forEach(roleId => {
           const role = roles.find(r => r.id === roleId);
           md += `- ${role?.name || roleId}\n`;
         });
@@ -4849,7 +4853,7 @@
       const wfmMdEntries = Object.entries(workflowMaturity);
       if (wfmMdEntries.length > 0) {
         md += `## 🤖 AI Workflow Maturity\n\n`;
-        const wfmMdActiveRoles = Array.from(selectedRoles).filter(id => wfmRoleDescriptions[id]);
+        const wfmMdActiveRoles = getSelectedRolesOrdered().filter(id => wfmRoleDescriptions[id]);
         wfmMdActiveRoles.forEach(roleId => {
           const stageIdx = workflowMaturity[roleId];
           if (stageIdx !== undefined && wfmStages[stageIdx]) {
