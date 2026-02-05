@@ -623,6 +623,171 @@
       display: none;
     }
 
+    /* AI Workflow Maturity styles */
+    .wfm-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .wfm-stage-header {
+      display: flex;
+      border-bottom: 3px solid #4f46e5;
+      margin-bottom: 0;
+      min-width: 900px;
+    }
+
+    .wfm-stage-header .wfm-role-label {
+      width: 70px;
+      min-width: 70px;
+      flex-shrink: 0;
+    }
+
+    .wfm-stage-tab {
+      flex: 1;
+      text-align: center;
+      padding: 0.6rem 0.25rem;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s;
+    }
+
+    .wfm-stage-tab::before {
+      content: '';
+      display: block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      margin: 0 auto 0.3rem;
+      background: #fff;
+      transition: all 0.15s;
+    }
+
+    .wfm-stage-tab:hover::before {
+      border-color: #818cf8;
+    }
+
+    .wfm-stage-tab .wfm-stage-num {
+      font-size: 0.65rem;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .wfm-stage-tab .wfm-stage-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #374151;
+      margin-top: 0.1rem;
+    }
+
+    .wfm-stage-tab .wfm-stage-sub {
+      font-size: 0.6rem;
+      color: #9ca3af;
+      margin-top: 0.1rem;
+    }
+
+    .wfm-body {
+      min-width: 900px;
+    }
+
+    .wfm-row {
+      display: flex;
+      border-bottom: 1px solid #e5e7eb;
+      transition: background 0.15s;
+    }
+
+    .wfm-row:hover {
+      background: #f8fafc;
+    }
+
+    .wfm-role-label {
+      width: 70px;
+      min-width: 70px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem 0.25rem;
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: #fff;
+      background: #374151;
+      border-radius: 4px;
+      margin: 0.35rem 0.25rem 0.35rem 0;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .wfm-cell {
+      flex: 1;
+      padding: 0.6rem 0.5rem;
+      font-size: 0.72rem;
+      color: #4b5563;
+      line-height: 1.35;
+      cursor: pointer;
+      border-left: 1px solid #f0f0f0;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .wfm-cell:hover {
+      background: #f5f3ff;
+    }
+
+    .wfm-cell.selected {
+      background: #eef2ff;
+      border-left-color: #c7d2fe;
+      font-weight: 500;
+      color: #1e1b4b;
+    }
+
+    .wfm-cell.selected::before {
+      content: '✓';
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-size: 0.65rem;
+      color: #4f46e5;
+      font-weight: 700;
+    }
+
+    .wfm-signals-row {
+      display: flex;
+      border-top: 2px solid #e5e7eb;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+    }
+
+    .wfm-signals-row .wfm-role-label {
+      background: transparent;
+      color: #6b7280;
+      font-size: 0.7rem;
+      font-weight: 600;
+      font-style: italic;
+    }
+
+    .wfm-signals-row .wfm-cell {
+      font-size: 0.65rem;
+      color: #6b7280;
+      cursor: default;
+      padding: 0.5rem;
+    }
+
+    .wfm-signals-row .wfm-cell:hover {
+      background: transparent;
+    }
+
+    .wfm-signals-row .wfm-cell ul {
+      margin: 0;
+      padding-left: 1rem;
+      list-style: disc;
+    }
+
+    .wfm-signals-row .wfm-cell li {
+      margin-bottom: 0.15rem;
+    }
+
     /* Role-Tool Matrix styles */
     .role-tool-matrix {
       width: 100%;
@@ -2146,6 +2311,24 @@
         </div>
       </div>
 
+      <!-- Step 9: AI Workflow Maturity -->
+      <div id="step9" class="step hidden">
+        <div class="card-header">
+          <div class="step-indicator">Step 8</div>
+          <h1 class="card-title">AI Workflow Maturity</h1>
+          <p class="card-subtitle">Select the current stage for each role</p>
+        </div>
+        <div class="card-body">
+          <div id="workflowMaturityContainer">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" id="step9Back">← Back</button>
+          <button class="btn btn-primary" id="step9Next">Continue →</button>
+        </div>
+      </div>
+
       <!-- Step 8: Review -->
       <div id="step8" class="step hidden">
         <div class="card-header">
@@ -2387,6 +2570,102 @@
     // Role-Tool Matrix: { "roleId:toolId": true }
     let roleToolMatrix = {};
 
+    // AI Workflow Maturity: { roleId: stageIndex (0-5) }
+    let workflowMaturity = {};
+
+    const wfmStages = [
+      { num: 'Stage 0', title: 'No AI Usage', sub: 'AI not used in delivery workflows' },
+      { num: 'Stage 1', title: 'Individual AI Usage', sub: 'AI used by individuals only' },
+      { num: 'Stage 2', title: 'Team AI Practices', sub: 'Shared, manual AI usage at team level' },
+      { num: 'Stage 3', title: 'AI-Chained Tasks', sub: 'Sequential AI steps from one intent' },
+      { num: 'Stage 4', title: 'Event-Triggered AI', sub: 'AI reacts automatically to SDLC events' },
+      { num: 'Stage 5', title: 'Semi-Agentic AI', sub: 'AI recommends, humans decide' }
+    ];
+
+    const wfmRoleDescriptions = {
+      pm: [
+        'Planning, estimation, and reporting done entirely manually',
+        'Uses AI to draft status updates and meeting notes',
+        'Team uses shared prompts for sprint planning and risk reviews',
+        'Defines scope, identifies risks, maps dependencies, and drafts timeline in one AI-assisted flow',
+        'AI automatically flags sprint risks when sprint is created or updated',
+        'AI analyzes sprint data and recommends scope or priority adjustments'
+      ],
+      swe: [
+        'No AI tools in IDEs or development environment',
+        'Uses Copilot for code snippets and refactoring help',
+        'Team has agreed standards for AI usage in code reviews',
+        'Takes a story and generates code skeleton with corresponding unit tests automatically',
+        'AI automatically reviews pull requests when they are created',
+        'AI identifies and suggests specific refactoring or tech-debt targets'
+      ],
+      qa: [
+        'Test cases written fully by hand without AI assistance',
+        'Uses AI to brainstorm test cases and scenarios',
+        'Team uses shared prompts for consistent test case generation',
+        'Generates test cases, creates test data, and produces automation scripts in sequence',
+        'AI automatically analyzes and categorizes failed test runs',
+        'AI recommends which tests to prioritize based on risk and coverage'
+      ],
+      qaa: [
+        'Automation scripts written without AI assistance',
+        'Uses AI to generate test automation snippets',
+        'Team uses shared prompts for consistent automation patterns',
+        'Generates test framework, creates page objects, and produces test suites in sequence',
+        'AI automatically runs and triages test failures on each build',
+        'AI recommends test suite optimizations and identifies flaky tests'
+      ],
+      ba: [
+        'Requirements written without any AI assistance',
+        'Uses AI to rewrite requirements and user stories',
+        'Team follows standard AI-assisted story templates',
+        'Transforms requirements into acceptance criteria and complete test scenarios',
+        'AI automatically enriches tickets with context when created',
+        'AI analyzes requirements and proposes simplifications or improvements'
+      ],
+      ux: [
+        'No AI used for ideation or content creation',
+        'Uses AI for copy generation, ideas, and quick wireframes',
+        'Team uses shared AI workflows for personas and UX copy',
+        'Converts requirements into wireframes with UX copy and design variants',
+        'AI automatically generates UX feedback when design changes are committed',
+        'AI analyzes feedback patterns and suggests UX improvements'
+      ],
+      devops: [
+        'Manual troubleshooting and script writing',
+        'Uses AI to explain logs and troubleshoot errors',
+        'Team maintains AI-assisted runbooks for common tasks',
+        'Analyzes incidents, generates root cause analysis, and suggests mitigation steps',
+        'AI automatically summarizes incidents when alerts are triggered',
+        'AI monitors usage patterns and recommends scaling or infrastructure changes'
+      ],
+      arch: [
+        'Designs created entirely without AI input',
+        'Uses AI to sanity-check design decisions',
+        'Team consistently uses AI in design review sessions',
+        'Converts requirements into architecture draft with documented tradeoffs',
+        'AI automatically checks designs against architectural standards',
+        'AI evaluates multiple architectural options with pros and cons'
+      ],
+      data: [
+        'No AI-assisted analysis or feature engineering',
+        'Uses AI to write SQL queries and Python snippets',
+        'Team shares AI notebooks for analysis and exploration',
+        'Transforms business questions into datasets with engineered features and model drafts',
+        'AI automatically validates pipelines and detects data drift',
+        'AI analyzes model performance and suggests feature or model improvements'
+      ]
+    };
+
+    const wfmSignals = [
+      ['AI tools blocked or discouraged', 'No AI policy or guidance', '"Shadow AI" usage only', 'No leadership discussion about AI'],
+      ['Tool usage varies widely', 'No shared standards', 'Outputs differ by person', 'Knowledge not reusable'],
+      ['Prompt libraries', 'AI referenced in ceremonies', 'Repeatable outputs', 'Onboarding includes AI practices'],
+      ['Prompt chains', 'Reused workflows', 'Scripts or templates', 'Consistent flow across tickets'],
+      ['Bots posting comments', 'Jira / GitHub / CI integrations', 'Background AI execution', 'Reduced manual triggering'],
+      ['Dashboards with AI insights', 'Confidence / risk scores', 'Recommendation reports', 'Humans approve actions']
+    ];
+
     // Use Cases state - stores items by category: { categoryId: { need: Set, doing: Set, custom: [] } }
     let useCaseData = {};
     let useCasesInitialized = false;
@@ -2452,6 +2731,7 @@
         selectedApprovedTools: Array.from(selectedApprovedTools),
         customApprovedTools,
         roleToolMatrix,
+        workflowMaturity,
         useCaseData: Object.fromEntries(
           Object.entries(useCaseData).map(([catId, data]) => [catId, {
             need: Array.from(data.need || []),
@@ -2509,6 +2789,7 @@
         selectedApprovedTools = new Set(state.selectedApprovedTools || []);
         customApprovedTools = state.customApprovedTools || [];
         roleToolMatrix = state.roleToolMatrix || {};
+        workflowMaturity = state.workflowMaturity || {};
 
         // Restore use case data
         if (state.useCaseData) {
@@ -2559,6 +2840,7 @@
         selectedApprovedTools = new Set();
         customApprovedTools = [];
         roleToolMatrix = {};
+        workflowMaturity = {};
         useCaseData = {};
         useCasesInitialized = false;
 
@@ -2937,8 +3219,8 @@
 
       // Display order mapping (internal IDs in display sequence)
       const hasRoles = selectedRoles.size > 0;
-      const activeOrder = [5, 6, 1, 2, 4, 3, 7, 8];
-      const stepLabels = {0:'Welcome', 5:'Engagement', 6:'Client AI', 1:'Roles', 2:'Tools', 4:'Role-Tool Matrix', 3:'Use Cases', 7:'Limiting Factors', 8:'Review'};
+      const activeOrder = [5, 6, 1, 2, 4, 3, 7, 9, 8];
+      const stepLabels = {0:'Welcome', 5:'Engagement', 6:'Client AI', 1:'Roles', 2:'Tools', 4:'Role-Tool Matrix', 3:'Use Cases', 7:'Limiting Factors', 9:'AI Workflow', 8:'Review'};
       const totalDisplaySteps = activeOrder.length - 1; // exclude review from count
 
       // Show/hide progress container (hide for welcome page)
@@ -2985,6 +3267,9 @@
       }
       if (step === 7) {
         renderLimitingFactors();
+      }
+      if (step === 9) {
+        renderWorkflowMaturity();
       }
       if (step === 8) {
         renderReview();
@@ -3561,6 +3846,76 @@
       });
     }
 
+    // AI Workflow Maturity render
+    function getRoleShortName(roleId) {
+      const map = { pm:'PM', swe:'Dev', qa:'QA', qaa:'QA Auto', ba:'BA', ux:'UX', devops:'DevOps', arch:'Arch', data:'Data' };
+      return map[roleId] || roleId;
+    }
+
+    function renderWorkflowMaturity() {
+      const container = document.getElementById('workflowMaturityContainer');
+      const activeRoles = Array.from(selectedRoles).filter(id => wfmRoleDescriptions[id]);
+
+      if (activeRoles.length === 0) {
+        container.innerHTML = '<div class="matrix-empty">No applicable roles selected. Go back to Step 3 to select roles.</div>';
+        return;
+      }
+
+      let html = '<div class="wfm-wrapper">';
+
+      // Stage header row
+      html += '<div class="wfm-stage-header">';
+      html += '<div class="wfm-role-label"></div>';
+      wfmStages.forEach(s => {
+        html += `<div class="wfm-stage-tab">
+          <span class="wfm-stage-num">${s.num}</span>
+          <span class="wfm-stage-title">${s.title}</span>
+          <span class="wfm-stage-sub">${s.sub}</span>
+        </div>`;
+      });
+      html += '</div>';
+
+      // Role rows
+      html += '<div class="wfm-body">';
+      activeRoles.forEach(roleId => {
+        const descs = wfmRoleDescriptions[roleId];
+        const selectedStage = workflowMaturity[roleId];
+        html += '<div class="wfm-row">';
+        html += `<div class="wfm-role-label">${getRoleShortName(roleId)}</div>`;
+        descs.forEach((desc, stageIdx) => {
+          const sel = selectedStage === stageIdx ? 'selected' : '';
+          html += `<div class="wfm-cell ${sel}" data-role="${roleId}" data-stage="${stageIdx}">${desc}</div>`;
+        });
+        html += '</div>';
+      });
+
+      // Signals row
+      html += '<div class="wfm-signals-row">';
+      html += '<div class="wfm-role-label">Signals</div>';
+      wfmSignals.forEach(signals => {
+        html += '<div class="wfm-cell"><ul>' + signals.map(s => `<li>${s}</li>`).join('') + '</ul></div>';
+      });
+      html += '</div>';
+
+      html += '</div></div>';
+      container.innerHTML = html;
+
+      // Attach click listeners
+      container.querySelectorAll('.wfm-cell[data-role]').forEach(cell => {
+        cell.addEventListener('click', () => {
+          const roleId = cell.dataset.role;
+          const stageIdx = parseInt(cell.dataset.stage);
+          if (workflowMaturity[roleId] === stageIdx) {
+            delete workflowMaturity[roleId];
+          } else {
+            workflowMaturity[roleId] = stageIdx;
+          }
+          renderWorkflowMaturity();
+          autoSave();
+        });
+      });
+    }
+
     const LIMITING_FACTORS_MAX = 2;
     const limitingFactorLabels = {
       time: 'Lack of time / competing priorities',
@@ -3905,6 +4260,34 @@
       }
       html += '</div></div>';
 
+      // AI Workflow Maturity
+      html += `<div class="review-section">
+        <div class="review-section-header" onclick="goToStep(9)">
+          <span class="review-section-title">🤖 AI Workflow Maturity</span>
+          <button class="review-edit-btn">Edit</button>
+        </div>
+        <div class="review-content">`;
+      const wfmActiveRoles = Array.from(selectedRoles).filter(id => wfmRoleDescriptions[id]);
+      if (wfmActiveRoles.length > 0 && Object.keys(workflowMaturity).length > 0) {
+        html += '<ul>';
+        wfmActiveRoles.forEach(roleId => {
+          const stageIdx = workflowMaturity[roleId];
+          if (stageIdx !== undefined && wfmStages[stageIdx]) {
+            html += `<li><strong>${getRoleShortName(roleId)}:</strong> ${wfmStages[stageIdx].num} — ${wfmStages[stageIdx].title}</li>`;
+          }
+        });
+        const unselected = wfmActiveRoles.filter(id => workflowMaturity[id] === undefined);
+        if (unselected.length > 0) {
+          unselected.forEach(roleId => {
+            html += `<li><strong>${getRoleShortName(roleId)}:</strong> <em>Not assessed</em></li>`;
+          });
+        }
+        html += '</ul>';
+      } else {
+        html += '<span class="review-empty">Not assessed yet</span>';
+      }
+      html += '</div></div>';
+
       container.innerHTML = html;
     }
 
@@ -4044,7 +4427,11 @@
 
       // Step 7 (Limiting Factors) — displayed as Step 7
       document.getElementById('step7Back').addEventListener('click', () => goToStep(3));
-      document.getElementById('step7Next').addEventListener('click', () => { if (validateStep(7)) goToStep(8); });
+      document.getElementById('step7Next').addEventListener('click', () => { if (validateStep(7)) goToStep(9); });
+
+      // Step 9 (AI Workflow Maturity) — displayed as Step 8
+      document.getElementById('step9Back').addEventListener('click', () => goToStep(7));
+      document.getElementById('step9Next').addEventListener('click', () => goToStep(8));
 
       // Step 7: Limiting Factors click handler
       document.getElementById('limitingFactorsOptions').addEventListener('click', (e) => {
@@ -4152,6 +4539,22 @@
             results.assessment.roleToolMatrix[roleName] = [];
           }
           results.assessment.roleToolMatrix[roleName].push(toolName);
+        });
+      }
+
+      // Add workflow maturity
+      const wfmEntries = Object.entries(workflowMaturity);
+      if (wfmEntries.length > 0) {
+        results.assessment.workflowMaturity = {};
+        wfmEntries.forEach(([roleId, stageIdx]) => {
+          const role = roles.find(r => r.id === roleId);
+          const roleName = role?.name || roleId;
+          const stage = wfmStages[stageIdx];
+          results.assessment.workflowMaturity[roleName] = {
+            stageIndex: stageIdx,
+            stageName: stage ? `${stage.num} — ${stage.title}` : `Stage ${stageIdx}`,
+            description: stage?.sub || ''
+          };
         });
       }
 
@@ -4354,6 +4757,21 @@
         }
       } else {
         md += `_None selected_\n\n`;
+      }
+
+      // AI Workflow Maturity
+      const wfmMdEntries = Object.entries(workflowMaturity);
+      if (wfmMdEntries.length > 0) {
+        md += `## 🤖 AI Workflow Maturity\n\n`;
+        const wfmMdActiveRoles = Array.from(selectedRoles).filter(id => wfmRoleDescriptions[id]);
+        wfmMdActiveRoles.forEach(roleId => {
+          const stageIdx = workflowMaturity[roleId];
+          if (stageIdx !== undefined && wfmStages[stageIdx]) {
+            md += `**${getRoleShortName(roleId)}:** ${wfmStages[stageIdx].num} — ${wfmStages[stageIdx].title}\n\n`;
+          } else {
+            md += `**${getRoleShortName(roleId)}:** _Not assessed_\n\n`;
+          }
+        });
       }
 
       md += `---\n\n`;
