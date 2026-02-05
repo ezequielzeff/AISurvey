@@ -629,149 +629,222 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    /* Stage column headers */
     .wfm-stage-header {
       display: flex;
-      border-bottom: 3px solid #4f46e5;
-      margin-bottom: 0;
-      min-width: 900px;
+      min-width: 960px;
+      gap: 0;
     }
 
-    .wfm-stage-header .wfm-role-label {
-      width: 70px;
-      min-width: 70px;
+    .wfm-stage-header .wfm-role-col {
+      width: 100px;
+      min-width: 100px;
       flex-shrink: 0;
     }
 
     .wfm-stage-tab {
       flex: 1;
       text-align: center;
-      padding: 0.6rem 0.25rem;
-      cursor: pointer;
+      padding: 0.75rem 0.35rem;
       position: relative;
-      transition: all 0.15s;
+      border: 2px solid #e5e7eb;
+      border-bottom: 3px solid #4f46e5;
+      margin-left: -2px;
+      background: #fafafa;
+    }
+    .wfm-stage-tab:first-of-type {
+      margin-left: 0;
+      border-top-left-radius: 10px;
+    }
+    .wfm-stage-tab:last-of-type {
+      border-top-right-radius: 10px;
     }
 
-    .wfm-stage-tab::before {
-      content: '';
-      display: block;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 2px solid #cbd5e1;
-      margin: 0 auto 0.3rem;
-      background: #fff;
-      transition: all 0.15s;
-    }
-
-    .wfm-stage-tab:hover::before {
-      border-color: #818cf8;
-    }
-
-    .wfm-stage-tab .wfm-stage-num {
-      font-size: 0.65rem;
-      color: #9ca3af;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .wfm-stage-tab .wfm-stage-title {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: #374151;
-      margin-top: 0.1rem;
-    }
-
-    .wfm-stage-tab .wfm-stage-sub {
+    .wfm-stage-num {
+      display: inline-block;
       font-size: 0.6rem;
-      color: #9ca3af;
-      margin-top: 0.1rem;
+      font-weight: 700;
+      color: #fff;
+      background: #6366f1;
+      border-radius: 4px;
+      padding: 0.1rem 0.4rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
     }
 
+    .wfm-stage-title {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #1e1b4b;
+      margin-top: 0.2rem;
+      line-height: 1.2;
+    }
+
+    .wfm-stage-sub {
+      display: block;
+      font-size: 0.62rem;
+      color: #6b7280;
+      margin-top: 0.15rem;
+      line-height: 1.3;
+      font-style: italic;
+    }
+
+    /* Body */
     .wfm-body {
-      min-width: 900px;
+      min-width: 960px;
     }
 
     .wfm-row {
       display: flex;
       border-bottom: 1px solid #e5e7eb;
       transition: background 0.15s;
+      align-items: stretch;
+    }
+
+    .wfm-row:last-child {
+      border-bottom: 2px solid #e5e7eb;
     }
 
     .wfm-row:hover {
       background: #f8fafc;
     }
 
-    .wfm-role-label {
-      width: 70px;
-      min-width: 70px;
+    /* Role label column */
+    .wfm-role-col {
+      width: 100px;
+      min-width: 100px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0.6rem 0.25rem;
-      font-weight: 700;
-      font-size: 0.75rem;
+      padding: 0.5rem 0.3rem;
+    }
+
+    .wfm-role-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+      background: #284086;
       color: #fff;
-      background: #374151;
-      border-radius: 4px;
-      margin: 0.35rem 0.25rem 0.35rem 0;
+      border-radius: 8px;
+      padding: 0.5rem 0.4rem;
+      width: 100%;
       text-align: center;
+    }
+
+    .wfm-role-badge-abbr {
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+    }
+
+    .wfm-role-badge-name {
+      font-size: 0.55rem;
+      opacity: 0.85;
       line-height: 1.2;
     }
 
+    /* Stage cells */
     .wfm-cell {
       flex: 1;
-      padding: 0.6rem 0.5rem;
-      font-size: 0.72rem;
-      color: #4b5563;
+      padding: 0.55rem 0.45rem;
+      font-size: 0.68rem;
+      color: #6b7280;
       line-height: 1.35;
       cursor: pointer;
-      border-left: 1px solid #f0f0f0;
+      border-left: 1px solid #e5e7eb;
       transition: all 0.15s;
       position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
     }
 
     .wfm-cell:hover {
       background: #f5f3ff;
     }
 
+    .wfm-cell-radio {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      background: #fff;
+      margin: 0 auto;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .wfm-cell:hover .wfm-cell-radio {
+      border-color: #818cf8;
+    }
+
+    .wfm-cell-desc {
+      font-size: 0.65rem;
+      color: #9ca3af;
+      line-height: 1.3;
+      text-align: center;
+    }
+
     .wfm-cell.selected {
       background: #eef2ff;
       border-left-color: #c7d2fe;
-      font-weight: 500;
-      color: #1e1b4b;
     }
 
-    .wfm-cell.selected::before {
+    .wfm-cell.selected .wfm-cell-radio {
+      border-color: #4f46e5;
+      background: #4f46e5;
+    }
+
+    .wfm-cell.selected .wfm-cell-radio::after {
       content: '✓';
       position: absolute;
-      top: 4px;
-      right: 6px;
-      font-size: 0.65rem;
-      color: #4f46e5;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-size: 0.6rem;
       font-weight: 700;
     }
 
-    .wfm-signals-row {
-      display: flex;
-      border-top: 2px solid #e5e7eb;
-      margin-top: 0.5rem;
-      padding-top: 0.5rem;
+    .wfm-cell.selected .wfm-cell-desc {
+      color: #4338ca;
+      font-weight: 500;
     }
 
-    .wfm-signals-row .wfm-role-label {
-      background: transparent;
-      color: #6b7280;
+    /* Signals row */
+    .wfm-signals-row {
+      display: flex;
+      border-top: 2px solid #d1d5db;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      min-width: 960px;
+    }
+
+    .wfm-signals-row .wfm-role-col {
+      width: 100px;
+      min-width: 100px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 0.5rem 0.3rem;
       font-size: 0.7rem;
       font-weight: 600;
+      color: #6b7280;
       font-style: italic;
     }
 
     .wfm-signals-row .wfm-cell {
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       color: #6b7280;
       cursor: default;
-      padding: 0.5rem;
+      padding: 0.4rem 0.45rem;
+      display: block;
     }
 
     .wfm-signals-row .wfm-cell:hover {
@@ -780,12 +853,12 @@
 
     .wfm-signals-row .wfm-cell ul {
       margin: 0;
-      padding-left: 1rem;
+      padding-left: 0.9rem;
       list-style: disc;
     }
 
     .wfm-signals-row .wfm-cell li {
-      margin-bottom: 0.15rem;
+      margin-bottom: 0.12rem;
     }
 
     /* Role-Tool Matrix styles */
@@ -2267,7 +2340,7 @@
       <!-- Step 7: Limiting Factors -->
       <div id="step7" class="step hidden">
         <div class="card-header">
-          <div class="step-indicator">Step 7</div>
+          <div class="step-indicator">Step 8</div>
           <h1 class="card-title">What are the main factors limiting your ability to adopt or use AI more effectively in your current work?</h1>
           <p class="card-subtitle">Select up to 2 options</p>
         </div>
@@ -2314,7 +2387,7 @@
       <!-- Step 9: AI Workflow Maturity -->
       <div id="step9" class="step hidden">
         <div class="card-header">
-          <div class="step-indicator">Step 8</div>
+          <div class="step-indicator">Step 7</div>
           <h1 class="card-title">AI Workflow Maturity</h1>
           <p class="card-subtitle">Select the current stage for each role</p>
         </div>
@@ -3219,8 +3292,8 @@
 
       // Display order mapping (internal IDs in display sequence)
       const hasRoles = selectedRoles.size > 0;
-      const activeOrder = [5, 6, 1, 2, 4, 3, 7, 9, 8];
-      const stepLabels = {0:'Welcome', 5:'Engagement', 6:'Client AI', 1:'Roles', 2:'Tools', 4:'Role-Tool Matrix', 3:'Use Cases', 7:'Limiting Factors', 9:'AI Workflow', 8:'Review'};
+      const activeOrder = [5, 6, 1, 2, 4, 3, 9, 7, 8];
+      const stepLabels = {0:'Welcome', 5:'Engagement', 6:'Client AI', 1:'Roles', 2:'Tools', 4:'Role-Tool Matrix', 3:'Use Cases', 9:'AI Workflow', 7:'Limiting Factors', 8:'Review'};
       const totalDisplaySteps = activeOrder.length - 1; // exclude review from count
 
       // Show/hide progress container (hide for welcome page)
@@ -3852,6 +3925,11 @@
       return map[roleId] || roleId;
     }
 
+    function getRoleFullName(roleId) {
+      const map = { pm:'Project Manager', swe:'Developer', qa:'QA Manual', qaa:'QA Automation', ba:'Business Analyst', ux:'UX Designer', devops:'DevOps', arch:'Architect', data:'Data Engineer' };
+      return map[roleId] || roleId;
+    }
+
     function renderWorkflowMaturity() {
       const container = document.getElementById('workflowMaturityContainer');
       const activeRoles = Array.from(selectedRoles).filter(id => wfmRoleDescriptions[id]);
@@ -3865,7 +3943,7 @@
 
       // Stage header row
       html += '<div class="wfm-stage-header">';
-      html += '<div class="wfm-role-label"></div>';
+      html += '<div class="wfm-role-col"></div>';
       wfmStages.forEach(s => {
         html += `<div class="wfm-stage-tab">
           <span class="wfm-stage-num">${s.num}</span>
@@ -3875,23 +3953,31 @@
       });
       html += '</div>';
 
-      // Role rows
+      // Role rows — each cell has a radio circle + description
       html += '<div class="wfm-body">';
       activeRoles.forEach(roleId => {
         const descs = wfmRoleDescriptions[roleId];
         const selectedStage = workflowMaturity[roleId];
         html += '<div class="wfm-row">';
-        html += `<div class="wfm-role-label">${getRoleShortName(roleId)}</div>`;
+        html += `<div class="wfm-role-col">
+          <div class="wfm-role-badge">
+            <span class="wfm-role-badge-abbr">${getRoleShortName(roleId)}</span>
+            <span class="wfm-role-badge-name">${getRoleFullName(roleId)}</span>
+          </div>
+        </div>`;
         descs.forEach((desc, stageIdx) => {
           const sel = selectedStage === stageIdx ? 'selected' : '';
-          html += `<div class="wfm-cell ${sel}" data-role="${roleId}" data-stage="${stageIdx}">${desc}</div>`;
+          html += `<div class="wfm-cell ${sel}" data-role="${roleId}" data-stage="${stageIdx}">
+            <div class="wfm-cell-radio"></div>
+            <div class="wfm-cell-desc">${desc}</div>
+          </div>`;
         });
         html += '</div>';
       });
 
       // Signals row
       html += '<div class="wfm-signals-row">';
-      html += '<div class="wfm-role-label">Signals</div>';
+      html += '<div class="wfm-role-col">Signals</div>';
       wfmSignals.forEach(signals => {
         html += '<div class="wfm-cell"><ul>' + signals.map(s => `<li>${s}</li>`).join('') + '</ul></div>';
       });
@@ -3900,7 +3986,7 @@
       html += '</div></div>';
       container.innerHTML = html;
 
-      // Attach click listeners
+      // Attach click listeners — click a cell to select that stage for the role
       container.querySelectorAll('.wfm-cell[data-role]').forEach(cell => {
         cell.addEventListener('click', () => {
           const roleId = cell.dataset.role;
@@ -4423,15 +4509,15 @@
 
       // Step 3 (Use Cases) — displayed as Step 6
       document.getElementById('step3Back').addEventListener('click', () => goToStep(4));
-      document.getElementById('step3Next').addEventListener('click', () => goToStep(7));
+      document.getElementById('step3Next').addEventListener('click', () => goToStep(9));
 
-      // Step 7 (Limiting Factors) — displayed as Step 7
-      document.getElementById('step7Back').addEventListener('click', () => goToStep(3));
-      document.getElementById('step7Next').addEventListener('click', () => { if (validateStep(7)) goToStep(9); });
+      // Step 9 (AI Workflow Maturity) — displayed as Step 7
+      document.getElementById('step9Back').addEventListener('click', () => goToStep(3));
+      document.getElementById('step9Next').addEventListener('click', () => goToStep(7));
 
-      // Step 9 (AI Workflow Maturity) — displayed as Step 8
-      document.getElementById('step9Back').addEventListener('click', () => goToStep(7));
-      document.getElementById('step9Next').addEventListener('click', () => goToStep(8));
+      // Step 7 (Limiting Factors) — displayed as Step 8
+      document.getElementById('step7Back').addEventListener('click', () => goToStep(9));
+      document.getElementById('step7Next').addEventListener('click', () => { if (validateStep(7)) goToStep(8); });
 
       // Step 7: Limiting Factors click handler
       document.getElementById('limitingFactorsOptions').addEventListener('click', (e) => {
