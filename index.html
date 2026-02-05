@@ -1055,7 +1055,7 @@
     }
 
     .journey-stage:not(:first-child) {
-      border-left: none;
+      margin-left: -2px;
     }
 
     .journey-stage:hover {
@@ -1064,28 +1064,17 @@
       z-index: 1;
     }
 
-    .journey-stage:hover + .journey-stage {
-      border-left-color: #a5b4fc;
+    .journey-stage.passed {
+      background: #f0fdf4;
+      border-color: #86efac;
+      z-index: 1;
     }
 
     .journey-stage.active {
       background: #eef2ff;
       border-color: #4f46e5;
       box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
-      z-index: 2;
-    }
-
-    .journey-stage.active + .journey-stage {
-      border-left-color: #4f46e5;
-    }
-
-    .journey-stage.passed {
-      background: #f0fdf4;
-      border-color: #86efac;
-    }
-
-    .journey-stage.passed + .journey-stage:not(.passed):not(.active) {
-      border-left-color: #86efac;
+      z-index: 3;
     }
 
     .journey-stage-icon {
