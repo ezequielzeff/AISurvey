@@ -1408,10 +1408,21 @@
       font-size: 0.9rem;
       color: #6b7280;
       margin-bottom: 1rem;
+      transition: color 0.2s;
+    }
+
+    .limiting-factors-hint.at-max {
+      color: #f59e0b;
+      font-weight: 600;
     }
 
     .limiting-factors-options {
       flex-wrap: wrap;
+    }
+
+    .limiting-factors-options.at-max .option-card:not(.selected) {
+      opacity: 0.4;
+      cursor: not-allowed;
     }
 
     .limiting-factors-options .option-card {
@@ -3102,12 +3113,10 @@
         return false;
       });
 
-      // Initialize "dont-know" as selected by default for categories without any selection
+      // Initialize empty sets for categories without any selection
       visibleCategories.forEach(cat => {
         if (!selectedTools[cat.id]) {
-          selectedTools[cat.id] = new Set(['dont-know']);
-        } else if (selectedTools[cat.id].size === 0) {
-          selectedTools[cat.id].add('dont-know');
+          selectedTools[cat.id] = new Set();
         }
       });
 
@@ -3181,7 +3190,6 @@
     }
 
     function handleStep2Continue() {
-      // Check which categories have "Don't know" selected
       const visibleCategories = toolCategories.filter(cat => {
         if (cat.showAlways) return true;
         if (cat.showForRoles) {
@@ -3189,25 +3197,34 @@
         }
         return false;
       });
-      
-      const dontKnowCategories = visibleCategories.filter(cat => 
+
+      // Check for categories with no selection or "Don't know"
+      const emptyCategories = visibleCategories.filter(cat =>
+        !selectedTools[cat.id] || selectedTools[cat.id].size === 0
+      );
+      const dontKnowCategories = visibleCategories.filter(cat =>
         selectedTools[cat.id]?.has('dont-know')
       );
-      
-      if (dontKnowCategories.length > 0) {
-        const categoryNames = dontKnowCategories.map(cat => cat.name).join(', ');
+
+      const warnCategories = [...emptyCategories, ...dontKnowCategories];
+      if (warnCategories.length > 0) {
+        const lines = warnCategories.map(cat => {
+          const reason = emptyCategories.includes(cat) ? 'no selection' : '"Don\'t know"';
+          return `• ${cat.name} (${reason})`;
+        }).join('\n');
         const confirmed = confirm(
-          `You have "Don't know" selected for the following sections:\n\n` +
-          `• ${dontKnowCategories.map(cat => cat.name).join('\n• ')}\n\n` +
-          `Are you sure you want to continue?`
+          `The following sections are incomplete:\n\n${lines}\n\nAre you sure you want to continue?`
         );
         if (!confirmed) return;
       }
-      
-      // Navigate to appropriate next step
-      const hasRoles = selectedRoles.size > 0;
 
-      goToStep(4); // Go to Role-Tool Matrix
+      // Skip Role-Tool Matrix if no AI tools are selected
+      const aiTools = getSelectedAITools();
+      if (aiTools.length === 0) {
+        goToStep(3); // Skip to Use Cases
+      } else {
+        goToStep(4); // Go to Role-Tool Matrix
+      }
     }
 
     function toggleTool(categoryId, toolId) {
@@ -3218,24 +3235,25 @@
       const specialOptions = ['dont-know', 'not-applicable'];
       
       if (toolId === 'dont-know') {
-        // If clicking "Don't know", clear all and select only "Don't know"
-        selectedTools[categoryId].clear();
-        selectedTools[categoryId].add('dont-know');
+        // Toggle "Don't know": clear all if selecting, or just deselect
+        if (selectedTools[categoryId].has('dont-know')) {
+          selectedTools[categoryId].delete('dont-know');
+        } else {
+          selectedTools[categoryId].clear();
+          selectedTools[categoryId].add('dont-know');
+        }
       } else if (toolId === 'not-applicable') {
-        // If clicking "Not Applicable", clear all and select only "Not Applicable"
-        selectedTools[categoryId].clear();
-        selectedTools[categoryId].add('not-applicable');
+        // Toggle "Not Applicable": clear all if selecting, or just deselect
+        if (selectedTools[categoryId].has('not-applicable')) {
+          selectedTools[categoryId].delete('not-applicable');
+        } else {
+          selectedTools[categoryId].clear();
+          selectedTools[categoryId].add('not-applicable');
+        }
       } else {
         // If clicking any regular tool
         if (selectedTools[categoryId].has(toolId)) {
-          // Deselecting a tool
           selectedTools[categoryId].delete(toolId);
-          // If no regular tools left selected, re-select "Don't know"
-          const hasRegularTools = Array.from(selectedTools[categoryId]).some(id => !specialOptions.includes(id));
-          if (!hasRegularTools) {
-            selectedTools[categoryId].clear();
-            selectedTools[categoryId].add('dont-know');
-          }
         } else {
           // Selecting a tool - remove special options and add the tool
           selectedTools[categoryId].delete('dont-know');
@@ -3298,8 +3316,12 @@
       currentStep = step;
 
       // Display order mapping (internal IDs in display sequence)
-      const hasRoles = selectedRoles.size > 0;
-      const activeOrder = [5, 6, 1, 2, 4, 3, 9, 7, 8];
+      // Skip Role-Tool Matrix (step 4) when no AI tools are selected
+      const aiTools = getSelectedAITools();
+      const showMatrix = aiTools.length > 0;
+      const activeOrder = showMatrix
+        ? [5, 6, 1, 2, 4, 3, 9, 7, 8]
+        : [5, 6, 1, 2, 3, 9, 7, 8];
       const stepLabels = {0:'Welcome', 5:'Engagement', 6:'Client AI', 1:'Roles', 2:'Tools', 4:'Role-Tool Matrix', 3:'Use Cases', 9:'AI Workflow', 7:'Limiting Factors', 8:'Review'};
       const totalDisplaySteps = activeOrder.length - 1; // exclude review from count
 
@@ -3485,7 +3507,12 @@
           if (card) {
             const value = card.dataset.value;
             if (value === 'not-using' || value === 'dont-know') {
-              // Exclusive options
+              // Exclusive options — warn if clearing existing selections
+              const otherSelections = Array.from(clientAIUsage).filter(v => v !== 'not-using' && v !== 'dont-know');
+              if (otherSelections.length > 0) {
+                const label = value === 'dont-know' ? "I Don't Know" : "Not Using AI";
+                if (!confirm(`Selecting "${label}" will clear your other selections. Continue?`)) return;
+              }
               clientAIUsage.clear();
               clientAIUsage.add(value);
             } else {
@@ -3495,9 +3522,6 @@
                 clientAIUsage.delete(value);
               } else {
                 clientAIUsage.add(value);
-              }
-              if (clientAIUsage.size === 0) {
-                clientAIUsage.add('dont-know');
               }
             }
             updateClientAIUsageUI();
@@ -4033,7 +4057,17 @@
         limitingFactorsOrder = limitingFactorsOrder.filter(id => id !== value);
         if (value === 'other') limitingFactorOther = '';
       } else {
-        if (selectedLimitingFactors.size >= LIMITING_FACTORS_MAX) return;
+        if (selectedLimitingFactors.size >= LIMITING_FACTORS_MAX) {
+          // Flash the hint to draw attention
+          const hint = document.getElementById('limitingFactorsHint');
+          hint.textContent = 'Deselect one to change your choice';
+          hint.classList.add('at-max');
+          clearTimeout(hint._flashTimeout);
+          hint._flashTimeout = setTimeout(() => {
+            hint.textContent = `Selected ${LIMITING_FACTORS_MAX} (max)`;
+          }, 2000);
+          return;
+        }
         selectedLimitingFactors.add(value);
         if (!limitingFactorsOrder.includes(value)) {
           limitingFactorsOrder.push(value);
@@ -4067,8 +4101,12 @@
       }
 
       const hint = document.getElementById('limitingFactorsHint');
+      const optionsContainer = document.getElementById('limitingFactorsOptions');
       const n = selectedLimitingFactors.size;
-      hint.textContent = n >= LIMITING_FACTORS_MAX ? `Selected ${LIMITING_FACTORS_MAX} (max)` : `Select up to ${LIMITING_FACTORS_MAX}`;
+      const atMax = n >= LIMITING_FACTORS_MAX;
+      hint.textContent = atMax ? `Selected ${LIMITING_FACTORS_MAX} (max)` : `Select up to ${LIMITING_FACTORS_MAX}`;
+      hint.classList.toggle('at-max', atMax);
+      optionsContainer.classList.toggle('at-max', atMax);
       const wrap = document.getElementById('limitingFactorOtherWrap');
       const otherInput = document.getElementById('limitingFactorOtherInput');
       if (selectedLimitingFactors.has('other')) {
@@ -4518,8 +4556,11 @@
       document.getElementById('step4Back').addEventListener('click', () => goToStep(2));
       document.getElementById('step4Next').addEventListener('click', () => goToStep(3));
 
-      // Step 3 (Use Cases) — displayed as Step 6
-      document.getElementById('step3Back').addEventListener('click', () => goToStep(4));
+      // Step 3 (Use Cases) — displayed as Step 6 (or Step 5 when Role-Tool Matrix is skipped)
+      document.getElementById('step3Back').addEventListener('click', () => {
+        const aiTools = getSelectedAITools();
+        goToStep(aiTools.length === 0 ? 2 : 4);
+      });
       document.getElementById('step3Next').addEventListener('click', () => goToStep(9));
 
       // Step 9 (AI Workflow Maturity) — displayed as Step 7
