@@ -965,21 +965,167 @@
       font-size: 0.7rem;
     }
 
-    /* Maturity Slider Styles */
-
-
-    .maturity-stage.active .maturity-desc {
-      color: #6b7280;
+    /* Compact inline options — force all cards in one row */
+    .inline-options {
+      flex-wrap: nowrap !important;
+      gap: 0.5rem;
     }
 
-    .maturity-stage[data-value="dont-know"].active .maturity-dot {
-      border-color: #9ca3af;
-      background: #9ca3af;
-      box-shadow: 0 0 0 4px rgba(156, 163, 175, 0.2);
+    .inline-options .option-card {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 0.6rem 0.4rem;
     }
 
-    .maturity-stage[data-value="dont-know"].active .maturity-name {
-      color: #6b7280;
+    .inline-options .option-card-icon {
+      font-size: 1.1rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .inline-options .option-card-title {
+      font-size: 0.78rem;
+      line-height: 1.2;
+    }
+
+    .inline-options .option-card-desc {
+      display: none;
+    }
+
+    /* AI Adoption Journey — horizontal pipeline */
+    .journey-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .journey-idk {
+      display: flex;
+      margin-bottom: 0.25rem;
+    }
+
+    .journey-idk .option-card {
+      flex: 0 0 auto;
+      min-width: 120px;
+      padding: 0.5rem 1rem;
+      border-style: dashed;
+    }
+
+    .journey-idk .option-card-icon {
+      font-size: 1.1rem;
+      margin-bottom: 0.1rem;
+    }
+
+    .journey-idk .option-card-title {
+      font-size: 0.8rem;
+    }
+
+    .journey-idk .option-card-desc {
+      display: none;
+    }
+
+    .journey-pipeline {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      position: relative;
+    }
+
+    .journey-stage {
+      flex: 1;
+      text-align: center;
+      padding: 0.75rem 0.4rem;
+      cursor: pointer;
+      border: 2px solid #e5e7eb;
+      background: #fff;
+      transition: all 0.2s ease;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2rem;
+    }
+
+    .journey-stage:first-child {
+      border-radius: 12px 0 0 12px;
+    }
+
+    .journey-stage:last-child {
+      border-radius: 0 12px 12px 0;
+    }
+
+    .journey-stage:not(:first-child) {
+      border-left: none;
+    }
+
+    .journey-stage:hover {
+      background: #f5f3ff;
+      border-color: #a5b4fc;
+      z-index: 1;
+    }
+
+    .journey-stage:hover + .journey-stage {
+      border-left-color: #a5b4fc;
+    }
+
+    .journey-stage.active {
+      background: #eef2ff;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+      z-index: 2;
+    }
+
+    .journey-stage.active + .journey-stage {
+      border-left-color: #4f46e5;
+    }
+
+    .journey-stage.passed {
+      background: #f0fdf4;
+      border-color: #86efac;
+    }
+
+    .journey-stage.passed + .journey-stage:not(.passed):not(.active) {
+      border-left-color: #86efac;
+    }
+
+    .journey-stage-icon {
+      font-size: 1.3rem;
+    }
+
+    .journey-stage-name {
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #1f2937;
+    }
+
+    .journey-stage.active .journey-stage-name {
+      color: #4f46e5;
+    }
+
+    .journey-stage-desc {
+      font-size: 0.65rem;
+      color: #9ca3af;
+    }
+
+    .journey-arrow-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 0.5rem;
+      margin-top: 0.25rem;
+    }
+
+    .journey-arrow-label span {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      font-style: italic;
+    }
+
+    .journey-arrow-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, #ef4444, #f59e0b, #22c55e);
+      margin: 0 0.5rem;
     }
 
     /* Option cards for engagement questions */
@@ -1269,6 +1415,28 @@
       }
       .option-cards {
         flex-direction: column;
+      }
+      .inline-options {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 0.4rem;
+      }
+      .inline-options .option-card {
+        flex: 0 1 auto;
+        min-width: 70px;
+        padding: 0.5rem 0.3rem;
+      }
+      .inline-options .option-card-title {
+        font-size: 0.7rem;
+      }
+      .journey-pipeline {
+        flex-wrap: nowrap;
+      }
+      .journey-stage-desc {
+        display: none;
+      }
+      .journey-stage-name {
+        font-size: 0.7rem;
       }
       .option-card {
         min-width: unset;
@@ -1635,43 +1803,51 @@
       <div id="step6" class="step hidden">
         <div class="card-header">
           <div class="step-indicator">Step 2</div>
-          <h1 class="card-title">What is the client doing around AI?</h1>
+          <h1 class="card-title">Client AI Adoption — As-Is State</h1>
           <p class="card-subtitle">(irrespective of DataArt's involvement)</p>
         </div>
         <div class="card-body">
-          <!-- Question 1: AI Maturity (Cards) -->
+          <!-- Question 1: AI Adoption Journey -->
           <div class="engagement-section">
-            <div class="engagement-label">What is the client's AI maturity stage?</div>
-            <div class="option-cards client-ai-options" id="maturityStages">
-              <div class="option-card" data-value="dont-know" style="flex:0 1 auto;min-width:100px;">
-                <div class="option-card-icon">🤷</div>
-                <div class="option-card-title">I Don't Know</div>
-                <div class="option-card-desc">Unsure</div>
+            <div class="engagement-label">At what stage is the client in their AI adoption journey?</div>
+            <div class="journey-container" id="maturityStages">
+              <div class="journey-idk">
+                <div class="option-card" data-value="dont-know">
+                  <div class="option-card-icon">🤷</div>
+                  <div class="option-card-title">I Don't Know</div>
+                </div>
               </div>
-              <div class="option-card" data-value="not-started" style="flex:0 1 auto;min-width:100px;">
-                <div class="option-card-icon">🚫</div>
-                <div class="option-card-title">Not Started</div>
-                <div class="option-card-desc">No AI initiatives</div>
+              <div class="journey-pipeline">
+                <div class="journey-stage" data-value="not-started">
+                  <span class="journey-stage-icon">🚫</span>
+                  <span class="journey-stage-name">Not Started</span>
+                  <span class="journey-stage-desc">No AI initiatives</span>
+                </div>
+                <div class="journey-stage" data-value="exploring">
+                  <span class="journey-stage-icon">🔍</span>
+                  <span class="journey-stage-name">Exploring</span>
+                  <span class="journey-stage-desc">Researching</span>
+                </div>
+                <div class="journey-stage" data-value="piloting">
+                  <span class="journey-stage-icon">🧪</span>
+                  <span class="journey-stage-name">Piloting</span>
+                  <span class="journey-stage-desc">Running POCs</span>
+                </div>
+                <div class="journey-stage" data-value="scaling">
+                  <span class="journey-stage-icon">📈</span>
+                  <span class="journey-stage-name">Scaling</span>
+                  <span class="journey-stage-desc">Expanding</span>
+                </div>
+                <div class="journey-stage" data-value="optimizing">
+                  <span class="journey-stage-icon">⚡</span>
+                  <span class="journey-stage-name">Optimizing</span>
+                  <span class="journey-stage-desc">AI embedded</span>
+                </div>
               </div>
-              <div class="option-card" data-value="exploring" style="flex:0 1 auto;min-width:100px;">
-                <div class="option-card-icon">🔍</div>
-                <div class="option-card-title">Exploring</div>
-                <div class="option-card-desc">Researching & learning</div>
-              </div>
-              <div class="option-card" data-value="piloting" style="flex:0 1 auto;min-width:100px;">
-                <div class="option-card-icon">🧪</div>
-                <div class="option-card-title">Piloting</div>
-                <div class="option-card-desc">Running POCs</div>
-              </div>
-              <div class="option-card" data-value="scaling" style="flex:0 1 auto;min-width:100px;">
-                <div class="option-card-icon">📈</div>
-                <div class="option-card-title">Scaling</div>
-                <div class="option-card-desc">Expanding solutions</div>
-              </div>
-              <div class="option-card" data-value="optimizing" style="flex:0 1 auto;min-width:100px;">
-                <div class="option-card-icon">⚡</div>
-                <div class="option-card-title">Optimizing</div>
-                <div class="option-card-desc">AI fully embedded</div>
+              <div class="journey-arrow-label">
+                <span>Early stage</span>
+                <div class="journey-arrow-line"></div>
+                <span>Mature</span>
               </div>
             </div>
           </div>
@@ -1680,7 +1856,7 @@
           <div class="engagement-section">
             <div class="engagement-label">How is the client currently using AI?</div>
             <div class="engagement-hint">Select all that apply</div>
-            <div class="option-cards client-ai-options" id="clientUsageOptions">
+            <div class="option-cards client-ai-options inline-options" id="clientUsageOptions">
               <div class="option-card" data-value="dont-know">
                 <div class="option-card-icon">🤷</div>
                 <div class="option-card-title">I Don't Know</div>
@@ -1722,7 +1898,7 @@
           <!-- Question 3: Strategic Priority -->
           <div class="engagement-section">
             <div class="engagement-label">Is AI a strategic priority for the client?</div>
-            <div class="option-cards client-ai-options" id="clientPriorityOptions">
+            <div class="option-cards client-ai-options inline-options" id="clientPriorityOptions">
               <div class="option-card" data-value="dont-know">
                 <div class="option-card-icon">🤷</div>
                 <div class="option-card-title">I Don't Know</div>
@@ -1754,7 +1930,7 @@
           <!-- Question 4: AI Governance -->
           <div class="engagement-section">
             <div class="engagement-label">Does the client have AI governance in place?</div>
-            <div class="option-cards client-ai-options" id="clientGovernanceOptions">
+            <div class="option-cards client-ai-options inline-options" id="clientGovernanceOptions">
               <div class="option-card" data-value="dont-know">
                 <div class="option-card-icon">🤷</div>
                 <div class="option-card-title">I Don't Know</div>
@@ -1786,7 +1962,7 @@
           <!-- Question 5: Biggest Challenge -->
           <div class="engagement-section">
             <div class="engagement-label">What is the client's biggest AI challenge?</div>
-            <div class="option-cards client-ai-options" id="clientChallengeOptions">
+            <div class="option-cards client-ai-options inline-options" id="clientChallengeOptions">
               <div class="option-card" data-value="dont-know">
                 <div class="option-card-icon">🤷</div>
                 <div class="option-card-title">I Don't Know</div>
@@ -1827,7 +2003,7 @@
           <!-- Question 6: Approved AI Tools List -->
           <div class="engagement-section">
             <div class="engagement-label">Is there an approved list of AI tools?</div>
-            <div class="option-cards client-ai-options" id="clientApprovedToolsOptions">
+            <div class="option-cards client-ai-options inline-options" id="clientApprovedToolsOptions">
               <div class="option-card" data-value="dont-know">
                 <div class="option-card-icon">🤷</div>
                 <div class="option-card-title">I Don't Know</div>
@@ -2937,10 +3113,10 @@
       updateClientApprovedToolsUI();
 
       if (!clientAIRendered) {
-        // Maturity (single select cards)
+        // Maturity (journey pipeline)
         document.getElementById('maturityStages').addEventListener('click', (e) => {
-          const card = e.target.closest('.option-card');
-          if (card) {
+          const card = e.target.closest('.option-card') || e.target.closest('.journey-stage');
+          if (card && card.dataset.value) {
             clientAIMaturity = card.dataset.value;
             updateClientAIMaturityUI();
             autoSave();
@@ -3061,8 +3237,23 @@
     }
 
     function updateClientAIMaturityUI() {
-      document.querySelectorAll('#maturityStages .option-card').forEach(card => {
+      const maturityOrder = ['not-started', 'exploring', 'piloting', 'scaling', 'optimizing'];
+      const selectedIdx = maturityOrder.indexOf(clientAIMaturity);
+
+      // "I don't know" card
+      document.querySelectorAll('#maturityStages .journey-idk .option-card').forEach(card => {
         card.classList.toggle('selected', card.dataset.value === clientAIMaturity);
+      });
+
+      // Journey pipeline stages
+      document.querySelectorAll('#maturityStages .journey-stage').forEach(stage => {
+        const stageIdx = maturityOrder.indexOf(stage.dataset.value);
+        stage.classList.remove('active', 'passed');
+        if (stage.dataset.value === clientAIMaturity) {
+          stage.classList.add('active');
+        } else if (selectedIdx > 0 && stageIdx < selectedIdx && stageIdx >= 0) {
+          stage.classList.add('passed');
+        }
       });
     }
 
@@ -3647,7 +3838,7 @@
       // Client AI Landscape
       html += `<div class="review-section">
         <div class="review-section-header" onclick="goToStep(6)">
-          <span class="review-section-title">🏢 Client AI Landscape</span>
+          <span class="review-section-title">🏢 Client AI Adoption — As-Is State</span>
           <button class="review-edit-btn">Edit</button>
         </div>
         <div class="review-content">`;
@@ -4086,7 +4277,7 @@
       }
 
       // Client AI Landscape
-      md += `## 🏢 Client AI Landscape\n\n`;
+      md += `## 🏢 Client AI Adoption — As-Is State\n\n`;
       
       if (clientAIMaturity) {
         md += `**AI Maturity Stage:** ${clientAILabels.maturity[clientAIMaturity]}\n\n`;
