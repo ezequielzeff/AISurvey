@@ -1665,6 +1665,10 @@
       border: 1px solid #c7d2fe;
     }
 
+    #clientChallengeOptions .option-card {
+      position: relative;
+    }
+
     #clientChallengeOptions .option-card[data-rank]::after {
       content: attr(data-rank);
       position: absolute;
@@ -1677,6 +1681,23 @@
       text-transform: uppercase;
       color: #4f46e5;
       background: #eef2ff;
+    }
+
+    #clientChallengeOptions.at-max .option-card:not(.selected) {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .challenges-hint {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+      transition: color 0.2s;
+    }
+
+    .challenges-hint.at-max {
+      color: #f59e0b;
+      font-weight: 600;
     }
 
     .limiting-factor-other-wrap {
@@ -2622,7 +2643,7 @@
           <!-- Question 5: Biggest Challenges -->
           <div class="engagement-section">
             <div class="engagement-label">What are the client's biggest AI challenges?</div>
-            <div class="engagement-hint">Select up to 2 (Primary and Secondary)</div>
+            <div class="challenges-hint" id="clientChallengesHint">Select up to 2 (Primary and Secondary)</div>
             <div class="option-cards client-ai-options" id="clientChallengeOptions">
               <div class="option-card" data-value="dont-know">
                 <div class="option-card-icon">🤷</div>
@@ -4702,7 +4723,17 @@
           clientChallengeOrder = clientChallengeOrder.filter(id => id !== value);
         } else {
           if (selectedChallenges.size >= CHALLENGES_MAX) {
-            return; // At max
+            // Flash the hint to draw attention
+            const hint = document.getElementById('clientChallengesHint');
+            if (hint) {
+              hint.textContent = 'Deselect one to change your choice';
+              hint.classList.add('at-max');
+              clearTimeout(hint._flashTimeout);
+              hint._flashTimeout = setTimeout(() => {
+                hint.textContent = `Selected ${CHALLENGES_MAX} (max)`;
+              }, 2000);
+            }
+            return;
           }
           selectedChallenges.add(value);
           clientChallengeOrder.push(value);
@@ -4733,6 +4764,26 @@
       if (clientChallengeOrder[1]) {
         const secondary = document.querySelector(`#clientChallengeOptions .option-card[data-value="${clientChallengeOrder[1]}"]`);
         if (secondary) secondary.setAttribute('data-rank', 'Secondary');
+      }
+
+      // Update hint and at-max styling
+      const hint = document.getElementById('clientChallengesHint');
+      const optionsContainer = document.getElementById('clientChallengeOptions');
+      if (!hint || !optionsContainer) return;
+
+      const n = selectedChallenges.size;
+      // "I Don't Know" counts as exclusive selection, not max
+      const isDontKnow = selectedChallenges.has('dont-know');
+      const atMax = !isDontKnow && n >= CHALLENGES_MAX;
+
+      if (isDontKnow) {
+        hint.textContent = 'Selected "I Don\'t Know"';
+        hint.classList.remove('at-max');
+        optionsContainer.classList.remove('at-max');
+      } else {
+        hint.textContent = atMax ? `Selected ${CHALLENGES_MAX} (max)` : `Select up to ${CHALLENGES_MAX} (Primary and Secondary)`;
+        hint.classList.toggle('at-max', atMax);
+        optionsContainer.classList.toggle('at-max', atMax);
       }
     }
 
