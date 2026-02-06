@@ -293,6 +293,11 @@
       margin: 0 auto;
       padding: 1.5rem 2rem 3rem;
       width: 100%;
+      transition: max-width 0.3s ease;
+    }
+
+    .main-container.expanded {
+      max-width: 1100px;
     }
 
     /* ═══════════════════════════════════════════
@@ -2242,6 +2247,10 @@
             <div id="aiChampionNameSection" style="display: none; margin-top: 1rem;">
               <label class="account-name-label" for="aiChampionName">Please specify who:</label>
               <input type="text" id="aiChampionName" class="account-name-input" placeholder="e.g., John Smith, Solutions Architect" maxlength="200">
+              <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; cursor: pointer;">
+                <input type="checkbox" id="aiChampionTraining" style="width: 18px; height: 18px; accent-color: #4f46e5; cursor: pointer;">
+                <span style="font-size: 0.875rem; color: #4b5563;">Suggest including in initial AI training sessions</span>
+              </label>
             </div>
           </div>
 
@@ -3077,6 +3086,7 @@
     let accountName = '';
     let aiChampion = null;        // 'yes', 'no'
     let aiChampionName = '';
+    let aiChampionTraining = false;
     let hasSuccessStories = null;  // 'yes', 'no'
     let successStories = [];       // array of strings
     let selectedRoles = new Set();
@@ -3202,6 +3212,15 @@
       ['Dashboards with AI insights', 'Confidence / risk scores', 'Recommendation reports', 'Humans approve actions']
     ];
 
+    const wfmSignalsExpanded = [
+      ['AI tools are explicitly prohibited or strongly discouraged by policy', 'No formal AI policy exists or guidelines have been communicated', 'Team members use AI tools privately without management knowledge', 'Leadership has not discussed or acknowledged AI adoption needs'],
+      ['Different team members use AI tools in inconsistent ways', 'No agreed-upon standards for prompts or workflows', 'Same task produces different quality outputs depending on who does it', 'Learnings and techniques are not shared or documented'],
+      ['Team maintains shared libraries of effective prompts', 'AI capabilities and limitations discussed in team ceremonies', 'Outputs follow consistent patterns and quality standards', 'New team members are taught AI practices as part of onboarding'],
+      ['Multiple prompts are chained together for complex tasks', 'Documented workflows that multiple team members follow', 'Scripts or templates standardize common AI interactions', 'Work items follow predictable AI-assisted flows'],
+      ['AI systems post updates directly to collaboration tools', 'Integrations with project management and CI/CD pipelines', 'AI tasks execute without manual triggering', 'Less time spent on repetitive manual AI interactions'],
+      ['Visual dashboards showing AI-generated insights and metrics', 'AI provides confidence scores and risk assessments', 'Regular reports with AI-generated recommendations', 'Human review and approval gates before AI actions take effect']
+    ];
+
     // Use Cases state - stores items by category: { categoryId: { need: Set, doing: Set, custom: [] } }
     let useCaseData = {};
     let useCasesInitialized = false;
@@ -3249,6 +3268,7 @@
         accountName,
         aiChampion,
         aiChampionName,
+        aiChampionTraining,
         hasSuccessStories,
         successStories,
         selectedRoles: Array.from(selectedRoles),
@@ -3304,6 +3324,7 @@
         accountName = state.accountName || '';
         aiChampion = state.aiChampion || null;
         aiChampionName = state.aiChampionName || '';
+        aiChampionTraining = state.aiChampionTraining || false;
         hasSuccessStories = state.hasSuccessStories || null;
         successStories = state.successStories || [];
         selectedRoles = new Set(state.selectedRoles || []);
@@ -3358,6 +3379,7 @@
         accountName = '';
         aiChampion = null;
         aiChampionName = '';
+        aiChampionTraining = false;
         hasSuccessStories = null;
         successStories = [];
         selectedRoles = new Set();
@@ -3517,6 +3539,7 @@
       });
       document.getElementById('aiChampionNameSection').style.display = aiChampion === 'yes' ? 'block' : 'none';
       document.getElementById('aiChampionName').value = aiChampionName;
+      document.getElementById('aiChampionTraining').checked = aiChampionTraining;
 
       // Restore success stories state
       document.querySelectorAll('#aiSuccessStoryToggle .option-card').forEach(c => {
@@ -3863,6 +3886,22 @@
       // Show/hide steps
       document.querySelectorAll('.step').forEach(el => el.classList.add('hidden'));
       document.getElementById(`step${step}`).classList.remove('hidden');
+
+      // Update step indicator dynamically based on position in activeOrder
+      const stepDiv = document.getElementById(`step${step}`);
+      if (stepDiv) {
+        const indicator = stepDiv.querySelector('.step-indicator');
+        if (indicator) {
+          const stepPosition = activeOrder.indexOf(step);
+          indicator.textContent = step === 8 ? 'Review' : `Step ${stepPosition + 1}`;
+        }
+      }
+
+      // Toggle expanded container for workflow maturity step
+      const mainContainer = document.querySelector('.main-container');
+      if (mainContainer) {
+        mainContainer.classList.toggle('expanded', step === 9);
+      }
 
       // Update sidebar
       renderSidebar();
@@ -4524,8 +4563,11 @@
       // Signals row
       html += '<div class="wfm-signals-row">';
       html += '<div class="wfm-role-col">Signals</div>';
-      wfmSignals.forEach(signals => {
-        html += '<div class="wfm-cell"><ul>' + signals.map(s => `<li>${s}</li>`).join('') + '</ul></div>';
+      wfmSignals.forEach((signals, stageIdx) => {
+        html += '<div class="wfm-cell"><ul>' + signals.map((s, sigIdx) => {
+          const expanded = wfmSignalsExpanded[stageIdx]?.[sigIdx] || s;
+          return `<li title="${expanded}">${s}</li>`;
+        }).join('') + '</ul></div>';
       });
       html += '</div>';
 
@@ -4757,7 +4799,8 @@
         html += '<span class="review-empty">No roles selected</span>';
       }
       if (aiChampion) {
-        const championLabel = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}` : 'No';
+        const trainingNote = aiChampionTraining ? ' (Suggested for training)' : '';
+        const championLabel = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}${trainingNote}` : 'No';
         html += `<br><strong>AI Champion:</strong> ${championLabel}`;
       }
       if (successStories.length > 0) {
@@ -5049,6 +5092,10 @@
         aiChampionName = e.target.value;
         autoSave();
       });
+      document.getElementById('aiChampionTraining').addEventListener('change', (e) => {
+        aiChampionTraining = e.target.checked;
+        autoSave();
+      });
 
       // AI Success Stories
       document.getElementById('aiSuccessStoryToggle').addEventListener('click', (e) => {
@@ -5122,7 +5169,7 @@
             const role = roles.find(r => r.id === id);
             return { id, name: role?.name || id };
           }),
-          aiChampion: aiChampion ? { answer: aiChampion, name: aiChampion === 'yes' ? aiChampionName : null } : null,
+          aiChampion: aiChampion ? { answer: aiChampion, name: aiChampion === 'yes' ? aiChampionName : null, suggestForTraining: aiChampion === 'yes' ? aiChampionTraining : false } : null,
           successStories: successStories.length > 0 ? successStories : null,
           tools: {},
           engagement: {
@@ -5256,7 +5303,8 @@
       }
       md += `\n`;
       if (aiChampion) {
-        const label = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}` : 'No';
+        const trainingNote = aiChampionTraining ? ' *(Suggested for initial AI training)*' : '';
+        const label = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}${trainingNote}` : 'No';
         md += `**AI Champion:** ${label}\n\n`;
       }
       if (successStories.length > 0) {
