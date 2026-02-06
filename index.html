@@ -1812,6 +1812,88 @@
     .validation-error.visible { display: block; }
 
     /* ═══════════════════════════════════════════
+       STEP NOTES
+       ═══════════════════════════════════════════ */
+    .step-notes {
+      margin-top: 1.5rem;
+      border-top: 1px solid #f3f4f6;
+      padding-top: 1rem;
+    }
+
+    .step-notes-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #6b7280;
+      padding: 0.35rem 0;
+      transition: color 0.15s;
+    }
+
+    .step-notes-toggle:hover {
+      color: #4f46e5;
+    }
+
+    .step-notes-toggle .notes-chevron {
+      transition: transform 0.2s;
+      font-size: 0.7rem;
+    }
+
+    .step-notes-toggle.open .notes-chevron {
+      transform: rotate(90deg);
+    }
+
+    .step-notes-toggle .notes-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4f46e5;
+      display: none;
+    }
+
+    .step-notes-toggle.has-content .notes-dot {
+      display: inline-block;
+    }
+
+    .step-notes-body {
+      display: none;
+      margin-top: 0.75rem;
+    }
+
+    .step-notes-body.open {
+      display: block;
+    }
+
+    .step-notes-textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: #374151;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+      background: #fafbfc;
+      line-height: 1.5;
+    }
+
+    .step-notes-textarea:focus {
+      border-color: #4f46e5;
+      background: #fff;
+    }
+
+    .step-notes-textarea::placeholder {
+      color: #9ca3af;
+    }
+
+    /* ═══════════════════════════════════════════
        REVIEW SECTION
        ═══════════════════════════════════════════ */
     .review-section {
@@ -2188,6 +2270,14 @@
             </div>
           </div>
 
+          <div class="step-notes" data-step="1">
+            <button type="button" class="step-notes-toggle" onclick="toggleStepNotes(1)">
+              <span class="notes-chevron">▶</span> Additional Notes <span class="notes-dot"></span>
+            </button>
+            <div class="step-notes-body">
+              <textarea class="step-notes-textarea" data-step="1" placeholder="Add any additional notes about team roles, AI champion, or success stories..."></textarea>
+            </div>
+          </div>
           <div class="validation-error" id="step1Error" role="alert"></div>
         </div>
         <div class="card-footer">
@@ -2206,6 +2296,16 @@
         </div>
         <div class="card-body" id="toolsContainer">
           <!-- Tools will be populated by JS (including cloud platforms) -->
+        </div>
+        <div class="card-body" style="padding-top:0;">
+          <div class="step-notes" data-step="2" style="margin-top:0;">
+            <button type="button" class="step-notes-toggle" onclick="toggleStepNotes(2)">
+              <span class="notes-chevron">▶</span> Additional Notes <span class="notes-dot"></span>
+            </button>
+            <div class="step-notes-body">
+              <textarea class="step-notes-textarea" data-step="2" placeholder="Add any additional notes about tools, infrastructure, or tech stack..."></textarea>
+            </div>
+          </div>
         </div>
         <div class="card-footer">
           <button class="btn btn-secondary" id="step2Back">← Back</button>
@@ -2320,6 +2420,14 @@
             </div>
           </div>
 
+          <div class="step-notes" data-step="5">
+            <button type="button" class="step-notes-toggle" onclick="toggleStepNotes(5)">
+              <span class="notes-chevron">▶</span> Additional Notes <span class="notes-dot"></span>
+            </button>
+            <div class="step-notes-body">
+              <textarea class="step-notes-textarea" data-step="5" placeholder="Add any additional notes about engagement model, ownership, or compliance..."></textarea>
+            </div>
+          </div>
           <div class="validation-error" id="step5Error" role="alert"></div>
         </div>
         <div class="card-footer">
@@ -2594,6 +2702,14 @@
             </div>
           </div>
 
+          <div class="step-notes" data-step="6">
+            <button type="button" class="step-notes-toggle" onclick="toggleStepNotes(6)">
+              <span class="notes-chevron">▶</span> Additional Notes <span class="notes-dot"></span>
+            </button>
+            <div class="step-notes-body">
+              <textarea class="step-notes-textarea" data-step="6" placeholder="Add any additional notes about the client's AI landscape..."></textarea>
+            </div>
+          </div>
           <div class="validation-error" id="step6Error" role="alert"></div>
         </div>
         <div class="card-footer">
@@ -2614,6 +2730,14 @@
           <div id="roleToolMatrixContainer">
             <!-- Matrix will be populated by JS -->
           </div>
+          <div class="step-notes" data-step="4">
+            <button type="button" class="step-notes-toggle" onclick="toggleStepNotes(4)">
+              <span class="notes-chevron">▶</span> Additional Notes <span class="notes-dot"></span>
+            </button>
+            <div class="step-notes-body">
+              <textarea class="step-notes-textarea" data-step="4" placeholder="Add any additional notes about role-tool assignments..."></textarea>
+            </div>
+          </div>
         </div>
         <div class="card-footer">
           <button class="btn btn-secondary" id="step4Back">← Back</button>
@@ -2630,6 +2754,16 @@
         </div>
         <div class="card-body" id="useCasesContainer">
           <!-- Use cases will be populated by JS -->
+        </div>
+        <div class="card-body" style="padding-top:0;">
+          <div class="step-notes" data-step="3" style="margin-top:0;">
+            <button type="button" class="step-notes-toggle" onclick="toggleStepNotes(3)">
+              <span class="notes-chevron">▶</span> Additional Notes <span class="notes-dot"></span>
+            </button>
+            <div class="step-notes-body">
+              <textarea class="step-notes-textarea" data-step="3" placeholder="Add any additional notes about AI use cases or priorities..."></textarea>
+            </div>
+          </div>
         </div>
         <div class="card-footer">
           <button class="btn btn-secondary" id="step3Back">← Back</button>
@@ -2676,6 +2810,14 @@
             <label class="account-name-label" for="limitingFactorOtherInput">Please specify</label>
             <input type="text" id="limitingFactorOtherInput" class="account-name-input" placeholder="Describe other limiting factors...">
           </div>
+          <div class="step-notes" data-step="7">
+            <button type="button" class="step-notes-toggle" onclick="toggleStepNotes(7)">
+              <span class="notes-chevron">▶</span> Additional Notes <span class="notes-dot"></span>
+            </button>
+            <div class="step-notes-body">
+              <textarea class="step-notes-textarea" data-step="7" placeholder="Add any additional notes about limiting factors or challenges..."></textarea>
+            </div>
+          </div>
           <div class="validation-error" id="step7Error" role="alert"></div>
         </div>
         <div class="card-footer">
@@ -2694,6 +2836,14 @@
         <div class="card-body">
           <div id="workflowMaturityContainer">
             <!-- Populated by JS -->
+          </div>
+          <div class="step-notes" data-step="9">
+            <button type="button" class="step-notes-toggle" onclick="toggleStepNotes(9)">
+              <span class="notes-chevron">▶</span> Additional Notes <span class="notes-dot"></span>
+            </button>
+            <div class="step-notes-body">
+              <textarea class="step-notes-textarea" data-step="9" placeholder="Add any additional notes about workflow maturity or AI practices..."></textarea>
+            </div>
           </div>
         </div>
         <div class="card-footer">
@@ -2955,6 +3105,9 @@
     // AI Workflow Maturity: { roleId: stageIndex (0-5) }
     let workflowMaturity = {};
 
+    // Step notes: { stepId: 'text' }
+    let stepNotes = {};
+
     const wfmStages = [
       { num: 'Stage 0', title: 'No AI Usage', sub: 'AI not used in delivery workflows' },
       { num: 'Stage 1', title: 'Individual AI Usage', sub: 'AI used by individuals only' },
@@ -3119,6 +3272,7 @@
         customApprovedTools,
         roleToolMatrix,
         workflowMaturity,
+        stepNotes,
         useCaseData: Object.fromEntries(
           Object.entries(useCaseData).map(([catId, data]) => [catId, {
             need: Array.from(data.need || []),
@@ -3173,6 +3327,7 @@
         customApprovedTools = state.customApprovedTools || [];
         roleToolMatrix = state.roleToolMatrix || {};
         workflowMaturity = state.workflowMaturity || {};
+        stepNotes = state.stepNotes || {};
 
         // Restore use case data
         if (state.useCaseData) {
@@ -3224,6 +3379,7 @@
         customApprovedTools = [];
         roleToolMatrix = {};
         workflowMaturity = {};
+        stepNotes = {};
         useCaseData = {};
         useCasesInitialized = false;
 
@@ -3238,7 +3394,10 @@
         // Reset account name input
         const accountInput = document.getElementById('accountNameInput');
         if (accountInput) accountInput.value = '';
-        
+
+        // Reset step notes UI
+        restoreAllNotesUI();
+
         // Reset engagement UI
         document.querySelectorAll('#ownershipOptions .option-card').forEach(card => {
           card.classList.remove('selected');
@@ -3283,6 +3442,7 @@
       const hasExistingData = loadFromLocalStorage();
       renderRoles();
       setupEventListeners();
+      setupStepNotes();
       
       if (hasExistingData) {
         updateRoleUI();
@@ -4542,6 +4702,13 @@
       return true;
     }
 
+    function getReviewNotesHtml(stepId) {
+      const note = (stepNotes[stepId] || '').trim();
+      if (!note) return '';
+      const escaped = note.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+      return '<div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #e5e7eb;"><strong>\u{1F4DD} Additional Notes:</strong><div style="margin-top: 0.25rem; color: #4b5563; white-space: pre-wrap;">' + escaped + '</div></div>';
+    }
+
     function renderReview() {
       const container = document.getElementById('reviewContainer');
       let html = '';
@@ -4577,7 +4744,7 @@
       if (successStories.length > 0) {
         html += '<br><strong>AI Success Stories:</strong><ul>' + successStories.map(s => `<li>${s.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</li>`).join('') + '</ul>';
       }
-      html += '</div></div>';
+      html += getReviewNotesHtml(1) + '</div></div>';
 
       // Tools
       html += `<div class="review-section">
@@ -4603,7 +4770,7 @@
         }
       });
       if (!hasAnyTools) html += '<span class="review-empty">No tools selected</span>';
-      html += '</div></div>';
+      html += getReviewNotesHtml(2) + '</div></div>';
 
       // Role-Tool Matrix
       const matrixAITools = getSelectedAITools();
@@ -4631,7 +4798,7 @@
       } else {
         html += '<span class="review-empty">No role-tool mappings defined</span>';
       }
-      html += '</div></div>';
+      html += getReviewNotesHtml(4) + '</div></div>';
 
       // Engagement
       html += `<div class="review-section">
@@ -4653,7 +4820,7 @@
           return cust?.name || id;
         }).join(', ');
       }
-      html += '</div></div>';
+      html += getReviewNotesHtml(5) + '</div></div>';
 
       // Client AI Landscape
       html += `<div class="review-section">
@@ -4684,7 +4851,7 @@
       } else if (clientAIUsage.has('not-using')) {
         html += '<strong>Usage:</strong> Not using AI';
       }
-      html += '</div></div>';
+      html += getReviewNotesHtml(6) + '</div></div>';
 
       // AI Use Cases
       html += `<div class="review-section">
@@ -4711,7 +4878,7 @@
         }
       });
       if (!hasUseCases) html += '<span class="review-empty">No use cases defined</span>';
-      html += '</div></div>';
+      html += getReviewNotesHtml(3) + '</div></div>';
 
       // Limiting Factors
       html += `<div class="review-section">
@@ -4732,7 +4899,7 @@
       } else {
         html += '<span class="review-empty">None selected</span>';
       }
-      html += '</div></div>';
+      html += getReviewNotesHtml(7) + '</div></div>';
 
       // AI Workflow Maturity
       html += `<div class="review-section">
@@ -4760,7 +4927,7 @@
       } else {
         html += '<span class="review-empty">Not assessed yet</span>';
       }
-      html += '</div></div>';
+      html += getReviewNotesHtml(9) + '</div></div>';
 
       container.innerHTML = html;
     }
@@ -5035,6 +5202,19 @@
         });
       }
 
+      // Add step notes
+      const notesForExport = {};
+      const noteStepLabels = {5: 'Engagement Model', 6: 'Client AI Landscape', 1: 'Team Roles', 2: 'Tools & Infrastructure', 4: 'Role-Tool Matrix', 3: 'AI Use Cases', 9: 'AI Workflow Maturity', 7: 'Limiting Factors'};
+      Object.entries(stepNotes).forEach(([stepId, note]) => {
+        if (note && note.trim()) {
+          const label = noteStepLabels[stepId] || ('Step ' + stepId);
+          notesForExport[label] = note.trim();
+        }
+      });
+      if (Object.keys(notesForExport).length > 0) {
+        results.assessment.notes = notesForExport;
+      }
+
       return JSON.stringify(results, null, 2);
     }
 
@@ -5251,6 +5431,19 @@
         });
       }
 
+      // Add step notes
+      const mdNoteStepNames = {5: 'Engagement Model', 6: 'Client AI Landscape', 1: 'Team Roles', 2: 'Tools & Infrastructure', 4: 'Role-Tool Matrix', 3: 'AI Use Cases', 9: 'AI Workflow Maturity', 7: 'Limiting Factors'};
+      const hasAnyStepNotes = Object.values(stepNotes).some(n => n && n.trim());
+      if (hasAnyStepNotes) {
+        md += `## \u{1F4DD} Additional Notes\n\n`;
+        Object.entries(mdNoteStepNames).forEach(([stepId, name]) => {
+          const note = (stepNotes[stepId] || '').trim();
+          if (note) {
+            md += `### ${name}\n\n${note}\n\n`;
+          }
+        });
+      }
+
       md += `---\n\n`;
       md += `*Report generated by AI Adoption Assessment Tool*\n`;
 
@@ -5301,6 +5494,49 @@
         btn.textContent = originalText;
         btn.disabled = false;
       }
+    }
+
+    // Step notes — toggle, save, restore
+    function toggleStepNotes(stepId) {
+      const container = document.querySelector(`.step-notes[data-step="${stepId}"]`);
+      if (!container) return;
+      const toggle = container.querySelector('.step-notes-toggle');
+      const body = container.querySelector('.step-notes-body');
+      const isOpen = body.classList.toggle('open');
+      toggle.classList.toggle('open', isOpen);
+    }
+
+    function setupStepNotes() {
+      document.querySelectorAll('.step-notes-textarea').forEach(textarea => {
+        const stepId = textarea.dataset.step;
+        // Restore saved value
+        if (stepNotes[stepId]) {
+          textarea.value = stepNotes[stepId];
+          updateNotesIndicator(stepId);
+        }
+        // Save on input
+        textarea.addEventListener('input', () => {
+          stepNotes[stepId] = textarea.value;
+          updateNotesIndicator(stepId);
+          autoSave();
+        });
+      });
+    }
+
+    function updateNotesIndicator(stepId) {
+      const container = document.querySelector(`.step-notes[data-step="${stepId}"]`);
+      if (!container) return;
+      const toggle = container.querySelector('.step-notes-toggle');
+      const hasContent = (stepNotes[stepId] || '').trim().length > 0;
+      toggle.classList.toggle('has-content', hasContent);
+    }
+
+    function restoreAllNotesUI() {
+      document.querySelectorAll('.step-notes-textarea').forEach(textarea => {
+        const stepId = textarea.dataset.step;
+        textarea.value = stepNotes[stepId] || '';
+        updateNotesIndicator(stepId);
+      });
     }
 
     // Start
