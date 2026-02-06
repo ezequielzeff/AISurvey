@@ -1665,6 +1665,20 @@
       border: 1px solid #c7d2fe;
     }
 
+    #clientChallengeOptions .option-card[data-rank]::after {
+      content: attr(data-rank);
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #4f46e5;
+      background: #eef2ff;
+    }
+
     .limiting-factor-other-wrap {
       margin-top: 1.5rem;
     }
@@ -2605,10 +2619,11 @@
             </div>
           </div>
 
-          <!-- Question 5: Biggest Challenge -->
+          <!-- Question 5: Biggest Challenges -->
           <div class="engagement-section">
-            <div class="engagement-label">What is the client's biggest AI challenge?</div>
-            <div class="option-cards client-ai-options inline-options" id="clientChallengeOptions">
+            <div class="engagement-label">What are the client's biggest AI challenges?</div>
+            <div class="engagement-hint">Select up to 2 (Primary and Secondary)</div>
+            <div class="option-cards client-ai-options" id="clientChallengeOptions">
               <div class="option-card" data-value="dont-know">
                 <div class="option-card-icon">🤷</div>
                 <div class="option-card-title">I Don't Know</div>
@@ -3105,7 +3120,8 @@
     let clientAIUsage = new Set();     // Multi-select: not-using, off-the-shelf, business-apps, custom-solutions, business-processes, customer-facing
     let clientAIPriority = null;       // not-priority, low, medium, high
     let clientAIGovernance = null;     // none, informal, developing, established
-    let clientAIChallenge = null;      // unclear-roi, skills, data, security, budget, infrastructure
+    let selectedChallenges = new Set();
+    let clientChallengeOrder = [];      // Ordered list for primary/secondary challenges
     let clientApprovedTools = null;    // dont-know, no, yes
     let selectedApprovedTools = new Set(); // selected approved tool chips
     let customApprovedTools = [];      // custom approved tools [{id, name}]
@@ -3287,7 +3303,8 @@
         clientAIUsage: Array.from(clientAIUsage),
         clientAIPriority,
         clientAIGovernance,
-        clientAIChallenge,
+        selectedChallenges: Array.from(selectedChallenges),
+        clientChallengeOrder,
         clientApprovedTools,
         selectedApprovedTools: Array.from(selectedApprovedTools),
         customApprovedTools,
@@ -3343,7 +3360,8 @@
         clientAIUsage = new Set(state.clientAIUsage || []);
         clientAIPriority = state.clientAIPriority || null;
         clientAIGovernance = state.clientAIGovernance || null;
-        clientAIChallenge = state.clientAIChallenge || null;
+        selectedChallenges = new Set(state.selectedChallenges || []);
+        clientChallengeOrder = state.clientChallengeOrder || [];
         clientApprovedTools = state.clientApprovedTools || null;
         selectedApprovedTools = new Set(state.selectedApprovedTools || []);
         customApprovedTools = state.customApprovedTools || [];
@@ -3396,7 +3414,8 @@
         clientAIUsage = new Set();
         clientAIPriority = null;
         clientAIGovernance = null;
-        clientAIChallenge = null;
+        selectedChallenges = new Set();
+        clientChallengeOrder = [];
         clientApprovedTools = null;
         selectedApprovedTools = new Set();
         customApprovedTools = [];
@@ -4037,7 +4056,7 @@
       updateClientAIUsageUI();
       updateClientAIPriorityUI();
       updateClientAIGovernanceUI();
-      updateClientAIChallengeUI();
+      updateChallengeUI();
       updateClientApprovedToolsUI();
 
       if (!clientAIRendered) {
@@ -4099,13 +4118,11 @@
           }
         });
 
-        // Challenge (single select)
+        // Challenges (multi-select with primary/secondary)
         document.getElementById('clientChallengeOptions').addEventListener('click', (e) => {
           const card = e.target.closest('.option-card');
           if (card) {
-            clientAIChallenge = card.dataset.value;
-            updateClientAIChallengeUI();
-            autoSave();
+            toggleChallenge(card.dataset.value);
           }
         });
 
@@ -4205,11 +4222,6 @@
       });
     }
 
-    function updateClientAIChallengeUI() {
-      document.querySelectorAll('#clientChallengeOptions .option-card').forEach(card => {
-        card.classList.toggle('selected', card.dataset.value === clientAIChallenge);
-      });
-    }
 
     function updateClientApprovedToolsUI() {
       document.querySelectorAll('#clientApprovedToolsOptions .option-card').forEach(card => {
@@ -4671,9 +4683,62 @@
       }
     }
 
+    const CHALLENGES_MAX = 2;
+
+    function toggleChallenge(value) {
+      // If "I don't know" is selected, make it exclusive
+      if (value === 'dont-know') {
+        selectedChallenges.clear();
+        clientChallengeOrder = [];
+        selectedChallenges.add(value);
+        clientChallengeOrder.push(value);
+      } else {
+        // Remove "don't know" if selecting something else
+        selectedChallenges.delete('dont-know');
+        clientChallengeOrder = clientChallengeOrder.filter(id => id !== 'dont-know');
+
+        if (selectedChallenges.has(value)) {
+          selectedChallenges.delete(value);
+          clientChallengeOrder = clientChallengeOrder.filter(id => id !== value);
+        } else {
+          if (selectedChallenges.size >= CHALLENGES_MAX) {
+            return; // At max
+          }
+          selectedChallenges.add(value);
+          clientChallengeOrder.push(value);
+        }
+      }
+      updateChallengeUI();
+      autoSave();
+    }
+
+    function updateChallengeUI() {
+      // Normalize order
+      clientChallengeOrder = clientChallengeOrder.filter(id => selectedChallenges.has(id));
+      selectedChallenges.forEach(id => {
+        if (!clientChallengeOrder.includes(id)) clientChallengeOrder.push(id);
+      });
+
+      // Update card selection state
+      document.querySelectorAll('#clientChallengeOptions .option-card').forEach(card => {
+        card.classList.toggle('selected', selectedChallenges.has(card.dataset.value));
+        card.removeAttribute('data-rank');
+      });
+
+      // Add rank badges
+      if (clientChallengeOrder[0] && clientChallengeOrder[0] !== 'dont-know') {
+        const primary = document.querySelector(`#clientChallengeOptions .option-card[data-value="${clientChallengeOrder[0]}"]`);
+        if (primary) primary.setAttribute('data-rank', 'Primary');
+      }
+      if (clientChallengeOrder[1]) {
+        const secondary = document.querySelector(`#clientChallengeOptions .option-card[data-value="${clientChallengeOrder[1]}"]`);
+        if (secondary) secondary.setAttribute('data-rank', 'Secondary');
+      }
+    }
+
     function getSelectedAITools() {
       const aiTools = [];
-      
+
       // Get predefined AI tools
       const aiCategory = toolCategories.find(c => c.id === 'ai');
       if (selectedTools['ai']) {
@@ -4732,7 +4797,7 @@
           if (!clientAIMaturity) missing.push('AI maturity stage');
           if (!clientAIPriority) missing.push('strategic priority');
           if (!clientAIGovernance) missing.push('AI governance');
-          if (!clientAIChallenge) missing.push('biggest challenge');
+          if (selectedChallenges.size === 0) missing.push('AI challenge(s)');
           if (missing.length > 0) {
             message = 'Please select: ' + missing.join(', ') + '.';
           }
@@ -4894,7 +4959,12 @@
       if (clientAIMaturity) html += `<strong>Maturity:</strong> ${clientAILabels.maturity[clientAIMaturity]}<br>`;
       if (clientAIPriority) html += `<strong>Priority:</strong> ${clientAILabels.priority[clientAIPriority]}<br>`;
       if (clientAIGovernance) html += `<strong>Governance:</strong> ${clientAILabels.governance[clientAIGovernance]}<br>`;
-      if (clientAIChallenge) html += `<strong>Challenge:</strong> ${clientAILabels.challenge[clientAIChallenge]}<br>`;
+      if (clientChallengeOrder.length > 0) {
+        const primaryLabel = clientAILabels.challenge[clientChallengeOrder[0]];
+        const secondaryLabel = clientChallengeOrder[1] ? clientAILabels.challenge[clientChallengeOrder[1]] : null;
+        html += `<strong>Primary Challenge:</strong> ${primaryLabel}<br>`;
+        if (secondaryLabel) html += `<strong>Secondary Challenge:</strong> ${secondaryLabel}<br>`;
+      }
       if (clientApprovedTools) {
         let approvedLabel;
         if (clientApprovedTools === 'yes') {
@@ -5193,7 +5263,11 @@
             usage: Array.from(clientAIUsage).filter(id => id !== 'not-using').map(id => ({ id, name: clientAILabels.usage[id] })),
             priority: clientAIPriority ? { id: clientAIPriority, name: clientAILabels.priority[clientAIPriority] } : null,
             governance: clientAIGovernance ? { id: clientAIGovernance, name: clientAILabels.governance[clientAIGovernance] } : null,
-            challenge: clientAIChallenge ? { id: clientAIChallenge, name: clientAILabels.challenge[clientAIChallenge] } : null,
+            challenges: clientChallengeOrder.map((id, index) => ({
+              id,
+              name: clientAILabels.challenge[id],
+              rank: index === 0 ? 'primary' : index === 1 ? 'secondary' : undefined
+            })),
             approvedToolsList: clientApprovedTools ? { answer: clientApprovedTools, tools: clientApprovedTools === 'yes' ? getApprovedToolNames() : null } : null
           },
           limitingFactors: (limitingFactorsOrder.length ? limitingFactorsOrder : Array.from(selectedLimitingFactors)).map((id, index) => ({
@@ -5422,8 +5496,11 @@
         md += `**AI Governance:** ${clientAILabels.governance[clientAIGovernance]}\n\n`;
       }
       
-      if (clientAIChallenge) {
-        md += `**Biggest AI Challenge:** ${clientAILabels.challenge[clientAIChallenge]}\n\n`;
+      if (clientChallengeOrder.length > 0) {
+        md += `**Primary AI Challenge:** ${clientAILabels.challenge[clientChallengeOrder[0]]}\n\n`;
+        if (clientChallengeOrder[1]) {
+          md += `**Secondary AI Challenge:** ${clientAILabels.challenge[clientChallengeOrder[1]]}\n\n`;
+        }
       }
 
       if (clientApprovedTools) {
