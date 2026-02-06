@@ -3815,6 +3815,17 @@
       nav.querySelectorAll('.sidebar-nav-item').forEach(item => {
         item.addEventListener('click', () => {
           const targetStep = parseInt(item.dataset.step);
+          const activeOrder = getActiveOrder();
+          const currentIdx = activeOrder.indexOf(currentStep);
+          const targetIdx = activeOrder.indexOf(targetStep);
+
+          // If navigating forward, validate current step first
+          if (targetIdx > currentIdx) {
+            if (!validateStep(currentStep)) {
+              return; // Block navigation if validation fails
+            }
+          }
+
           goToStep(targetStep);
           // Close mobile sidebar
           document.getElementById('sidebar').classList.remove('open');
