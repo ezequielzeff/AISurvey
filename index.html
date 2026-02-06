@@ -4576,10 +4576,10 @@
       html += '<div class="wfm-signals-row">';
       html += '<div class="wfm-role-col">Signals</div>';
       wfmSignals.forEach((signals, stageIdx) => {
-        html += '<div class="wfm-cell"><ul>' + signals.map((s, sigIdx) => {
-          const expanded = wfmSignalsExpanded[stageIdx]?.[sigIdx] || s;
-          return `<li title="${expanded}">${s}</li>`;
-        }).join('') + '</ul></div>';
+        // Build tooltip with all expanded signals for this stage
+        const expandedSignals = wfmSignalsExpanded[stageIdx] || signals;
+        const tooltip = expandedSignals.map(exp => `• ${exp}`).join('\n');
+        html += `<div class="wfm-cell" title="${tooltip}"><ul>` + signals.map(s => `<li>${s}</li>`).join('') + '</ul></div>';
       });
       html += '</div>';
 
