@@ -2837,6 +2837,7 @@
           <div id="workflowMaturityContainer">
             <!-- Populated by JS -->
           </div>
+          <div class="validation-error" id="step9Error" role="alert"></div>
           <div class="step-notes" data-step="9">
             <button type="button" class="step-notes-toggle" onclick="toggleStepNotes(9)">
               <span class="notes-chevron">▶</span> Additional Notes <span class="notes-dot"></span>
@@ -4700,6 +4701,13 @@
             message = 'Please select at least one limiting factor.';
           } else if (selectedLimitingFactors.has('other') && !limitingFactorOther.trim()) {
             message = 'Please specify the "Other" limiting factor.';
+          }
+          break;
+        case 9:
+          errorDiv = document.getElementById('step9Error');
+          const wfmRoles = getSelectedRolesOrdered().filter(id => wfmRoleDescriptions[id]);
+          if (wfmRoles.length > 0 && Object.keys(workflowMaturity).length === 0) {
+            message = 'Please select a workflow maturity stage for at least one role.';
           }
           break;
       }
