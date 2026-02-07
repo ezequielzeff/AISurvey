@@ -2287,6 +2287,14 @@
                 <span style="font-size: 0.875rem; color: #4b5563;">Suggest including in initial AI training sessions</span>
               </label>
             </div>
+            <div id="aiFutureChampionSection" style="display: none; margin-top: 1rem;">
+              <label class="account-name-label" for="aiFutureChampionName">Who would you like to nominate as a future AI champion?</label>
+              <input type="text" id="aiFutureChampionName" class="account-name-input" placeholder="e.g., Jane Doe, Tech Lead" maxlength="200">
+              <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; cursor: pointer;">
+                <input type="checkbox" id="aiFutureChampionTraining" style="width: 18px; height: 18px; accent-color: #4f46e5; cursor: pointer;">
+                <span style="font-size: 0.875rem; color: #4b5563;">Include in initial AI training sessions</span>
+              </label>
+            </div>
           </div>
 
           <!-- AI Success Stories -->
@@ -3123,6 +3131,8 @@
     let aiChampion = null;        // 'yes', 'no'
     let aiChampionName = '';
     let aiChampionTraining = false;
+    let aiFutureChampionName = '';
+    let aiFutureChampionTraining = false;
     let hasSuccessStories = null;  // 'yes', 'no'
     let successStories = [];       // array of strings
     let selectedRoles = new Set();
@@ -3306,6 +3316,8 @@
         aiChampion,
         aiChampionName,
         aiChampionTraining,
+        aiFutureChampionName,
+        aiFutureChampionTraining,
         hasSuccessStories,
         successStories,
         selectedRoles: Array.from(selectedRoles),
@@ -3363,6 +3375,8 @@
         aiChampion = state.aiChampion || null;
         aiChampionName = state.aiChampionName || '';
         aiChampionTraining = state.aiChampionTraining || false;
+        aiFutureChampionName = state.aiFutureChampionName || '';
+        aiFutureChampionTraining = state.aiFutureChampionTraining || false;
         hasSuccessStories = state.hasSuccessStories || null;
         successStories = state.successStories || [];
         selectedRoles = new Set(state.selectedRoles || []);
@@ -3419,6 +3433,8 @@
         aiChampion = null;
         aiChampionName = '';
         aiChampionTraining = false;
+        aiFutureChampionName = '';
+        aiFutureChampionTraining = false;
         hasSuccessStories = null;
         successStories = [];
         selectedRoles = new Set();
@@ -3580,6 +3596,9 @@
       document.getElementById('aiChampionNameSection').style.display = aiChampion === 'yes' ? 'block' : 'none';
       document.getElementById('aiChampionName').value = aiChampionName;
       document.getElementById('aiChampionTraining').checked = aiChampionTraining;
+      document.getElementById('aiFutureChampionSection').style.display = aiChampion === 'no' ? 'block' : 'none';
+      document.getElementById('aiFutureChampionName').value = aiFutureChampionName;
+      document.getElementById('aiFutureChampionTraining').checked = aiFutureChampionTraining;
 
       // Restore success stories state
       document.querySelectorAll('#aiSuccessStoryToggle .option-card').forEach(c => {
@@ -4918,6 +4937,10 @@
         const trainingNote = aiChampionTraining ? ' (Suggested for training)' : '';
         const championLabel = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}${trainingNote}` : 'No';
         html += `<br><strong>AI Champion:</strong> ${championLabel}`;
+        if (aiChampion === 'no' && aiFutureChampionName) {
+          const futureTrainingNote = aiFutureChampionTraining ? ' (Include in training)' : '';
+          html += `<br><strong>Future Champion Nomination:</strong> ${aiFutureChampionName}${futureTrainingNote}`;
+        }
       }
       if (successStories.length > 0) {
         html += '<br><strong>AI Success Stories:</strong><ul>' + successStories.map(s => `<li>${s.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</li>`).join('') + '</ul>';
@@ -5206,6 +5229,7 @@
             c.classList.toggle('selected', c.dataset.value === aiChampion);
           });
           document.getElementById('aiChampionNameSection').style.display = aiChampion === 'yes' ? 'block' : 'none';
+          document.getElementById('aiFutureChampionSection').style.display = aiChampion === 'no' ? 'block' : 'none';
           autoSave();
         }
       });
@@ -5215,6 +5239,14 @@
       });
       document.getElementById('aiChampionTraining').addEventListener('change', (e) => {
         aiChampionTraining = e.target.checked;
+        autoSave();
+      });
+      document.getElementById('aiFutureChampionName').addEventListener('input', (e) => {
+        aiFutureChampionName = e.target.value;
+        autoSave();
+      });
+      document.getElementById('aiFutureChampionTraining').addEventListener('change', (e) => {
+        aiFutureChampionTraining = e.target.checked;
         autoSave();
       });
 
@@ -5290,7 +5322,15 @@
             const role = roles.find(r => r.id === id);
             return { id, name: role?.name || id };
           }),
-          aiChampion: aiChampion ? { answer: aiChampion, name: aiChampion === 'yes' ? aiChampionName : null, suggestForTraining: aiChampion === 'yes' ? aiChampionTraining : false } : null,
+          aiChampion: aiChampion ? {
+            answer: aiChampion,
+            name: aiChampion === 'yes' ? aiChampionName : null,
+            suggestForTraining: aiChampion === 'yes' ? aiChampionTraining : false,
+            futureChampion: aiChampion === 'no' && aiFutureChampionName ? {
+              name: aiFutureChampionName,
+              includeInTraining: aiFutureChampionTraining
+            } : null
+          } : null,
           successStories: successStories.length > 0 ? successStories : null,
           tools: {},
           engagement: {
@@ -5431,6 +5471,10 @@
         const trainingNote = aiChampionTraining ? ' *(Suggested for initial AI training)*' : '';
         const label = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}${trainingNote}` : 'No';
         md += `**AI Champion:** ${label}\n\n`;
+        if (aiChampion === 'no' && aiFutureChampionName) {
+          const futureTrainingNote = aiFutureChampionTraining ? ' *(Include in training)*' : '';
+          md += `**Future Champion Nomination:** ${aiFutureChampionName}${futureTrainingNote}\n\n`;
+        }
       }
       if (successStories.length > 0) {
         md += `**AI Success Stories:**\n`;
