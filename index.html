@@ -2280,16 +2280,28 @@
               </div>
             </div>
             <div id="aiChampionNameSection" style="display: none; margin-top: 1rem;">
-              <label class="account-name-label" for="aiChampionName">Please specify who:</label>
-              <input type="text" id="aiChampionName" class="account-name-input" placeholder="e.g., John Smith, Solutions Architect" maxlength="200">
-              <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; cursor: pointer;">
-                <input type="checkbox" id="aiChampionTraining" style="width: 18px; height: 18px; accent-color: #4f46e5; cursor: pointer;">
-                <span style="font-size: 0.875rem; color: #4b5563;">Suggest including in initial AI training sessions</span>
-              </label>
+              <div id="aiChampionsList"></div>
+              <div style="margin-top: 0.75rem;">
+                <label class="account-name-label">Add a champion:</label>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                  <input type="text" id="aiChampionInput" class="account-name-input" placeholder="e.g., John Smith, Solutions Architect" maxlength="200" style="flex: 1; min-width: 200px;">
+                  <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                    <input type="checkbox" id="aiChampionTrainingInput" style="width: 18px; height: 18px; accent-color: #4f46e5; cursor: pointer;">
+                    <span style="font-size: 0.875rem; color: #4b5563;">Suggest for training</span>
+                  </label>
+                </div>
+                <button class="btn btn-secondary" id="addChampionBtn" style="margin-top: 0.5rem;">+ Add Champion</button>
+              </div>
             </div>
             <div id="aiFutureChampionSection" style="display: none; margin-top: 1rem;">
-              <label class="account-name-label" for="aiFutureChampionName">Who would you like to nominate as a future AI champion?</label>
-              <input type="text" id="aiFutureChampionName" class="account-name-input" placeholder="e.g., Jane Doe, Tech Lead" maxlength="200">
+              <div id="aiFutureChampionsList"></div>
+              <div style="margin-top: 0.75rem;">
+                <label class="account-name-label">Who would you like to nominate as a future AI champion?</label>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                  <input type="text" id="aiFutureChampionInput" class="account-name-input" placeholder="e.g., Jane Doe, Tech Lead" maxlength="200" style="flex: 1; min-width: 200px;">
+                </div>
+                <button class="btn btn-secondary" id="addFutureChampionBtn" style="margin-top: 0.5rem;">+ Add Future Champion</button>
+              </div>
             </div>
           </div>
 
@@ -3125,9 +3137,8 @@
     let currentStep = 1;
     let accountName = '';
     let aiChampion = null;        // 'yes', 'no'
-    let aiChampionName = '';
-    let aiChampionTraining = false;
-    let aiFutureChampionName = '';
+    let aiChampions = [];         // array of { name: string, training: boolean }
+    let aiFutureChampions = [];    // array of strings (future champion nominations)
     let hasSuccessStories = null;  // 'yes', 'no'
     let successStories = [];       // array of strings
     let selectedRoles = new Set();
@@ -3309,9 +3320,8 @@
         currentStep,
         accountName,
         aiChampion,
-        aiChampionName,
-        aiChampionTraining,
-        aiFutureChampionName,
+        aiChampions,
+        aiFutureChampions,
         hasSuccessStories,
         successStories,
         selectedRoles: Array.from(selectedRoles),
@@ -3367,9 +3377,16 @@
         currentStep = state.currentStep || 1;
         accountName = state.accountName || '';
         aiChampion = state.aiChampion || null;
-        aiChampionName = state.aiChampionName || '';
-        aiChampionTraining = state.aiChampionTraining || false;
-        aiFutureChampionName = state.aiFutureChampionName || '';
+        aiChampions = state.aiChampions || [];
+        // Backward compat: migrate old single-champion data
+        if (!state.aiChampions && state.aiChampionName) {
+          aiChampions = [{ name: state.aiChampionName, training: !!state.aiChampionTraining }];
+        }
+        aiFutureChampions = state.aiFutureChampions || [];
+        // Backward compat: migrate old single future champion data
+        if (!state.aiFutureChampions && state.aiFutureChampionName) {
+          aiFutureChampions = [state.aiFutureChampionName];
+        }
         hasSuccessStories = state.hasSuccessStories || null;
         successStories = state.successStories || [];
         selectedRoles = new Set(state.selectedRoles || []);
@@ -3424,9 +3441,8 @@
         currentStep = 1;
         accountName = '';
         aiChampion = null;
-        aiChampionName = '';
-        aiChampionTraining = false;
-        aiFutureChampionName = '';
+        aiChampions = [];
+        aiFutureChampions = [];
         hasSuccessStories = null;
         successStories = [];
         selectedRoles = new Set();
@@ -3586,10 +3602,9 @@
         c.classList.toggle('selected', c.dataset.value === aiChampion);
       });
       document.getElementById('aiChampionNameSection').style.display = aiChampion === 'yes' ? 'block' : 'none';
-      document.getElementById('aiChampionName').value = aiChampionName;
-      document.getElementById('aiChampionTraining').checked = aiChampionTraining;
+      renderChampions();
       document.getElementById('aiFutureChampionSection').style.display = aiChampion === 'no' ? 'block' : 'none';
-      document.getElementById('aiFutureChampionName').value = aiFutureChampionName;
+      renderFutureChampions();
 
       // Restore success stories state
       document.querySelectorAll('#aiSuccessStoryToggle .option-card').forEach(c => {
@@ -3615,6 +3630,50 @@
         btn.addEventListener('click', () => {
           successStories.splice(parseInt(btn.dataset.index), 1);
           renderSuccessStories();
+          autoSave();
+        });
+      });
+    }
+
+    function renderChampions() {
+      const list = document.getElementById('aiChampionsList');
+      if (aiChampions.length === 0) {
+        list.innerHTML = '';
+        return;
+      }
+      list.innerHTML = aiChampions.map((champ, i) => `
+        <div style="background:#F8FAFA;border:1px solid #E2E6E9;border-radius:8px;padding:0.75rem 1rem;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.75rem;">
+          <div style="flex:1;font-size:0.9rem;color:#374151;">
+            ${champ.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}${champ.training ? ' <span style="color:#4f46e5;font-size:0.8rem;">(Suggested for training)</span>' : ''}
+          </div>
+          <button class="remove-champion-btn" data-index="${i}" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.1rem;padding:0 0.25rem;" title="Remove champion">✕</button>
+        </div>
+      `).join('');
+      list.querySelectorAll('.remove-champion-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          aiChampions.splice(parseInt(btn.dataset.index), 1);
+          renderChampions();
+          autoSave();
+        });
+      });
+    }
+
+    function renderFutureChampions() {
+      const list = document.getElementById('aiFutureChampionsList');
+      if (aiFutureChampions.length === 0) {
+        list.innerHTML = '';
+        return;
+      }
+      list.innerHTML = aiFutureChampions.map((name, i) => `
+        <div style="background:#F8FAFA;border:1px solid #E2E6E9;border-radius:8px;padding:0.75rem 1rem;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.75rem;">
+          <div style="flex:1;font-size:0.9rem;color:#374151;">${name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+          <button class="remove-future-champion-btn" data-index="${i}" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.1rem;padding:0 0.25rem;" title="Remove nomination">✕</button>
+        </div>
+      `).join('');
+      list.querySelectorAll('.remove-future-champion-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          aiFutureChampions.splice(parseInt(btn.dataset.index), 1);
+          renderFutureChampions();
           autoSave();
         });
       });
@@ -4925,11 +4984,20 @@
         html += '<span class="review-empty">No roles selected</span>';
       }
       if (aiChampion) {
-        const trainingNote = aiChampionTraining ? ' (Suggested for training)' : '';
-        const championLabel = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}${trainingNote}` : 'No';
-        html += `<br><strong>AI Champion:</strong> ${championLabel}`;
-        if (aiChampion === 'no' && aiFutureChampionName) {
-          html += `<br><strong>Future Champion Nomination:</strong> ${aiFutureChampionName}`;
+        if (aiChampion === 'yes') {
+          html += '<br><strong>AI Champion(s):</strong> Yes';
+          if (aiChampions.length > 0) {
+            html += '<ul>' + aiChampions.map(c => {
+              const tn = c.training ? ' <em>(Suggested for training)</em>' : '';
+              return `<li>${c.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}${tn}</li>`;
+            }).join('') + '</ul>';
+          }
+        } else {
+          html += '<br><strong>AI Champion:</strong> No';
+          if (aiFutureChampions.length > 0) {
+            html += '<br><strong>Future Champion Nomination(s):</strong>';
+            html += '<ul>' + aiFutureChampions.map(name => `<li>${name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</li>`).join('') + '</ul>';
+          }
         }
       }
       if (successStories.length > 0) {
@@ -5223,17 +5291,33 @@
           autoSave();
         }
       });
-      document.getElementById('aiChampionName').addEventListener('input', (e) => {
-        aiChampionName = e.target.value;
-        autoSave();
+      document.getElementById('addChampionBtn').addEventListener('click', () => {
+        const nameInput = document.getElementById('aiChampionInput');
+        const trainingInput = document.getElementById('aiChampionTrainingInput');
+        const name = nameInput.value.trim();
+        if (name) {
+          aiChampions.push({ name: name, training: trainingInput.checked });
+          nameInput.value = '';
+          trainingInput.checked = false;
+          renderChampions();
+          autoSave();
+        }
       });
-      document.getElementById('aiChampionTraining').addEventListener('change', (e) => {
-        aiChampionTraining = e.target.checked;
-        autoSave();
+      document.getElementById('aiChampionInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('addChampionBtn').click();
       });
-      document.getElementById('aiFutureChampionName').addEventListener('input', (e) => {
-        aiFutureChampionName = e.target.value;
-        autoSave();
+      document.getElementById('addFutureChampionBtn').addEventListener('click', () => {
+        const input = document.getElementById('aiFutureChampionInput');
+        const name = input.value.trim();
+        if (name) {
+          aiFutureChampions.push(name);
+          input.value = '';
+          renderFutureChampions();
+          autoSave();
+        }
+      });
+      document.getElementById('aiFutureChampionInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('addFutureChampionBtn').click();
       });
 
       // AI Success Stories
@@ -5310,9 +5394,8 @@
           }),
           aiChampion: aiChampion ? {
             answer: aiChampion,
-            name: aiChampion === 'yes' ? aiChampionName : null,
-            suggestForTraining: aiChampion === 'yes' ? aiChampionTraining : false,
-            futureChampion: aiChampion === 'no' && aiFutureChampionName ? aiFutureChampionName : null
+            champions: aiChampion === 'yes' ? aiChampions : [],
+            futureChampions: aiChampion === 'no' && aiFutureChampions.length > 0 ? aiFutureChampions : []
           } : null,
           successStories: successStories.length > 0 ? successStories : null,
           tools: {},
@@ -5451,11 +5534,24 @@
       }
       md += `\n`;
       if (aiChampion) {
-        const trainingNote = aiChampionTraining ? ' *(Suggested for initial AI training)*' : '';
-        const label = aiChampion === 'yes' ? `Yes${aiChampionName ? ' — ' + aiChampionName : ''}${trainingNote}` : 'No';
-        md += `**AI Champion:** ${label}\n\n`;
-        if (aiChampion === 'no' && aiFutureChampionName) {
-          md += `**Future Champion Nomination:** ${aiFutureChampionName}\n\n`;
+        if (aiChampion === 'yes') {
+          md += `**AI Champion(s):** Yes\n`;
+          if (aiChampions.length > 0) {
+            aiChampions.forEach((c, i) => {
+              const tn = c.training ? ' *(Suggested for initial AI training)*' : '';
+              md += `${i + 1}. ${c.name}${tn}\n`;
+            });
+          }
+          md += `\n`;
+        } else {
+          md += `**AI Champion:** No\n\n`;
+          if (aiFutureChampions.length > 0) {
+            md += `**Future Champion Nomination(s):**\n`;
+            aiFutureChampions.forEach((name, i) => {
+              md += `${i + 1}. ${name}\n`;
+            });
+            md += `\n`;
+          }
         }
       }
       if (successStories.length > 0) {
