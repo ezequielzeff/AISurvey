@@ -2285,10 +2285,6 @@
                 <label class="account-name-label">Add a champion:</label>
                 <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                   <input type="text" id="aiChampionInput" class="account-name-input" placeholder="e.g., John Smith, Solutions Architect" maxlength="200" style="flex: 1; min-width: 200px;">
-                  <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
-                    <input type="checkbox" id="aiChampionTrainingInput" style="width: 18px; height: 18px; accent-color: #4f46e5; cursor: pointer;">
-                    <span style="font-size: 0.875rem; color: #4b5563;">Suggest for training</span>
-                  </label>
                 </div>
                 <button class="btn btn-secondary" id="addChampionBtn" style="margin-top: 0.5rem;">+ Add Champion</button>
               </div>
@@ -3137,7 +3133,7 @@
     let currentStep = 1;
     let accountName = '';
     let aiChampion = null;        // 'yes', 'no'
-    let aiChampions = [];         // array of { name: string, training: boolean }
+    let aiChampions = [];         // array of strings (champion names)
     let aiFutureChampions = [];    // array of strings (future champion nominations)
     let hasSuccessStories = null;  // 'yes', 'no'
     let successStories = [];       // array of strings
@@ -3380,7 +3376,7 @@
         aiChampions = state.aiChampions || [];
         // Backward compat: migrate old single-champion data
         if (!state.aiChampions && state.aiChampionName) {
-          aiChampions = [{ name: state.aiChampionName, training: !!state.aiChampionTraining }];
+          aiChampions = [state.aiChampionName];
         }
         aiFutureChampions = state.aiFutureChampions || [];
         // Backward compat: migrate old single future champion data
@@ -3643,9 +3639,7 @@
       }
       list.innerHTML = aiChampions.map((champ, i) => `
         <div style="background:#F8FAFA;border:1px solid #E2E6E9;border-radius:8px;padding:0.75rem 1rem;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.75rem;">
-          <div style="flex:1;font-size:0.9rem;color:#374151;">
-            ${champ.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}${champ.training ? ' <span style="color:#4f46e5;font-size:0.8rem;">(Suggested for training)</span>' : ''}
-          </div>
+          <div style="flex:1;font-size:0.9rem;color:#374151;">${champ.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
           <button class="remove-champion-btn" data-index="${i}" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.1rem;padding:0 0.25rem;" title="Remove champion">✕</button>
         </div>
       `).join('');
@@ -4988,8 +4982,7 @@
           html += '<br><strong>AI Champion(s):</strong> Yes';
           if (aiChampions.length > 0) {
             html += '<ul>' + aiChampions.map(c => {
-              const tn = c.training ? ' <em>(Suggested for training)</em>' : '';
-              return `<li>${c.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}${tn}</li>`;
+              return `<li>${c.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</li>`;
             }).join('') + '</ul>';
           }
         } else {
@@ -5293,12 +5286,10 @@
       });
       document.getElementById('addChampionBtn').addEventListener('click', () => {
         const nameInput = document.getElementById('aiChampionInput');
-        const trainingInput = document.getElementById('aiChampionTrainingInput');
         const name = nameInput.value.trim();
         if (name) {
-          aiChampions.push({ name: name, training: trainingInput.checked });
+          aiChampions.push(name);
           nameInput.value = '';
-          trainingInput.checked = false;
           renderChampions();
           autoSave();
         }
@@ -5538,8 +5529,7 @@
           md += `**AI Champion(s):** Yes\n`;
           if (aiChampions.length > 0) {
             aiChampions.forEach((c, i) => {
-              const tn = c.training ? ' *(Suggested for initial AI training)*' : '';
-              md += `${i + 1}. ${c.name}${tn}\n`;
+              md += `${i + 1}. ${c}\n`;
             });
           }
           md += `\n`;
