@@ -3059,12 +3059,12 @@
         name: 'Code Development',
         icon: '💻',
         items: [
-          'Code completion and suggestions',
-          'Generate code from natural language',
-          'Code refactoring and optimization',
-          'Automated code review assistance',
-          'Debugging and error resolution',
-          'Code explanation and documentation'
+          { id: 'code-completion', label: 'Code completion and suggestions' },
+          { id: 'code-generation', label: 'Generate code from natural language' },
+          { id: 'code-refactoring', label: 'Code refactoring and optimization' },
+          { id: 'code-review', label: 'Automated code review assistance' },
+          { id: 'debugging', label: 'Debugging and error resolution' },
+          { id: 'code-explanation', label: 'Code explanation and documentation' }
         ]
       },
       {
@@ -3072,11 +3072,11 @@
         name: 'Documentation',
         icon: '📄',
         items: [
-          'API documentation generation',
-          'README and setup guides',
-          'Technical specification writing',
-          'Code comments and docstrings',
-          'Release notes generation'
+          { id: 'api-docs', label: 'API documentation generation' },
+          { id: 'readme-generation', label: 'README and setup guides' },
+          { id: 'technical-specs', label: 'Technical specification writing' },
+          { id: 'inline-comments', label: 'Code comments and docstrings' },
+          { id: 'release-notes', label: 'Release notes generation' }
         ]
       },
       {
@@ -3084,11 +3084,11 @@
         name: 'Requirements & Analysis',
         icon: '📊',
         items: [
-          'User story creation and refinement',
-          'Requirements gap analysis',
-          'Acceptance criteria generation',
-          'Impact analysis for changes',
-          'Backlog grooming assistance'
+          { id: 'user-stories', label: 'User story creation and refinement' },
+          { id: 'requirements-analysis', label: 'Requirements gap analysis' },
+          { id: 'acceptance-criteria', label: 'Acceptance criteria generation' },
+          { id: 'impact-analysis', label: 'Impact analysis for changes' },
+          { id: 'backlog-refinement', label: 'Backlog grooming assistance' }
         ]
       },
       {
@@ -3096,11 +3096,11 @@
         name: 'Project Management',
         icon: '📋',
         items: [
-          'Meeting summaries and action items',
-          'Status report generation',
-          'Risk identification and mitigation',
-          'Effort estimation assistance',
-          'Stakeholder communication drafts'
+          { id: 'meeting-summaries', label: 'Meeting summaries and action items' },
+          { id: 'status-reports', label: 'Status report generation' },
+          { id: 'risk-identification', label: 'Risk identification and mitigation' },
+          { id: 'estimation', label: 'Effort estimation assistance' },
+          { id: 'stakeholder-comms', label: 'Stakeholder communication drafts' }
         ]
       },
       {
@@ -3108,11 +3108,11 @@
         name: 'Design & UX',
         icon: '🎨',
         items: [
-          'Design critique and feedback',
-          'UI copy and microcopy writing',
-          'Accessibility recommendations',
-          'User research analysis',
-          'Persona and journey mapping'
+          { id: 'design-feedback', label: 'Design critique and feedback' },
+          { id: 'copy-writing', label: 'UI copy and microcopy writing' },
+          { id: 'accessibility', label: 'Accessibility recommendations' },
+          { id: 'user-research', label: 'User research analysis' },
+          { id: 'persona-creation', label: 'Persona and journey mapping' }
         ]
       },
       {
@@ -3120,14 +3120,30 @@
         name: 'Data & Analytics',
         icon: '📈',
         items: [
-          'SQL query generation',
-          'Data transformation scripts',
-          'Data analysis and insights',
-          'Data pipeline development',
-          'Data quality checks'
+          { id: 'sql-generation', label: 'SQL query generation' },
+          { id: 'data-transformation', label: 'Data transformation scripts' },
+          { id: 'data-analysis', label: 'Data analysis and insights' },
+          { id: 'pipeline-development', label: 'Data pipeline development' },
+          { id: 'data-quality', label: 'Data quality checks' }
         ]
       }
     ];
+
+    // Use case helpers
+    function getUseCaseLabel(categoryId, itemId) {
+      const cat = useCaseCategories.find(c => c.id === categoryId);
+      if (!cat) return itemId;
+      const item = cat.items.find(i => i.id === itemId);
+      return item ? item.label : itemId;
+    }
+
+    // Reverse map for migrating old text-based use case data to IDs
+    const useCaseTextToId = {};
+    useCaseCategories.forEach(cat => {
+      cat.items.forEach(item => {
+        useCaseTextToId[item.label] = item.id;
+      });
+    });
 
     // State
     let currentStep = 1;
@@ -3419,6 +3435,21 @@
               custom: data.custom || []
             }])
           );
+          // Migrate old text-based use case items to IDs
+          Object.entries(useCaseData).forEach(([catId, catData]) => {
+            ['need', 'doing'].forEach(col => {
+              const migrated = new Set();
+              catData[col].forEach(val => {
+                const asId = useCaseTextToId[val];
+                migrated.add(asId || val); // custom items kept as-is
+              });
+              catData[col] = migrated;
+            });
+            // Migrate custom items from string[] to {id, label}[]
+            if (catData.custom.length > 0 && typeof catData.custom[0] === 'string') {
+              catData.custom = catData.custom.map(text => ({ id: text, label: text }));
+            }
+          });
           useCasesInitialized = true;
         }
 
@@ -4377,7 +4408,7 @@
       useCaseCategories.forEach(cat => {
         if (!useCaseData[cat.id]) {
           useCaseData[cat.id] = {
-            need: new Set(cat.items),  // All items start in "Need" column
+            need: new Set(cat.items.map(i => i.id)),  // All items start in "Need" column (by ID)
             doing: new Set(),
             custom: []
           };
@@ -4411,7 +4442,7 @@
                   ${needItems.length > 0 ? needItems.map(item => `
                     <div class="usecase-card" data-item="${item.replace(/"/g, '&quot;')}">
                       <span class="usecase-delete-btn" title="Remove">×</span>
-                      <span class="usecase-name">${item}</span>
+                      <span class="usecase-name">${getUseCaseLabel(cat.id, item)}</span>
                       <span class="usecase-move-btn" title="Move to Already Doing">→</span>
                     </div>
                   `).join('') : '<div class="usecase-empty">Move items here when needed</div>'}
@@ -4425,7 +4456,7 @@
                   ${doingItems.length > 0 ? doingItems.map(item => `
                     <div class="usecase-card" data-item="${item.replace(/"/g, '&quot;')}">
                       <span class="usecase-move-btn" title="Move to Need">←</span>
-                      <span class="usecase-name">${item}</span>
+                      <span class="usecase-name">${getUseCaseLabel(cat.id, item)}</span>
                       <span class="usecase-delete-btn" title="Remove">×</span>
                     </div>
                   `).join('') : '<div class="usecase-empty">Move items here when already addressed</div>'}
@@ -4496,7 +4527,7 @@
       const catData = useCaseData[categoryId];
       catData[fromColumn].delete(item);
       // Also remove from custom if it's a custom item
-      catData.custom = catData.custom.filter(c => c !== item);
+      catData.custom = catData.custom.filter(c => (typeof c === 'string' ? c : c.id) !== item);
 
       renderUseCases();
       autoSave();
@@ -4510,14 +4541,19 @@
       if (!value) return;
 
       const catData = useCaseData[categoryId];
-      // Check for duplicates
-      if (catData.need.has(value) || catData.doing.has(value)) {
+      // Check for duplicates against labels
+      const existingLabels = new Set([
+        ...useCaseCategories.find(c => c.id === categoryId).items.map(i => i.label),
+        ...catData.custom.map(c => typeof c === 'string' ? c : c.label)
+      ]);
+      if (existingLabels.has(value)) {
         alert('This use case already exists in this category.');
         return;
       }
 
-      catData.need.add(value);
-      catData.custom.push(value);
+      const customId = `custom-uc-${Date.now()}`;
+      catData.need.add(customId);
+      catData.custom.push({ id: customId, label: value });
       input.value = '';
 
       renderUseCases();
@@ -5127,10 +5163,10 @@
           hasUseCases = true;
           html += `<strong>${cat.icon} ${cat.name}:</strong><br>`;
           if (needItems.length > 0) {
-            html += `&nbsp;&nbsp;• Need: ${needItems.join(', ')}<br>`;
+            html += `&nbsp;&nbsp;• Need: ${needItems.map(id => getUseCaseLabel(cat.id, id)).join(', ')}<br>`;
           }
           if (doingItems.length > 0) {
-            html += `&nbsp;&nbsp;• Already Doing: ${doingItems.join(', ')}<br>`;
+            html += `&nbsp;&nbsp;• Already Doing: ${doingItems.map(id => getUseCaseLabel(cat.id, id)).join(', ')}<br>`;
           }
         }
       });
@@ -5374,134 +5410,160 @@
     }
 
     function generateJSON() {
-      // Build the results object
+      // Full-universe export: every question and option is always present
       const results = {
-        timestamp: new Date().toISOString(),
+        schemaVersion: '2.0.0',
+        exportedAt: new Date().toISOString(),
         accountName: accountName || 'Unnamed Account',
-        assessment: {
-          roles: getSelectedRolesOrdered().map(id => {
-            const role = roles.find(r => r.id === id);
-            return { id, name: role?.name || id };
-          }),
-          aiChampion: aiChampion ? {
-            answer: aiChampion,
+
+        // --- Engagement Model ---
+        engagement: {
+          ownership: Object.fromEntries(
+            Object.keys(ownershipLabels).map(id => [id, { selected: selectedOwnership.has(id) }])
+          ),
+          aiToolPayment: { value: aiToolPayment },
+          compliance: {
+            ...Object.fromEntries(
+              complianceOptions.map(c => [c.id, { selected: selectedCompliance.has(c.id) }])
+            ),
+            custom: customCompliance.map(c => ({
+              id: c.id, name: c.name, selected: selectedCompliance.has(c.id)
+            }))
+          }
+        },
+
+        // --- Client AI Landscape ---
+        clientAILandscape: {
+          maturity: { value: clientAIMaturity },
+          usage: Object.fromEntries(
+            Object.keys(clientAILabels.usage).map(id => [id, { selected: clientAIUsage.has(id) }])
+          ),
+          priority: { value: clientAIPriority },
+          governance: { value: clientAIGovernance },
+          challenges: Object.fromEntries(
+            Object.keys(clientAILabels.challenge).map(id => {
+              const idx = clientChallengeOrder.indexOf(id);
+              return [id, { rank: idx >= 0 ? idx + 1 : null }];
+            })
+          ),
+          approvedToolsList: {
+            value: clientApprovedTools,
+            tools: {
+              ...Object.fromEntries(
+                Object.keys(approvedToolLabels).map(id => [id, { selected: selectedApprovedTools.has(id) }])
+              ),
+              custom: customApprovedTools.map(t => ({
+                id: t.id, name: t.name, selected: selectedApprovedTools.has(t.id)
+              }))
+            }
+          }
+        },
+
+        // --- Team Roles ---
+        teamRoles: {
+          roles: Object.fromEntries(
+            roles.map(r => [r.id, { selected: selectedRoles.has(r.id) }])
+          ),
+          aiChampion: {
+            value: aiChampion,
             champions: aiChampion === 'yes' ? aiChampions : [],
-            futureChampions: aiChampion === 'no' && aiFutureChampions.length > 0 ? aiFutureChampions : []
-          } : null,
-          successStories: successStories.length > 0 ? successStories : null,
-          tools: {},
-          engagement: {
-            ownership: Array.from(selectedOwnership).map(id => ({
-              id,
-              name: ownershipLabels[id]?.name || id
-            })),
-            aiToolPayment: aiToolPayment,
-            aiToolPaymentLabel: aiToolPayment === 'us' ? 'We Will Pay' : aiToolPayment === 'customer' ? 'Customer Will Pay' : aiToolPayment === 'mix' ? 'It Is a Mix' : aiToolPayment === 'tbd' ? 'To Be Determined' : 'Not Selected',
-            compliance: Array.from(selectedCompliance).map(id => {
-              const predefined = complianceOptions.find(c => c.id === id);
-              if (predefined) {
-                return { id, name: predefined.name };
+            futureChampions: aiChampion === 'no' ? aiFutureChampions : []
+          },
+          successStories: {
+            value: hasSuccessStories,
+            stories: hasSuccessStories === 'yes' ? successStories : []
+          }
+        },
+
+        // --- Tools & Infrastructure ---
+        toolsAndInfrastructure: Object.fromEntries(
+          toolCategories.map(cat => {
+            const catSelected = selectedTools[cat.id] || new Set();
+            const isVisible = cat.showAlways || (cat.showForRoles?.some(r => selectedRoles.has(r)) ?? false);
+            const entry = {};
+            if (!cat.showAlways) entry.visible = isVisible;
+            cat.tools.forEach(t => {
+              entry[t.id] = { selected: catSelected.has(t.id) };
+            });
+            entry['dont-know'] = { selected: catSelected.has('dont-know') };
+            entry['not-applicable'] = { selected: catSelected.has('not-applicable') };
+            entry.custom = (customTools[cat.id] || []).map(t => ({
+              id: t.id, name: t.name, selected: catSelected.has(t.id)
+            }));
+            return [cat.id, entry];
+          })
+        ),
+
+        // --- Role-Tool Matrix ---
+        // Complete grid: every selectedRole × every selectedAITool
+        roleToolMatrix: (() => {
+          const selectedRoleIds = getSelectedRolesOrdered();
+          const aiTools = getSelectedAITools();
+          const matrix = {};
+          selectedRoleIds.forEach(roleId => {
+            aiTools.forEach(tool => {
+              const key = `${roleId}:${tool.id}`;
+              matrix[key] = !!roleToolMatrix[key];
+            });
+          });
+          return matrix;
+        })(),
+
+        // --- Use Cases ---
+        useCases: Object.fromEntries(
+          useCaseCategories.map(cat => {
+            const catData = useCaseData[cat.id] || { need: new Set(), doing: new Set(), custom: [] };
+            const entry = {};
+            cat.items.forEach(item => {
+              if (catData.doing && catData.doing.has(item.id)) {
+                entry[item.id] = { status: 'doing' };
+              } else if (catData.need && catData.need.has(item.id)) {
+                entry[item.id] = { status: 'need' };
+              } else {
+                entry[item.id] = { status: 'removed' };
               }
-              const custom = customCompliance.find(c => c.id === id);
-              return { id, name: custom?.name || id, custom: true };
-            }),
-          },
-          clientAILandscape: {
-            maturity: clientAIMaturity ? { id: clientAIMaturity, name: clientAILabels.maturity[clientAIMaturity] } : null,
-            usage: Array.from(clientAIUsage).filter(id => id !== 'not-using').map(id => ({ id, name: clientAILabels.usage[id] })),
-            priority: clientAIPriority ? { id: clientAIPriority, name: clientAILabels.priority[clientAIPriority] } : null,
-            governance: clientAIGovernance ? { id: clientAIGovernance, name: clientAILabels.governance[clientAIGovernance] } : null,
-            challenges: clientChallengeOrder.map((id, index) => ({
-              id,
-              name: clientAILabels.challenge[id],
-              rank: index === 0 ? 'primary' : index === 1 ? 'secondary' : undefined
-            })),
-            approvedToolsList: clientApprovedTools ? { answer: clientApprovedTools, tools: clientApprovedTools === 'yes' ? getApprovedToolNames() : null } : null
-          },
-          limitingFactors: (limitingFactorsOrder.length ? limitingFactorsOrder : Array.from(selectedLimitingFactors)).map((id, index) => ({
-            id,
-            name: id === 'other' ? (limitingFactorOther || limitingFactorLabels.other) : limitingFactorLabels[id],
-            rank: index === 0 ? 'primary' : index === 1 ? 'secondary' : undefined
-          })),
-          useCases: useCaseCategories.map(cat => {
-            const catData = useCaseData[cat.id] || { need: new Set(), doing: new Set() };
-            return {
-              category: cat.name,
-              need: Array.from(catData.need || []),
-              alreadyDoing: Array.from(catData.doing || [])
-            };
-          }).filter(cat => cat.need.length > 0 || cat.alreadyDoing.length > 0)
+            });
+            entry.custom = (catData.custom || []).map(c => {
+              const cId = typeof c === 'string' ? c : c.id;
+              const cLabel = typeof c === 'string' ? c : c.label;
+              const status = catData.doing?.has(cId) ? 'doing' :
+                             catData.need?.has(cId) ? 'need' : 'removed';
+              return { id: cId, label: cLabel, status };
+            });
+            return [cat.id, entry];
+          })
+        ),
+
+        // --- Workflow Maturity ---
+        // All 9 roles; null means role was not selected / not assessed
+        workflowMaturity: Object.fromEntries(
+          roles.map(r => [r.id, {
+            stage: workflowMaturity[r.id] !== undefined ? workflowMaturity[r.id] : null
+          }])
+        ),
+
+        // --- Limiting Factors ---
+        limitingFactors: Object.fromEntries(
+          Object.keys(limitingFactorLabels).map(id => {
+            const idx = limitingFactorsOrder.indexOf(id);
+            const entry = { rank: idx >= 0 ? idx + 1 : null };
+            if (id === 'other') entry.text = limitingFactorOther || null;
+            return [id, entry];
+          })
+        ),
+
+        // --- Step Notes ---
+        notes: {
+          engagement: (stepNotes[5] || '').trim() || null,
+          clientAILandscape: (stepNotes[6] || '').trim() || null,
+          teamRoles: (stepNotes[1] || '').trim() || null,
+          tools: (stepNotes[2] || '').trim() || null,
+          roleToolMatrix: (stepNotes[4] || '').trim() || null,
+          useCases: (stepNotes[3] || '').trim() || null,
+          workflowMaturity: (stepNotes[9] || '').trim() || null,
+          limitingFactors: (stepNotes[7] || '').trim() || null
         }
       };
-
-      // Add tools by category
-      toolCategories.forEach(cat => {
-        const selected = selectedTools[cat.id];
-        if (selected && selected.size > 0) {
-          // Filter out special options from exports
-          const filteredTools = Array.from(selected)
-            .filter(toolId => toolId !== 'dont-know' && toolId !== 'not-applicable')
-            .map(toolId => {
-              const tool = cat.tools.find(t => t.id === toolId);
-              if (tool) {
-                return { id: toolId, name: tool.name };
-              }
-              // Check custom tools
-              const custom = customTools[cat.id]?.find(t => t.id === toolId);
-              return { id: toolId, name: custom?.name || toolId, custom: true };
-            });
-          if (filteredTools.length > 0) {
-            results.assessment.tools[cat.name] = filteredTools;
-          }
-        }
-      });
-
-      // Add role-tool matrix
-      const matrixKeys = Object.keys(roleToolMatrix).filter(k => roleToolMatrix[k]);
-      if (matrixKeys.length > 0) {
-        results.assessment.roleToolMatrix = {};
-        matrixKeys.forEach(key => {
-          const [roleId, toolId] = key.split(':');
-          const role = roles.find(r => r.id === roleId);
-          const aiCat = toolCategories.find(c => c.id === 'ai');
-          const tool = aiCat?.tools.find(t => t.id === toolId) || customTools['ai']?.find(t => t.id === toolId);
-          const roleName = role?.name || roleId;
-          const toolName = tool?.name || toolId;
-          if (!results.assessment.roleToolMatrix[roleName]) {
-            results.assessment.roleToolMatrix[roleName] = [];
-          }
-          results.assessment.roleToolMatrix[roleName].push(toolName);
-        });
-      }
-
-      // Add workflow maturity
-      const wfmEntries = Object.entries(workflowMaturity);
-      if (wfmEntries.length > 0) {
-        results.assessment.workflowMaturity = {};
-        wfmEntries.forEach(([roleId, stageIdx]) => {
-          const role = roles.find(r => r.id === roleId);
-          const roleName = role?.name || roleId;
-          const stage = wfmStages[stageIdx];
-          results.assessment.workflowMaturity[roleName] = {
-            stageIndex: stageIdx,
-            stageName: stage ? `${stage.num} — ${stage.title}` : `Stage ${stageIdx}`,
-            description: stage?.sub || ''
-          };
-        });
-      }
-
-      // Add step notes
-      const notesForExport = {};
-      const noteStepLabels = {5: 'Engagement Model', 6: 'Client AI Landscape', 1: 'Team Roles', 2: 'Tools & Infrastructure', 4: 'Role-Tool Matrix', 3: 'AI Use Cases', 9: 'AI Workflow Maturity', 7: 'Limiting Factors'};
-      Object.entries(stepNotes).forEach(([stepId, note]) => {
-        if (note && note.trim()) {
-          const label = noteStepLabels[stepId] || ('Step ' + stepId);
-          notesForExport[label] = note.trim();
-        }
-      });
-      if (Object.keys(notesForExport).length > 0) {
-        results.assessment.notes = notesForExport;
-      }
 
       return JSON.stringify(results, null, 2);
     }
@@ -5691,14 +5753,14 @@
           if (needItems.length > 0) {
             md += `**Need:**\n`;
             needItems.forEach(item => {
-              md += `- ${item}\n`;
+              md += `- ${getUseCaseLabel(cat.id, item)}\n`;
             });
             md += `\n`;
           }
           if (doingItems.length > 0) {
             md += `**Already Doing:**\n`;
             doingItems.forEach(item => {
-              md += `- ${item}\n`;
+              md += `- ${getUseCaseLabel(cat.id, item)}\n`;
             });
             md += `\n`;
           }
