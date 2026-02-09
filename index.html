@@ -226,6 +226,101 @@
       z-index: 99;
     }
 
+    /* Info Modal */
+    .info-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .info-modal-overlay.open {
+      display: flex;
+    }
+    .info-modal {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 720px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+      padding: 2rem;
+      position: relative;
+    }
+    .info-modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+    }
+    .info-modal-close:hover {
+      background: #f3f4f6;
+      color: #1f2937;
+    }
+    .info-modal h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0 0 1.5rem;
+      padding-right: 2rem;
+    }
+    .info-modal-stage {
+      margin-bottom: 1.5rem;
+    }
+    .info-modal-stage:last-child {
+      margin-bottom: 0;
+    }
+    .info-modal-stage h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #4f46e5;
+      margin: 0 0 0.5rem;
+    }
+    .info-modal-stage p {
+      font-size: 0.9rem;
+      color: #374151;
+      line-height: 1.6;
+      margin: 0;
+    }
+    .info-modal-summary {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+    }
+    .info-modal-summary h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0 0 0.5rem;
+    }
+    .info-modal-summary p {
+      font-size: 0.9rem;
+      color: #374151;
+      line-height: 1.6;
+      margin: 0;
+    }
+    .more-info-link {
+      font-size: 0.85rem;
+      color: #4f46e5;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 500;
+      margin-left: 0.5rem;
+    }
+    .more-info-link:hover {
+      text-decoration: underline;
+      color: #4338ca;
+    }
+
     /* ═══════════════════════════════════════════
        MAIN CONTENT AREA
        ═══════════════════════════════════════════ */
@@ -2502,7 +2597,7 @@
         <div class="card-body">
           <!-- Question 1: AI Adoption Journey -->
           <div class="engagement-section">
-            <div class="engagement-label">At what stage is the client in their AI adoption journey?</div>
+            <div class="engagement-label">At what stage is the client in their AI adoption journey? <a class="more-info-link" onclick="openMaturityInfoModal()">ℹ️ More info</a></div>
             <div class="journey-container" id="maturityStages">
               <div class="journey-idk">
                 <div class="option-card" data-value="dont-know">
@@ -2929,6 +3024,44 @@
   </div>
   <!-- Mobile sidebar overlay -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Maturity Info Modal -->
+  <div class="info-modal-overlay" id="maturityInfoModal">
+    <div class="info-modal">
+      <button class="info-modal-close" onclick="closeMaturityInfoModal()" title="Close">&times;</button>
+      <h2>AI Adoption Journey — Stage Descriptions</h2>
+
+      <div class="info-modal-stage">
+        <h3>🚫 Not Started — "AI is not on the agenda"</h3>
+        <p>At this stage, AI is essentially absent from the client's strategy. There are no initiatives, no owners, and no clear awareness of where AI could add value. If AI is mentioned, it's usually abstract or perceived as something for "big tech companies," not something actionable for them. Decisions are driven by existing processes and tools, and there is often uncertainty or skepticism around AI's relevance, cost, or risk.</p>
+      </div>
+
+      <div class="info-modal-stage">
+        <h3>🔍 Exploring — "We are trying to understand AI"</h3>
+        <p>Here the client has curiosity, but not commitment. AI is being researched, discussed, or experimented with informally — maybe through demos, workshops, vendor conversations, or isolated experiments by motivated individuals. There is no production usage, no clear ROI expectations, and no governance. Learning is the goal, not outcomes. This stage is about sense-making, not delivery.</p>
+      </div>
+
+      <div class="info-modal-stage">
+        <h3>🧪 Piloting — "We are testing if AI actually works for us"</h3>
+        <p>This is a key inflection point. The client is running concrete POCs tied to real problems (often in limited scopes like SDLC, support, or analytics). There is some budget, some sponsorship, and early success criteria — but AI is still treated as an experiment. Results are evaluated cautiously, risks are contained, and decisions about scaling are pending. AI exists, but it's not yet trusted or systemic.</p>
+      </div>
+
+      <div class="info-modal-stage">
+        <h3>📈 Scaling — "AI is becoming part of how we operate"</h3>
+        <p>Now AI has proven value. Successful pilots are expanded across teams, functions, or products. Investment increases, governance starts to matter, and repeatability becomes important. The client begins to standardize tools, define ownership, train people, and integrate AI into workflows. The focus shifts from "does this work?" to "how do we roll this out safely and consistently?"</p>
+      </div>
+
+      <div class="info-modal-stage">
+        <h3>⚡ Optimizing — "AI is embedded and continuously improved"</h3>
+        <p>At this stage, AI is no longer a project — it's infrastructure. AI is embedded into core processes and products, measured with KPIs, and continuously refined. The client actively optimizes models, workflows, and cost/value tradeoffs. People are trained by default, governance is mature, and AI decisions are part of normal business planning. The question is no longer whether to use AI, but how to do it better.</p>
+      </div>
+
+      <div class="info-modal-summary">
+        <h3>The big difference across stages</h3>
+        <p>Early stages are about learning and reducing uncertainty. Middle stages are about proving value and managing risk. Later stages are about institutionalizing and optimizing impact.</p>
+      </div>
+    </div>
+  </div>
 
   <script>
     // Data
@@ -5944,6 +6077,28 @@
       const isOpen = body.classList.toggle('open');
       toggle.classList.toggle('open', isOpen);
     }
+
+    // Maturity Info Modal
+    function openMaturityInfoModal() {
+      document.getElementById('maturityInfoModal').classList.add('open');
+    }
+
+    function closeMaturityInfoModal() {
+      document.getElementById('maturityInfoModal').classList.remove('open');
+    }
+
+    // Close modal on overlay click (outside modal content)
+    document.getElementById('maturityInfoModal').addEventListener('click', function(e) {
+      if (e.target === this) closeMaturityInfoModal();
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('maturityInfoModal');
+        if (modal && modal.classList.contains('open')) closeMaturityInfoModal();
+      }
+    });
 
     function setupStepNotes() {
       document.querySelectorAll('.step-notes-textarea').forEach(textarea => {
