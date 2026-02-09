@@ -5411,20 +5411,33 @@
 
     function generateJSON() {
       // Full-universe export: every question and option is always present
+      // _meta, _label, _valueLabel fields provide human-readable context (strip with key.startsWith('_'))
+      const paymentLabels = { us: 'We Are/Will', customer: 'Customer Is/Will', mix: 'It Is a Mix', tbd: 'To Be Determined' };
+      const approvedToolsValueLabels = { 'dont-know': "I Don't Know", no: 'No', yes: 'Yes' };
+
       const results = {
-        schemaVersion: '2.0.0',
+        schemaVersion: '2.1.0',
         exportedAt: new Date().toISOString(),
         accountName: accountName || 'Unnamed Account',
 
         // --- Engagement Model ---
         engagement: {
-          ownership: Object.fromEntries(
-            Object.keys(ownershipLabels).map(id => [id, { selected: selectedOwnership.has(id) }])
-          ),
-          aiToolPayment: { value: aiToolPayment },
-          compliance: {
+          _meta: { step: 'Step 1', title: 'Engagement Model' },
+          ownership: {
+            _meta: { question: 'What level of ownership do you have on this project?', type: 'multi-select' },
             ...Object.fromEntries(
-              complianceOptions.map(c => [c.id, { selected: selectedCompliance.has(c.id) }])
+              Object.keys(ownershipLabels).map(id => [id, { selected: selectedOwnership.has(id), _label: ownershipLabels[id].name }])
+            )
+          },
+          aiToolPayment: {
+            _meta: { question: 'Who pays (or will pay) for AI tools?', type: 'single-select' },
+            value: aiToolPayment,
+            _valueLabel: aiToolPayment ? (paymentLabels[aiToolPayment] || aiToolPayment) : null
+          },
+          compliance: {
+            _meta: { question: 'What compliance requirements apply to this project?', type: 'multi-select' },
+            ...Object.fromEntries(
+              complianceOptions.map(c => [c.id, { selected: selectedCompliance.has(c.id), _label: c.name }])
             ),
             custom: customCompliance.map(c => ({
               id: c.id, name: c.name, selected: selectedCompliance.has(c.id)
@@ -5434,23 +5447,44 @@
 
         // --- Client AI Landscape ---
         clientAILandscape: {
-          maturity: { value: clientAIMaturity },
-          usage: Object.fromEntries(
-            Object.keys(clientAILabels.usage).map(id => [id, { selected: clientAIUsage.has(id) }])
-          ),
-          priority: { value: clientAIPriority },
-          governance: { value: clientAIGovernance },
-          challenges: Object.fromEntries(
-            Object.keys(clientAILabels.challenge).map(id => {
-              const idx = clientChallengeOrder.indexOf(id);
-              return [id, { rank: idx >= 0 ? idx + 1 : null }];
-            })
-          ),
+          _meta: { step: 'Step 2', title: 'Client AI Adoption — As-Is State' },
+          maturity: {
+            _meta: { question: 'At what stage is the client in their AI adoption journey?', type: 'single-select' },
+            value: clientAIMaturity,
+            _valueLabel: clientAIMaturity ? (clientAILabels.maturity[clientAIMaturity] || clientAIMaturity) : null
+          },
+          usage: {
+            _meta: { question: 'How is the client currently using AI?', type: 'multi-select' },
+            ...Object.fromEntries(
+              Object.keys(clientAILabels.usage).map(id => [id, { selected: clientAIUsage.has(id), _label: clientAILabels.usage[id] }])
+            )
+          },
+          priority: {
+            _meta: { question: 'Is AI a strategic priority for the client?', type: 'single-select' },
+            value: clientAIPriority,
+            _valueLabel: clientAIPriority ? (clientAILabels.priority[clientAIPriority] || clientAIPriority) : null
+          },
+          governance: {
+            _meta: { question: 'Does the client have AI governance in place?', type: 'single-select' },
+            value: clientAIGovernance,
+            _valueLabel: clientAIGovernance ? (clientAILabels.governance[clientAIGovernance] || clientAIGovernance) : null
+          },
+          challenges: {
+            _meta: { question: "What are the client's biggest AI challenges?", type: 'ranked (max 2)' },
+            ...Object.fromEntries(
+              Object.keys(clientAILabels.challenge).map(id => {
+                const idx = clientChallengeOrder.indexOf(id);
+                return [id, { rank: idx >= 0 ? idx + 1 : null, _label: clientAILabels.challenge[id] }];
+              })
+            )
+          },
           approvedToolsList: {
+            _meta: { question: 'Is there an approved list of AI tools?', type: 'single-select + multi-select' },
             value: clientApprovedTools,
+            _valueLabel: clientApprovedTools ? (approvedToolsValueLabels[clientApprovedTools] || clientApprovedTools) : null,
             tools: {
               ...Object.fromEntries(
-                Object.keys(approvedToolLabels).map(id => [id, { selected: selectedApprovedTools.has(id) }])
+                Object.keys(approvedToolLabels).map(id => [id, { selected: selectedApprovedTools.has(id), _label: approvedToolLabels[id] }])
               ),
               custom: customApprovedTools.map(t => ({
                 id: t.id, name: t.name, selected: selectedApprovedTools.has(t.id)
@@ -5461,67 +5495,87 @@
 
         // --- Team Roles ---
         teamRoles: {
-          roles: Object.fromEntries(
-            roles.map(r => [r.id, { selected: selectedRoles.has(r.id) }])
-          ),
+          _meta: { step: 'Step 3', title: 'Team Roles & AI Champion' },
+          roles: {
+            _meta: { question: "Who's on your team?", type: 'multi-select' },
+            ...Object.fromEntries(
+              roles.map(r => [r.id, { selected: selectedRoles.has(r.id), _label: r.name }])
+            )
+          },
           aiChampion: {
+            _meta: { question: 'Is there someone responsible for driving and championing AI adoption?', type: 'yes/no + names' },
             value: aiChampion,
             champions: aiChampion === 'yes' ? aiChampions : [],
             futureChampions: aiChampion === 'no' ? aiFutureChampions : []
           },
           successStories: {
+            _meta: { question: 'Do you have an AI Success Story you\'d like to share?', type: 'yes/no + entries' },
             value: hasSuccessStories,
             stories: hasSuccessStories === 'yes' ? successStories : []
           }
         },
 
         // --- Tools & Infrastructure ---
-        toolsAndInfrastructure: Object.fromEntries(
-          toolCategories.map(cat => {
+        toolsAndInfrastructure: (() => {
+          const section = {
+            _meta: { step: 'Step 4', title: 'Tools & Infrastructure' }
+          };
+          toolCategories.forEach(cat => {
             const catSelected = selectedTools[cat.id] || new Set();
             const isVisible = cat.showAlways || (cat.showForRoles?.some(r => selectedRoles.has(r)) ?? false);
-            const entry = {};
+            const entry = {
+              _meta: { question: 'What tools does your team use?', _categoryName: cat.name, type: 'multi-select' }
+            };
             if (!cat.showAlways) entry.visible = isVisible;
             cat.tools.forEach(t => {
-              entry[t.id] = { selected: catSelected.has(t.id) };
+              entry[t.id] = { selected: catSelected.has(t.id), _label: t.name };
             });
-            entry['dont-know'] = { selected: catSelected.has('dont-know') };
-            entry['not-applicable'] = { selected: catSelected.has('not-applicable') };
+            entry['dont-know'] = { selected: catSelected.has('dont-know'), _label: "Don't Know" };
+            entry['not-applicable'] = { selected: catSelected.has('not-applicable'), _label: 'Not Applicable' };
             entry.custom = (customTools[cat.id] || []).map(t => ({
               id: t.id, name: t.name, selected: catSelected.has(t.id)
             }));
-            return [cat.id, entry];
-          })
-        ),
+            section[cat.id] = entry;
+          });
+          return section;
+        })(),
 
         // --- Role-Tool Matrix ---
         // Complete grid: every selectedRole × every selectedAITool
         roleToolMatrix: (() => {
           const selectedRoleIds = getSelectedRolesOrdered();
           const aiTools = getSelectedAITools();
-          const matrix = {};
+          const matrix = {
+            _meta: { step: 'Step 5', title: 'Who uses which AI tools?', type: 'checkbox-matrix' }
+          };
           selectedRoleIds.forEach(roleId => {
+            const role = roles.find(r => r.id === roleId);
             aiTools.forEach(tool => {
               const key = `${roleId}:${tool.id}`;
-              matrix[key] = !!roleToolMatrix[key];
+              matrix[key] = {
+                selected: !!roleToolMatrix[key],
+                _role: role?.name || roleId,
+                _tool: tool.name || tool.id
+              };
             });
           });
           return matrix;
         })(),
 
         // --- Use Cases ---
-        useCases: Object.fromEntries(
-          useCaseCategories.map(cat => {
+        useCases: (() => {
+          const section = {
+            _meta: { step: 'Step 6', title: 'AI Use Case Needs' }
+          };
+          useCaseCategories.forEach(cat => {
             const catData = useCaseData[cat.id] || { need: new Set(), doing: new Set(), custom: [] };
-            const entry = {};
+            const entry = {
+              _meta: { _categoryName: cat.name, type: 'tri-state (need / doing / removed)' }
+            };
             cat.items.forEach(item => {
-              if (catData.doing && catData.doing.has(item.id)) {
-                entry[item.id] = { status: 'doing' };
-              } else if (catData.need && catData.need.has(item.id)) {
-                entry[item.id] = { status: 'need' };
-              } else {
-                entry[item.id] = { status: 'removed' };
-              }
+              const status = (catData.doing && catData.doing.has(item.id)) ? 'doing' :
+                             (catData.need && catData.need.has(item.id)) ? 'need' : 'removed';
+              entry[item.id] = { status, _label: item.label };
             });
             entry.custom = (catData.custom || []).map(c => {
               const cId = typeof c === 'string' ? c : c.id;
@@ -5530,30 +5584,46 @@
                              catData.need?.has(cId) ? 'need' : 'removed';
               return { id: cId, label: cLabel, status };
             });
-            return [cat.id, entry];
-          })
-        ),
+            section[cat.id] = entry;
+          });
+          return section;
+        })(),
 
         // --- Workflow Maturity ---
         // All 9 roles; null means role was not selected / not assessed
-        workflowMaturity: Object.fromEntries(
-          roles.map(r => [r.id, {
-            stage: workflowMaturity[r.id] !== undefined ? workflowMaturity[r.id] : null
-          }])
-        ),
+        workflowMaturity: {
+          _meta: { step: 'Step 7', title: 'AI Workflow Maturity', type: 'single-select per role (stage 0-5)' },
+          ...Object.fromEntries(
+            roles.map(r => {
+              const stageIdx = workflowMaturity[r.id] !== undefined ? workflowMaturity[r.id] : null;
+              const entry = {
+                stage: stageIdx,
+                _label: r.name
+              };
+              if (stageIdx !== null && wfmStages[stageIdx]) {
+                entry._stageLabel = `${wfmStages[stageIdx].num} — ${wfmStages[stageIdx].title}`;
+              }
+              return [r.id, entry];
+            })
+          )
+        },
 
         // --- Limiting Factors ---
-        limitingFactors: Object.fromEntries(
-          Object.keys(limitingFactorLabels).map(id => {
-            const idx = limitingFactorsOrder.indexOf(id);
-            const entry = { rank: idx >= 0 ? idx + 1 : null };
-            if (id === 'other') entry.text = limitingFactorOther || null;
-            return [id, entry];
-          })
-        ),
+        limitingFactors: {
+          _meta: { step: 'Step 8', title: 'Factors Limiting AI Adoption', type: 'ranked (max 2)' },
+          ...Object.fromEntries(
+            Object.keys(limitingFactorLabels).map(id => {
+              const idx = limitingFactorsOrder.indexOf(id);
+              const entry = { rank: idx >= 0 ? idx + 1 : null, _label: limitingFactorLabels[id] };
+              if (id === 'other') entry.text = limitingFactorOther || null;
+              return [id, entry];
+            })
+          )
+        },
 
         // --- Step Notes ---
         notes: {
+          _meta: { description: 'Free-text notes added by the respondent for each survey step' },
           engagement: (stepNotes[5] || '').trim() || null,
           clientAILandscape: (stepNotes[6] || '').trim() || null,
           teamRoles: (stepNotes[1] || '').trim() || null,
