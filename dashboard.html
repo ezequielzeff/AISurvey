@@ -538,12 +538,132 @@
       box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
     }
 
+    .dm-input {
+      padding: 0.2rem 0.4rem;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #374151;
+      background: #fff;
+      outline: none;
+      width: 120px;
+      box-sizing: border-box;
+    }
+    .dm-input:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+    }
+    .dm-input::placeholder {
+      color: #9ca3af;
+      font-weight: 400;
+    }
+
     .maturity-not-started { background: #f3f4f6; color: #6b7280; }
     .maturity-exploring { background: #dbeafe; color: #1d4ed8; }
     .maturity-piloting { background: #fef3c7; color: #92400e; }
     .maturity-scaling { background: #d1fae5; color: #065f46; }
     .maturity-optimizing { background: #ede9fe; color: #5b21b6; }
     .maturity-dont-know { background: #f3f4f6; color: #9ca3af; }
+
+    /* More info link */
+    .more-info-link {
+      font-size: 0.85rem;
+      color: #4f46e5;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+      margin-left: 0.5rem;
+    }
+    .more-info-link:hover {
+      text-decoration: underline;
+      color: #4338ca;
+    }
+
+    /* ═══════════════════════════════════════════
+       MATURITY INFO MODAL
+       ═══════════════════════════════════════════ */
+    .info-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .info-modal-overlay.open {
+      display: flex;
+    }
+    .info-modal {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 720px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+      padding: 2rem;
+      position: relative;
+    }
+    .info-modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+    }
+    .info-modal-close:hover {
+      background: #f3f4f6;
+      color: #1f2937;
+    }
+    .info-modal h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0 0 1.5rem;
+      padding-right: 2rem;
+    }
+    .info-modal-stage {
+      margin-bottom: 1.5rem;
+    }
+    .info-modal-stage:last-child {
+      margin-bottom: 0;
+    }
+    .info-modal-stage h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #4f46e5;
+      margin: 0 0 0.5rem;
+    }
+    .info-modal-stage p {
+      font-size: 0.9rem;
+      color: #374151;
+      line-height: 1.6;
+      margin: 0;
+    }
+    .info-modal-summary {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+    }
+    .info-modal-summary h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0 0 0.5rem;
+    }
+    .info-modal-summary p {
+      font-size: 0.9rem;
+      color: #374151;
+      line-height: 1.6;
+      margin: 0;
+    }
 
     /* ═══════════════════════════════════════════
        UPLOAD MODAL
@@ -875,7 +995,7 @@
         <div class="widget-header">
           <div class="widget-title">Client AI Adoption Stage</div>
           <div class="widget-subtitle">Portfolio-wide adoption maturity</div>
-          <div class="widget-question">At what stage is the client in their AI adoption journey?</div>
+          <div class="widget-question">At what stage is the client in their AI adoption journey? <a href="#" class="more-info-link" onclick="event.preventDefault();openMaturityInfoModal();">More info</a></div>
         </div>
 
         <!-- Average Stage Callout -->
@@ -931,10 +1051,8 @@
             <tr>
               <th>Account</th>
               <th>Type</th>
-              <th>Maturity</th>
-              <th>Roles</th>
-              <th>AI Tools</th>
-              <th>Export Date</th>
+              <th>Client AI Maturity</th>
+              <th>Delivery Manager</th>
               <th>Quarter</th>
               <th>Actions</th>
             </tr>
@@ -973,6 +1091,10 @@
             <option value="other">Other</option>
           </select>
         </div>
+        <div style="flex:1;min-width:180px;">
+          <label style="display:block;font-size:0.8rem;font-weight:600;color:#6b7280;margin-bottom:0.35rem;text-transform:uppercase;letter-spacing:0.05em;">Delivery Manager</label>
+          <input type="text" class="filter-select" id="uploadDeliveryManager" placeholder="e.g. John Smith" style="width:100%;box-sizing:border-box;">
+        </div>
       </div>
       <div class="drop-zone" id="dropZone">
         <div class="drop-zone-icon">📁</div>
@@ -981,6 +1103,44 @@
         <input type="file" id="fileInput" accept=".json,.zip" multiple style="display:none;">
       </div>
       <div class="upload-results" id="uploadResults"></div>
+    </div>
+  </div>
+
+  <!-- Maturity Info Modal -->
+  <div class="info-modal-overlay" id="maturityInfoModal">
+    <div class="info-modal">
+      <button class="info-modal-close" onclick="closeMaturityInfoModal()" title="Close">&times;</button>
+      <h2>AI Adoption Journey — Stage Descriptions</h2>
+
+      <div class="info-modal-stage">
+        <h3>🚫 Not Started — "AI is not on the agenda"</h3>
+        <p>At this stage, AI is essentially absent from the client's strategy. There are no initiatives, no owners, and no clear awareness of where AI could add value. If AI is mentioned, it's usually abstract or perceived as something for "big tech companies," not something actionable for them. Decisions are driven by existing processes and tools, and there is often uncertainty or skepticism around AI's relevance, cost, or risk.</p>
+      </div>
+
+      <div class="info-modal-stage">
+        <h3>🔍 Exploring — "We are trying to understand AI"</h3>
+        <p>Here the client has curiosity, but not commitment. AI is being researched, discussed, or experimented with informally — maybe through demos, workshops, vendor conversations, or isolated experiments by motivated individuals. There is no production usage, no clear ROI expectations, and no governance. Learning is the goal, not outcomes. This stage is about sense-making, not delivery.</p>
+      </div>
+
+      <div class="info-modal-stage">
+        <h3>🧪 Piloting — "We are testing if AI actually works for us"</h3>
+        <p>This is a key inflection point. The client is running concrete POCs tied to real problems (often in limited scopes like SDLC, support, or analytics). There is some budget, some sponsorship, and early success criteria — but AI is still treated as an experiment. Results are evaluated cautiously, risks are contained, and decisions about scaling are pending. AI exists, but it's not yet trusted or systemic.</p>
+      </div>
+
+      <div class="info-modal-stage">
+        <h3>📈 Scaling — "AI is becoming part of how we operate"</h3>
+        <p>Now AI has proven value. Successful pilots are expanded across teams, functions, or products. Investment increases, governance starts to matter, and repeatability becomes important. The client begins to standardize tools, define ownership, train people, and integrate AI into workflows. The focus shifts from "does this work?" to "how do we roll this out safely and consistently?"</p>
+      </div>
+
+      <div class="info-modal-stage">
+        <h3>⚡ Optimizing — "AI is embedded and continuously improved"</h3>
+        <p>At this stage, AI is no longer a project — it's infrastructure. AI is embedded into core processes and products, measured with KPIs, and continuously refined. The client actively optimizes models, workflows, and cost/value tradeoffs. People are trained by default, governance is mature, and AI decisions are part of normal business planning. The question is no longer whether to use AI, but how to do it better.</p>
+      </div>
+
+      <div class="info-modal-summary">
+        <h3>The big difference across stages</h3>
+        <p>Early stages are about learning and reducing uncertainty. Middle stages are about proving value and managing risk. Later stages are about institutionalizing and optimizing impact.</p>
+      </div>
     </div>
   </div>
 
@@ -1307,12 +1467,19 @@
         raw_json TEXT NOT NULL,
         uploaded_at TEXT NOT NULL DEFAULT (datetime('now')),
         account_type TEXT NOT NULL DEFAULT 'other',
+        delivery_manager TEXT NOT NULL DEFAULT '',
         UNIQUE(account_name, exported_at)
       )
     `);
     // Migration: add account_type to existing databases that lack the column
     try {
       db.run("ALTER TABLE surveys ADD COLUMN account_type TEXT NOT NULL DEFAULT 'other'");
+    } catch (e) {
+      // Column already exists — ignore
+    }
+    // Migration: add delivery_manager to existing databases that lack the column
+    try {
+      db.run("ALTER TABLE surveys ADD COLUMN delivery_manager TEXT NOT NULL DEFAULT ''");
     } catch (e) {
       // Column already exists — ignore
     }
@@ -1376,6 +1543,16 @@
   }
 
   // ═══════════════════════════════════════════
+  // MATURITY INFO MODAL
+  // ═══════════════════════════════════════════
+  function openMaturityInfoModal() {
+    document.getElementById('maturityInfoModal').classList.add('open');
+  }
+  function closeMaturityInfoModal() {
+    document.getElementById('maturityInfoModal').classList.remove('open');
+  }
+
+  // ═══════════════════════════════════════════
   // UPLOAD
   // ═══════════════════════════════════════════
   function openUploadModal() {
@@ -1391,6 +1568,7 @@
       yearSelect.innerHTML += `<option value="${y}"${y === currentYear ? ' selected' : ''}>${y}</option>`;
     }
     document.getElementById('uploadQuarter').value = String(currentQuarter);
+    document.getElementById('uploadDeliveryManager').value = '';
   }
   function closeUploadModal() {
     document.getElementById('uploadModal').classList.remove('open');
@@ -1405,7 +1583,7 @@
     return errors;
   }
 
-  async function processFile(file, year, quarter, accountType) {
+  async function processFile(file, year, quarter, accountType, deliveryManager) {
     const result = { filename: file.name, status: '', message: '' };
 
     try {
@@ -1449,8 +1627,8 @@
       }
 
       db.run(
-        'INSERT INTO surveys (account_name, exported_at, year, quarter, schema_version, raw_json, account_type) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [data.accountName, data.exportedAt, year, quarter, data.schemaVersion, jsonText, accountType]
+        'INSERT INTO surveys (account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [data.accountName, data.exportedAt, year, quarter, data.schemaVersion, jsonText, accountType, deliveryManager]
       );
 
     } catch (e) {
@@ -1465,12 +1643,13 @@
     const year = parseInt(document.getElementById('uploadYear').value);
     const quarter = parseInt(document.getElementById('uploadQuarter').value);
     const accountType = document.getElementById('uploadAccountType').value;
+    const deliveryManager = document.getElementById('uploadDeliveryManager').value.trim();
     const resultsDiv = document.getElementById('uploadResults');
     resultsDiv.innerHTML = '<div style="color:#6b7280;font-size:0.85rem;padding:0.5rem 0;">Processing...</div>';
 
     const results = [];
     for (const file of files) {
-      results.push(await processFile(file, year, quarter, accountType));
+      results.push(await processFile(file, year, quarter, accountType, deliveryManager));
     }
 
     await saveToIndexedDB();
@@ -1523,7 +1702,7 @@
     // No types selected = no results
     if (selectedTypes.length === 0) return [];
 
-    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type FROM surveys WHERE 1=1';
+    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager FROM surveys WHERE 1=1';
     const params = [];
     if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
     if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
@@ -1539,7 +1718,7 @@
     let surveys = result[0].values.map(row => ({
       id: row[0], account_name: row[1], exported_at: row[2],
       year: row[3], quarter: row[4], schema_version: row[5],
-      data: JSON.parse(row[6]), account_type: row[7] || 'other'
+      data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || ''
     }));
 
     // Apply maturity filter (post-query JS filter)
@@ -1565,7 +1744,7 @@
 
     if (selectedTypes.length === 0) return [];
 
-    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type FROM surveys WHERE 1=1';
+    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager FROM surveys WHERE 1=1';
     const params = [];
     if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
     if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
@@ -1581,7 +1760,7 @@
     return result[0].values.map(row => ({
       id: row[0], account_name: row[1], exported_at: row[2],
       year: row[3], quarter: row[4], schema_version: row[5],
-      data: JSON.parse(row[6]), account_type: row[7] || 'other'
+      data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || ''
     }));
   }
 
@@ -1892,7 +2071,7 @@
   function renderSurveysTable(surveys) {
     const tbody = document.getElementById('surveysTableBody');
     if (surveys.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
       return;
     }
 
@@ -1900,18 +2079,6 @@
       const maturity = s.data?.clientAILandscape?.maturity?.value || '-';
       const maturityLabel = MATURITY_LABELS[maturity] || maturity;
       const maturityClass = maturity !== '-' ? `maturity-${maturity}` : '';
-
-      let roleCount = 0;
-      const roles = s.data?.teamRoles?.roles;
-      if (roles) Object.values(roles).forEach(v => { if (v?.selected) roleCount++; });
-
-      let aiToolCount = 0;
-      const aiSection = s.data?.toolsAndInfrastructure?.ai;
-      if (aiSection) Object.entries(aiSection).forEach(([k, v]) => {
-        if (!k.startsWith('_') && k !== 'custom' && k !== 'dont-know' && k !== 'not-applicable' && k !== 'visible' && v?.selected) aiToolCount++;
-      });
-
-      const exportDate = new Date(s.exported_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
       const isSelected = activeAccountFilter === s.account_name;
       const rowStyle = isSelected ? 'background:#eef2ff;' : '';
@@ -1922,6 +2089,8 @@
         `<option value="${t.id}"${t.id === accountType ? ' selected' : ''}>${t.label}</option>`
       ).join('');
 
+      const dmValue = escapeHtml(s.delivery_manager || '');
+
       return `<tr style="${rowStyle}cursor:pointer;" onclick="setAccountFilter('${escapedName}')" title="Click to filter by ${escapeHtml(s.account_name)}">
         <td><strong style="${isSelected ? 'color:#4f46e5;' : ''}">${escapeHtml(s.account_name)}</strong></td>
         <td onclick="event.stopPropagation();">
@@ -1930,9 +2099,11 @@
           </select>
         </td>
         <td><span class="maturity-badge ${maturityClass}">${maturityLabel}</span></td>
-        <td>${roleCount}</td>
-        <td>${aiToolCount}</td>
-        <td>${exportDate}</td>
+        <td onclick="event.stopPropagation();">
+          <input type="text" class="dm-input" value="${dmValue}" placeholder="—"
+            onchange="updateDeliveryManager(${s.id}, this.value.trim())"
+            title="Edit delivery manager">
+        </td>
         <td>Q${s.quarter} ${s.year}</td>
         <td class="actions" onclick="event.stopPropagation();">
           <button class="btn-icon" title="Download JSON" onclick="downloadSurvey(${s.id})">📥</button>
@@ -1966,6 +2137,11 @@
     db.run('UPDATE surveys SET account_type = ? WHERE id = ?', [newType, id]);
     await saveToIndexedDB();
     // No full refresh needed — the dropdown already shows the new value
+  }
+
+  async function updateDeliveryManager(id, newDM) {
+    db.run('UPDATE surveys SET delivery_manager = ? WHERE id = ?', [newDM, id]);
+    await saveToIndexedDB();
   }
 
   async function deleteSurvey(id, name) {
