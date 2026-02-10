@@ -1325,14 +1325,16 @@
     'exploring': '#3b82f6',
     'piloting': '#f59e0b',
     'scaling': '#10b981',
-    'optimizing': '#8b5cf6'
+    'optimizing': '#8b5cf6',
+    'dont-know': '#d1d5db'
   };
   const MATURITY_ICONS = {
     'not-started': '🚫',
     'exploring': '🔍',
     'piloting': '🧪',
     'scaling': '📈',
-    'optimizing': '⚡'
+    'optimizing': '⚡',
+    'dont-know': '❓'
   };
   const GOVERNANCE_LABELS = { 'none': 'No Governance', 'informal': 'Informal', 'developing': 'Developing', 'established': 'Established', 'dont-know': "Don't Know" };
   const GOVERNANCE_ORDER = ['none', 'informal', 'developing', 'established', 'dont-know'];
@@ -1814,7 +1816,8 @@
     // Summary cards (show count of filtered surveys)
     updateSummaryCards(surveys);
 
-    // Adoption Stage Widget (uses allSurveys so it always shows full distribution)
+    // Adoption Stage Widget — always shows full distribution for selected year/quarter/type
+    // (maturity + account filters only affect visual highlights, not percentages)
     renderAdoptionStageWidget(allSurveys);
 
     // Table always shows all surveys for the year/quarter (so user can click to filter/unfilter)
@@ -1855,26 +1858,28 @@
   // ═══════════════════════════════════════════
 
   function renderAdoptionStageWidget(surveys) {
-    // Calculate maturity counts (excluding dont-know)
+    // Count all maturity values including dont-know
     const counts = {};
-    MATURITY_STAGES.forEach(k => counts[k] = 0);
-    let totalKnown = 0;
+    MATURITY_ORDER.forEach(k => counts[k] = 0);
+    let totalAll = 0;
+    let totalKnown = 0; // excludes dont-know (for weighted average)
 
     surveys.forEach(s => {
       const val = s.data?.clientAILandscape?.maturity?.value;
-      if (val && val !== 'dont-know' && MATURITY_STAGES.includes(val)) {
+      if (val && MATURITY_ORDER.includes(val)) {
         counts[val]++;
-        totalKnown++;
+        totalAll++;
+        if (val !== 'dont-know') totalKnown++;
       }
     });
 
-    // Calculate percentages
+    // Calculate percentages over total (including dont-know)
     const pcts = {};
-    MATURITY_STAGES.forEach(k => {
-      pcts[k] = totalKnown > 0 ? Math.round((counts[k] / totalKnown) * 100) : 0;
+    MATURITY_ORDER.forEach(k => {
+      pcts[k] = totalAll > 0 ? Math.round((counts[k] / totalAll) * 100) : 0;
     });
 
-    // Calculate weighted average index and round to nearest stage
+    // Calculate weighted average index (excluding dont-know)
     let weightedSum = 0;
     MATURITY_STAGES.forEach((k, i) => {
       weightedSum += counts[k] * i;
@@ -1883,7 +1888,7 @@
     const avgPosition = totalKnown > 0 ? avgIndex / (MATURITY_STAGES.length - 1) : 0.5;
     const avgStage = totalKnown > 0 ? MATURITY_STAGES[Math.round(avgIndex)] : null;
 
-    // Update callout — uses same weighted average as the progress bar
+    // Update callout
     const calloutValue = document.getElementById('stageCalloutValue');
     if (avgStage) {
       calloutValue.innerHTML = `${MATURITY_ICONS[avgStage]} ${MATURITY_LABELS[avgStage]}`;
@@ -1891,14 +1896,14 @@
       calloutValue.textContent = '--';
     }
 
-    // Render stage pipeline
+    // Render stage pipeline (all stages including dont-know)
     const pipeline = document.getElementById('stagePipeline');
-    pipeline.innerHTML = MATURITY_STAGES.map((stage, i) => {
+    pipeline.innerHTML = MATURITY_ORDER.map((stage, i) => {
       const isActive = activeMaturityFilter === stage;
       const borderColor = isActive ? MATURITY_COLORS[stage] : '#e5e7eb';
       const bgColor = isActive ? (MATURITY_COLORS[stage] + '15') : '#fff';
       const shadowColor = isActive ? (MATURITY_COLORS[stage] + '40') : 'transparent';
-      const connector = i < MATURITY_STAGES.length - 1
+      const connector = i < MATURITY_ORDER.length - 1
         ? '<div class="stage-connector">&#9654;</div>'
         : '';
       return `<div class="stage-card ${isActive ? 'active' : ''}"
@@ -1917,12 +1922,12 @@
     const markerPct = Math.max(5, Math.min(95, avgPosition * 100));
     marker.style.left = markerPct + '%';
 
-    // Render distribution chart (scatter — needs individual survey data)
+    // Render distribution chart (scatter — includes dont-know)
     renderDistributionChart(surveys);
 
-    // Render legend
+    // Render legend (all stages including dont-know)
     const legend = document.getElementById('widgetLegend');
-    legend.innerHTML = MATURITY_STAGES.map(stage =>
+    legend.innerHTML = MATURITY_ORDER.map(stage =>
       `<div class="legend-item">
         <div class="legend-dot" style="background:${MATURITY_COLORS[stage]};"></div>
         <span>${MATURITY_LABELS[stage]}</span>
@@ -1954,17 +1959,17 @@
     // Build scatter points: each survey becomes a dot at its stage's x position
     // Stack dots vertically when multiple accounts share a stage (jitter by row)
     const stageSlots = {}; // stage -> array of account names
-    MATURITY_STAGES.forEach(k => stageSlots[k] = []);
+    MATURITY_ORDER.forEach(k => stageSlots[k] = []);
 
     surveys.forEach(s => {
       const val = s.data?.clientAILandscape?.maturity?.value;
-      if (val && val !== 'dont-know' && MATURITY_STAGES.includes(val)) {
+      if (val && MATURITY_ORDER.includes(val)) {
         stageSlots[val].push(s.account_name);
       }
     });
 
-    // Create one dataset per stage for color coding
-    const datasets = MATURITY_STAGES.map((stage, stageIdx) => {
+    // Create one dataset per stage for color coding (including dont-know)
+    const datasets = MATURITY_ORDER.map((stage, stageIdx) => {
       const accounts = stageSlots[stage];
       const points = accounts.map((name, rowIdx) => ({
         x: stageIdx,
@@ -2007,7 +2012,7 @@
     });
 
     // Find max y for axis range
-    const maxDots = Math.max(1, ...MATURITY_STAGES.map(k => stageSlots[k].length));
+    const maxDots = Math.max(1, ...MATURITY_ORDER.map(k => stageSlots[k].length));
 
     charts['chartDistribution'] = new Chart(ctx, {
       type: 'scatter',
@@ -2022,7 +2027,7 @@
               title: function() { return ''; },
               label: function(context) {
                 const pt = context.raw;
-                const stageName = MATURITY_LABELS[MATURITY_STAGES[pt.x]];
+                const stageName = MATURITY_LABELS[MATURITY_ORDER[pt.x]];
                 return `${pt.accountName} — ${stageName}`;
               }
             }
@@ -2032,11 +2037,11 @@
           x: {
             type: 'linear',
             min: -0.5,
-            max: MATURITY_STAGES.length - 0.5,
+            max: MATURITY_ORDER.length - 0.5,
             ticks: {
               stepSize: 1,
               callback: function(value) {
-                return MATURITY_STAGES[value] ? MATURITY_LABELS[MATURITY_STAGES[value]] : '';
+                return MATURITY_ORDER[value] ? MATURITY_LABELS[MATURITY_ORDER[value]] : '';
               },
               font: { size: 11, weight: '600' },
               color: '#6b7280'
