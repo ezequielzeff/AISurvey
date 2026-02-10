@@ -2585,7 +2585,11 @@
     const stageCards = pipelineEl.querySelectorAll('.stage-card');
     const barRect = progressBar ? progressBar.getBoundingClientRect() : null;
 
-    if (barRect && stageCards.length > 0) {
+    // Hide marker when no surveys have maturity data (e.g., clicking a stage with 0%)
+    if (totalAll === 0) {
+      marker.style.display = 'none';
+    } else if (barRect && stageCards.length > 0) {
+      marker.style.display = '';
       // When a maturity filter is active, snap marker to the center of the selected stage card
       if (activeMaturityFilter) {
         const filterIdx = MATURITY_ORDER.indexOf(activeMaturityFilter);
@@ -2612,6 +2616,8 @@
           marker.style.left = markerPct + '%';
         }
       }
+    } else {
+      marker.style.display = 'none';
     }
 
     // Render legend (all stages including dont-know)
@@ -2735,13 +2741,34 @@
       </div>`;
     }).join('');
 
-    // 7. Position progress bar marker — uses filtered average, or active filter stage
+    // 7. Position progress bar marker — snap to circle center when filter active
     const marker = document.getElementById('wfmProgressMarker');
-    const markerValue = activeWfmStageFilter !== null ? activeWfmStageFilter : filteredAvg;
-    if (filteredTotal > 0) {
-      const markerPct = Math.max(3, Math.min(97, (markerValue / 5) * 100));
-      marker.style.left = markerPct + '%';
+    const wfmBar = document.querySelector('.wfm-gradient-bar');
+    const wfmCircles = journey.querySelectorAll('.wfm-stage');
+    const wfmBarRect = wfmBar ? wfmBar.getBoundingClientRect() : null;
+
+    if (filteredTotal === 0) {
+      marker.style.display = 'none';
+    } else if (wfmBarRect && wfmCircles.length > 0) {
       marker.style.display = '';
+      if (activeWfmStageFilter !== null && activeWfmStageFilter < wfmCircles.length) {
+        // Snap to the center of the selected stage circle
+        const circleEl = wfmCircles[activeWfmStageFilter];
+        const circleRect = circleEl.getBoundingClientRect();
+        const circleCenter = circleRect.left + circleRect.width / 2;
+        const markerPct = Math.max(2, Math.min(98, ((circleCenter - wfmBarRect.left) / wfmBarRect.width) * 100));
+        marker.style.left = markerPct + '%';
+      } else {
+        // No WFM filter: position based on filtered average using circle positions
+        const firstCircle = wfmCircles[0];
+        const lastCircle = wfmCircles[wfmCircles.length - 1];
+        const startX = firstCircle.getBoundingClientRect().left + firstCircle.offsetWidth / 2;
+        const endX = lastCircle.getBoundingClientRect().left + lastCircle.offsetWidth / 2;
+        const avgPosition = filteredAvg / 5;
+        const markerX = startX + avgPosition * (endX - startX);
+        const markerPct = Math.max(2, Math.min(98, ((markerX - wfmBarRect.left) / wfmBarRect.width) * 100));
+        marker.style.left = markerPct + '%';
+      }
     } else {
       marker.style.display = 'none';
     }
