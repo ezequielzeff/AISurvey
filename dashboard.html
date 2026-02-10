@@ -2639,17 +2639,22 @@
     allAccountStages.forEach(s => { if (allCounts[s] !== undefined) allCounts[s]++; });
     const allTotal = allAccountStages.length;
 
-    // 1b. Compute from FILTERED surveys (for callout / marker)
+    // 1b. Compute from FILTERED surveys (for callout / marker / hybrid circles)
     const filteredAccountStages = computeAccountStages(filteredSurveys);
+    const filteredCounts = {};
+    WFM_STAGES.forEach(s => filteredCounts[s] = 0);
+    filteredAccountStages.forEach(s => { if (filteredCounts[s] !== undefined) filteredCounts[s]++; });
     const filteredTotal = filteredAccountStages.length;
     const filteredAvg = filteredTotal > 0
       ? (filteredAccountStages.reduce((a, b) => a + b, 0) / filteredTotal)
       : 0;
 
-    // 2. Percentages (from all surveys for circle sizes)
+    // 2. Percentages — use filtered data when WFM filter active, all data otherwise
+    const displayTotal = activeWfmStageFilter !== null ? filteredTotal : allTotal;
+    const displayCounts = activeWfmStageFilter !== null ? filteredCounts : allCounts;
     const pcts = {};
     WFM_STAGES.forEach(s => {
-      pcts[s] = allTotal > 0 ? Math.round((allCounts[s] / allTotal) * 100) : 0;
+      pcts[s] = displayTotal > 0 ? Math.round((displayCounts[s] / displayTotal) * 100) : 0;
     });
 
     // 3. Update callout — reflects FILTERED data, show stage name and score
@@ -2665,12 +2670,15 @@
       avgDescEl.textContent = 'No accounts match current filters';
     }
 
-    // 6. Render journey circles (from ALL surveys, with dimming)
+    // 6. Render journey circles (hybrid: filtered % when filter active, all % otherwise)
     const maxPct = Math.max(1, ...Object.values(pcts));
     const journey = document.getElementById('wfmJourney');
     journey.innerHTML = WFM_STAGES.map(stage => {
       const pct = pcts[stage];
-      const count = allCounts[stage];
+      const count = displayCounts[stage];
+      const countLabel = activeWfmStageFilter !== null
+        ? `${count} of ${allCounts[stage]} total`
+        : `${count} account${count !== 1 ? 's' : ''}`;
       // Circle size: scale between 48px and 90px based on percentage
       const size = Math.round(48 + (pct / maxPct) * 42);
       const fontSize = size > 60 ? '1.1rem' : '0.9rem';
@@ -2688,7 +2696,7 @@
         <div class="wfm-circle" style="width:${size}px;height:${size}px;background:${bgColor};font-size:${fontSize};color:${textColor};">
           ${pct}%
         </div>
-        <div class="wfm-count">${count} account${count !== 1 ? 's' : ''}</div>
+        <div class="wfm-count">${countLabel}</div>
         <div class="wfm-stage-badge" style="background:${badgeBg};color:${badgeColor};">Stage ${stage}</div>
         <div class="wfm-stage-title" style="${labelWeight}">${WFM_LABELS[stage]}</div>
         <div class="wfm-stage-sub">${WFM_SUBTITLES[stage]}</div>
