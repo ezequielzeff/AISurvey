@@ -545,6 +545,21 @@
     <div class="modal">
       <button class="modal-close" onclick="closeUploadModal()" title="Close">&times;</button>
       <h2>Upload Survey Files</h2>
+      <div style="display:flex;gap:1rem;margin-bottom:1.25rem;align-items:end;flex-wrap:wrap;">
+        <div style="flex:1;min-width:120px;">
+          <label style="display:block;font-size:0.8rem;font-weight:600;color:#6b7280;margin-bottom:0.35rem;text-transform:uppercase;letter-spacing:0.05em;">Year</label>
+          <select class="filter-select" id="uploadYear" style="width:100%;"></select>
+        </div>
+        <div style="flex:1;min-width:120px;">
+          <label style="display:block;font-size:0.8rem;font-weight:600;color:#6b7280;margin-bottom:0.35rem;text-transform:uppercase;letter-spacing:0.05em;">Quarter</label>
+          <select class="filter-select" id="uploadQuarter" style="width:100%;">
+            <option value="1">Q1 (Jan–Mar)</option>
+            <option value="2">Q2 (Apr–Jun)</option>
+            <option value="3">Q3 (Jul–Sep)</option>
+            <option value="4">Q4 (Oct–Dec)</option>
+          </select>
+        </div>
+      </div>
       <div class="drop-zone" id="dropZone">
         <div class="drop-zone-icon">📁</div>
         <div class="drop-zone-text">Drag & drop JSON or ZIP files here</div>
@@ -843,14 +858,19 @@
   function openUploadModal() {
     document.getElementById('uploadModal').classList.add('open');
     document.getElementById('uploadResults').innerHTML = '';
+    // Pre-populate year/quarter with current values
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
+    const yearSelect = document.getElementById('uploadYear');
+    yearSelect.innerHTML = '';
+    for (let y = currentYear + 1; y >= currentYear - 3; y--) {
+      yearSelect.innerHTML += `<option value="${y}"${y === currentYear ? ' selected' : ''}>${y}</option>`;
+    }
+    document.getElementById('uploadQuarter').value = String(currentQuarter);
   }
   function closeUploadModal() {
     document.getElementById('uploadModal').classList.remove('open');
-  }
-
-  function extractYearQuarter(isoDate) {
-    const d = new Date(isoDate);
-    return { year: d.getFullYear(), quarter: Math.ceil((d.getMonth() + 1) / 3) };
   }
 
   function validateSurveyJSON(data) {
@@ -862,7 +882,7 @@
     return errors;
   }
 
-  async function processFile(file) {
+  async function processFile(file, year, quarter) {
     const result = { filename: file.name, status: '', message: '' };
 
     try {
@@ -893,18 +913,16 @@
         return result;
       }
 
-      const { year, quarter } = extractYearQuarter(data.exportedAt);
-
       // Check for duplicate
       const existing = db.exec('SELECT id FROM surveys WHERE account_name = ? AND exported_at = ?', [data.accountName, data.exportedAt]);
       if (existing.length > 0 && existing[0].values.length > 0) {
         // Replace existing
         db.run('DELETE FROM surveys WHERE account_name = ? AND exported_at = ?', [data.accountName, data.exportedAt]);
         result.status = 'warning';
-        result.message = `Replaced existing survey for "${data.accountName}"`;
+        result.message = `Replaced existing survey for "${data.accountName}" → ${year} Q${quarter}`;
       } else {
         result.status = 'success';
-        result.message = `Imported "${data.accountName}" (${year} Q${quarter})`;
+        result.message = `Imported "${data.accountName}" → ${year} Q${quarter}`;
       }
 
       db.run(
@@ -921,12 +939,14 @@
   }
 
   async function handleFiles(files) {
+    const year = parseInt(document.getElementById('uploadYear').value);
+    const quarter = parseInt(document.getElementById('uploadQuarter').value);
     const resultsDiv = document.getElementById('uploadResults');
     resultsDiv.innerHTML = '<div style="color:#6b7280;font-size:0.85rem;padding:0.5rem 0;">Processing...</div>';
 
     const results = [];
     for (const file of files) {
-      results.push(await processFile(file));
+      results.push(await processFile(file, year, quarter));
     }
 
     await saveToIndexedDB();
