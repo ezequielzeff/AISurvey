@@ -174,6 +174,35 @@
       color: #6b7280;
       font-weight: 500;
     }
+    /* AI Usage card — comparison indicator */
+    .summary-card-comparison {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 0.15rem;
+    }
+    .summary-card-comparison.up { color: #10b981; }
+    .summary-card-comparison.down { color: #ef4444; }
+    .summary-card-comparison.neutral { color: #6b7280; }
+    .summary-card-comparison .arrow { font-size: 0.75rem; }
+    /* Inline period picker */
+    .summary-card-period-picker { margin-top: 0.35rem; }
+    .summary-card-period-picker select {
+      padding: 0.2rem 0.4rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: #6b7280;
+      background: #f9fafb;
+      cursor: pointer;
+      outline: none;
+    }
+    .summary-card-period-picker select:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+    }
 
     /* ═══════════════════════════════════════════
        WIDGET CARD
@@ -1103,6 +1132,18 @@
           <div class="summary-card-icon">📋</div>
           <div class="summary-card-value" id="totalSurveys">0</div>
           <div class="summary-card-label">Surveys</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-icon">🤖</div>
+          <div class="summary-card-value" id="aiUsagePct">--</div>
+          <div class="summary-card-label">AI Usage (%)</div>
+          <div class="summary-card-comparison neutral" id="aiUsageComparison"></div>
+          <div class="summary-card-period-picker">
+            <select id="aiUsageCompPeriod" title="Compare against">
+              <option value="prev-quarter">vs Previous Quarter</option>
+              <option value="same-quarter-last-year">vs Same Quarter Last Year</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -2052,6 +2093,8 @@
     if (currentVal && currentVal !== 'all' && years.includes(parseInt(currentVal))) {
       yearSelect.value = currentVal;
     }
+
+    populateComparisonPeriodOptions();
   }
 
   function getSelectedAccountTypes() {
@@ -2260,6 +2303,160 @@
 
   function updateSummaryCards(surveys) {
     document.getElementById('totalSurveys').textContent = surveys.length;
+
+    // --- AI Usage % ---
+    const pctEl = document.getElementById('aiUsagePct');
+    const compEl = document.getElementById('aiUsageComparison');
+
+    const currentPct = calculateAiUsagePercent(surveys);
+    pctEl.textContent = currentPct !== null ? currentPct + '%' : '--';
+
+    // Comparison
+    const compPeriod = getComparisonPeriod();
+    if (compPeriod && currentPct !== null) {
+      const compSurveys = fetchComparisonSurveys(compPeriod.year, compPeriod.quarter);
+      const prevPct = calculateAiUsagePercent(compSurveys);
+
+      if (prevPct !== null) {
+        const delta = currentPct - prevPct;
+        const absDelta = Math.abs(delta);
+        const sel = document.getElementById('aiUsageCompPeriod');
+        const periodLabel = sel.selectedOptions[0]?.textContent || '';
+        const periodShort = periodLabel.replace(/^vs\s*/i, '');
+
+        if (delta > 0) {
+          compEl.className = 'summary-card-comparison up';
+          compEl.innerHTML = `<span class="arrow">&#9650;</span> +${absDelta} pp vs ${periodShort}`;
+        } else if (delta < 0) {
+          compEl.className = 'summary-card-comparison down';
+          compEl.innerHTML = `<span class="arrow">&#9660;</span> -${absDelta} pp vs ${periodShort}`;
+        } else {
+          compEl.className = 'summary-card-comparison neutral';
+          compEl.innerHTML = `No change vs ${periodShort}`;
+        }
+      } else {
+        compEl.className = 'summary-card-comparison neutral';
+        compEl.innerHTML = 'No comparison data';
+      }
+    } else {
+      compEl.className = 'summary-card-comparison neutral';
+      const yr = document.getElementById('filterYear').value;
+      const qr = document.getElementById('filterQuarter').value;
+      compEl.innerHTML = (yr === 'all' || qr === 'all')
+        ? 'Select a specific period to compare'
+        : 'No comparison data';
+    }
+  }
+
+  function calculateAiUsagePercent(surveys) {
+    if (surveys.length === 0) return null;
+    const EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
+    let usesAiCount = 0;
+
+    surveys.forEach(s => {
+      const aiTools = s.data?.toolsAndInfrastructure?.ai;
+      if (!aiTools) return;
+
+      const hasNamedTool = Object.keys(aiTools).some(key =>
+        !EXCLUDED_KEYS.includes(key) && aiTools[key]?.selected === true
+      );
+      const hasCustomTool = Array.isArray(aiTools.custom) && aiTools.custom.length > 0;
+
+      if (hasNamedTool || hasCustomTool) usesAiCount++;
+    });
+
+    return Math.round((usesAiCount / surveys.length) * 100);
+  }
+
+  function fetchComparisonSurveys(compYear, compQuarter) {
+    const selectedTypes = getSelectedAccountTypes();
+    if (selectedTypes.length === 0) return [];
+
+    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager FROM surveys WHERE year = ? AND quarter = ?';
+    const params = [compYear, compQuarter];
+
+    if (selectedTypes.length < ACCOUNT_TYPES.length) {
+      sql += ` AND account_type IN (${selectedTypes.map(() => '?').join(',')})`;
+      params.push(...selectedTypes);
+    }
+    sql += ' ORDER BY account_name';
+
+    const result = db.exec(sql, params);
+    if (result.length === 0) return [];
+
+    let surveys = result[0].values.map(row => ({
+      id: row[0], account_name: row[1], exported_at: row[2],
+      year: row[3], quarter: row[4], schema_version: row[5],
+      data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || ''
+    }));
+
+    // Apply engagement type filter (structural)
+    const selectedEngagementTypes = getSelectedEngagementTypes();
+    if (selectedEngagementTypes.length === 0) return [];
+    if (selectedEngagementTypes.length < ENGAGEMENT_TYPES.length) {
+      surveys = surveys.filter(s => {
+        const ownership = s.data?.engagement?.ownership;
+        if (!ownership) return false;
+        return selectedEngagementTypes.some(type => ownership[type]?.selected === true);
+      });
+    }
+
+    return surveys;
+  }
+
+  function getComparisonPeriod() {
+    const year = document.getElementById('filterYear').value;
+    const quarter = document.getElementById('filterQuarter').value;
+    const mode = document.getElementById('aiUsageCompPeriod').value;
+
+    if (year === 'all' || quarter === 'all') return null;
+
+    const y = parseInt(year);
+    const q = parseInt(quarter);
+
+    if (mode === 'prev-quarter') {
+      return q === 1 ? { year: y - 1, quarter: 4 } : { year: y, quarter: q - 1 };
+    }
+    if (mode === 'same-quarter-last-year') {
+      return { year: y - 1, quarter: q };
+    }
+    // Specific year-quarter format: "YYYY-Q"
+    if (mode.includes('-')) {
+      const parts = mode.split('-');
+      return { year: parseInt(parts[0]), quarter: parseInt(parts[1]) };
+    }
+    return null;
+  }
+
+  function populateComparisonPeriodOptions() {
+    const select = document.getElementById('aiUsageCompPeriod');
+    const currentVal = select.value;
+
+    // Keep the two preset options, remove dynamically added ones
+    while (select.options.length > 2) {
+      select.remove(2);
+    }
+
+    // Query available year+quarter combinations
+    const rows = db.exec('SELECT DISTINCT year, quarter FROM surveys ORDER BY year DESC, quarter DESC');
+    if (rows.length > 0 && rows[0].values.length > 0) {
+      const separator = document.createElement('option');
+      separator.disabled = true;
+      separator.textContent = '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500';
+      select.appendChild(separator);
+
+      rows[0].values.forEach(([y, q]) => {
+        const opt = document.createElement('option');
+        opt.value = `${y}-${q}`;
+        opt.textContent = `vs ${y} Q${q}`;
+        select.appendChild(opt);
+      });
+    }
+
+    // Restore previous selection if still valid
+    if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
+      select.value = currentVal;
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -2979,6 +3176,9 @@
       activeMaturityFilter = null;
       activeAccountFilter = null;
       refreshDashboard();
+    });
+    document.getElementById('aiUsageCompPeriod').addEventListener('change', () => {
+      updateSummaryCards(getFilteredSurveys());
     });
     // Close account type menu when clicking outside
     document.addEventListener('click', e => {
