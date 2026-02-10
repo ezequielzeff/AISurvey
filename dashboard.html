@@ -948,6 +948,15 @@
       text-align: center;
       max-width: 120px;
     }
+    .wfm-info-icon {
+      cursor: pointer;
+      font-size: 0.85rem;
+      opacity: 0.7;
+      transition: opacity 0.15s;
+    }
+    .wfm-info-icon:hover {
+      opacity: 1;
+    }
     .wfm-gradient-bar {
       height: 8px;
       border-radius: 4px;
@@ -1156,7 +1165,7 @@
             <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
           </div>
           <div class="stage-callout" id="wfmCallout" style="margin:0;">
-            <div class="stage-callout-label">Portfolio Average Maturity</div>
+            <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
             <div class="stage-callout-value" id="wfmAvgValue">-- <span style="font-size:0.9rem;font-weight:400;color:#6b7280;">/ 5.0</span></div>
           </div>
         </div>
@@ -1301,6 +1310,25 @@
     <div class="info-modal" style="max-width:560px;">
       <button class="info-modal-close" onclick="closeStageDescriptionModal()" title="Close">&times;</button>
       <div id="stageDescriptionContent"></div>
+    </div>
+  </div>
+
+  <div class="info-modal-overlay" id="wfmInfoModal">
+    <div class="info-modal" style="max-width:620px;">
+      <button class="info-modal-close" onclick="closeWfmInfoModal()" title="Close">&times;</button>
+      <h2>How is Portfolio Average Maturity Calculated?</h2>
+      <div class="info-modal-stage">
+        <h3>Step 1 — Per-Account Stage</h3>
+        <p>For each account (survey), we look at the workflow maturity stage assigned to each role (PM, BA, Architects, Software Engineers, QA, QA Automation, Data Engineers, DevOps, UI/UX). Roles with no stage assigned are excluded. The remaining stages (0–5) are averaged and rounded to the nearest integer to produce a single account-level stage.</p>
+      </div>
+      <div class="info-modal-stage">
+        <h3>Step 2 — Portfolio Average</h3>
+        <p>The portfolio average is the arithmetic mean of all account-level stages. It is displayed with one decimal point on a 0–5 scale, where 0 = No AI Usage and 5 = Semi-Agentic AI.</p>
+      </div>
+      <div class="info-modal-summary">
+        <h3>Stage Reference</h3>
+        <p><strong>Stage 0</strong> — No AI Usage · <strong>Stage 1</strong> — Individual AI · <strong>Stage 2</strong> — Team Practices · <strong>Stage 3</strong> — AI-Chained · <strong>Stage 4</strong> — Event-Triggered · <strong>Stage 5</strong> — Semi-Agentic</p>
+      </div>
     </div>
   </div>
 
@@ -1850,6 +1878,13 @@
 
   function closeStageDescriptionModal() {
     document.getElementById('stageDescriptionModal').classList.remove('open');
+  }
+
+  function openWfmInfoModal() {
+    document.getElementById('wfmInfoModal').classList.add('open');
+  }
+  function closeWfmInfoModal() {
+    document.getElementById('wfmInfoModal').classList.remove('open');
   }
 
   // ═══════════════════════════════════════════
@@ -2831,6 +2866,9 @@
     document.getElementById('stageDescriptionModal').addEventListener('click', e => {
       if (e.target === document.getElementById('stageDescriptionModal')) closeStageDescriptionModal();
     });
+    document.getElementById('wfmInfoModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('wfmInfoModal')) closeWfmInfoModal();
+    });
 
     // Escape key
     document.addEventListener('keydown', e => {
@@ -2838,6 +2876,7 @@
         closeUploadModal();
         closeMaturityInfoModal();
         closeStageDescriptionModal();
+        closeWfmInfoModal();
       }
     });
 
