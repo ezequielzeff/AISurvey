@@ -885,6 +885,78 @@
     .multi-select-actions button:hover { text-decoration: underline; }
 
     /* ═══════════════════════════════════════════
+       WORKFLOW MATURITY JOURNEY
+       ═══════════════════════════════════════════ */
+    .wfm-section-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #374151;
+      margin: 1.25rem 0 1rem;
+    }
+    .wfm-journey {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      position: relative;
+      padding: 0 0.5rem;
+    }
+    .wfm-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+    .wfm-circle {
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #1f2937;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      transition: all 0.3s ease;
+    }
+    .wfm-count {
+      font-size: 0.7rem;
+      color: #6b7280;
+      margin-top: 0.35rem;
+      background: #f3f4f6;
+      padding: 1px 8px;
+      border-radius: 10px;
+    }
+    .wfm-stage-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+      letter-spacing: 0.03em;
+    }
+    .wfm-stage-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #374151;
+      margin-top: 0.3rem;
+      text-align: center;
+    }
+    .wfm-stage-sub {
+      font-size: 0.68rem;
+      color: #9ca3af;
+      text-align: center;
+      max-width: 120px;
+    }
+    .wfm-gradient-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(to right, #ef4444 0%, #f97316 20%, #eab308 40%, #eab308 55%, #4ade80 75%, #22c55e 100%);
+      position: relative;
+      margin: 0.75rem 0 0.4rem;
+    }
+
+    /* ═══════════════════════════════════════════
        RESPONSIVE
        ═══════════════════════════════════════════ */
     @media (max-width: 900px) {
@@ -896,6 +968,7 @@
       .stage-pipeline { flex-wrap: wrap; gap: 0.5rem; }
       .stage-connector { display: none; }
       .stage-card { min-width: 80px; }
+      .wfm-journey { flex-wrap: wrap; gap: 1rem; justify-content: center; }
     }
     @media (max-width: 600px) {
       .summary-cards { grid-template-columns: repeat(2, 1fr); }
@@ -1072,6 +1145,38 @@
         <div class="widget-footer" id="widgetFooter" style="display:none;">
           <div id="activeFilterTags" style="display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
           <button class="filter-clear-btn" onclick="clearAllFilters()">Clear All Filters</button>
+        </div>
+      </div>
+
+      <!-- Widget: Workflow Maturity Summary -->
+      <div class="widget-card" id="workflowMaturityWidget">
+        <div class="widget-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <div class="widget-title">Workflow Maturity Summary</div>
+            <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
+          </div>
+          <div class="stage-callout" id="wfmCallout" style="margin:0;">
+            <div class="stage-callout-label">Portfolio Average Maturity</div>
+            <div class="stage-callout-value" id="wfmAvgValue">-- <span style="font-size:0.9rem;font-weight:400;color:#6b7280;">/ 5.0</span></div>
+          </div>
+        </div>
+
+        <div class="wfm-section-title">Maturity Journey Distribution</div>
+
+        <!-- Journey visualization -->
+        <div class="wfm-journey" id="wfmJourney">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Gradient bar -->
+        <div class="progress-section" id="wfmProgressSection" style="margin-left:0;">
+          <div class="wfm-gradient-bar">
+            <div class="progress-marker" id="wfmProgressMarker" style="left:50%;"></div>
+          </div>
+          <div class="progress-labels">
+            <span>← Starting Point</span>
+            <span>Maturity Goal →</span>
+          </div>
         </div>
       </div>
 
@@ -1433,6 +1538,22 @@
     qa: 'Manual QA', qaa: 'QA Automation', data: 'Data Eng.', devops: 'DevOps', ux: 'UI/UX'
   };
   const ROLE_ORDER = ['pm', 'ba', 'arch', 'swe', 'qa', 'qaa', 'data', 'devops', 'ux'];
+
+  // Workflow Maturity Stages
+  const WFM_STAGES = [0, 1, 2, 3, 4, 5];
+  const WFM_LABELS = {
+    0: 'No AI Usage', 1: 'Individual AI', 2: 'Team Practices',
+    3: 'AI-Chained', 4: 'Event-Triggered', 5: 'Semi-Agentic'
+  };
+  const WFM_SUBTITLES = {
+    0: 'Work done entirely manually', 1: 'AI used by individuals only',
+    2: 'Shared, manual AI usage', 3: 'Multi-step AI workflows',
+    4: 'Automated AI integration', 5: 'AI recommends, humans decide'
+  };
+  const WFM_COLORS = {
+    0: '#d1d5db', 1: '#f87171', 2: '#fbbf24',
+    3: '#fbbf24', 4: '#4ade80', 5: '#22c55e'
+  };
 
   // Account Types
   const ACCOUNT_TYPES = [
@@ -2038,6 +2159,9 @@
     // Adoption Stage Widget — percentages reflect active filters
     renderAdoptionStageWidget(surveys);
 
+    // Workflow Maturity Summary
+    renderWorkflowMaturityWidget(surveys);
+
     // Distribution chart always shows all dots (dimmed/highlighted via filter state)
     renderDistributionChart(allSurveys);
 
@@ -2198,6 +2322,84 @@
       document.getElementById('activeFilterTags').innerHTML = tags;
     } else {
       footer.style.display = 'none';
+    }
+  }
+
+  function renderWorkflowMaturityWidget(surveys) {
+    // 1. Compute per-account workflow maturity stage
+    const accountStages = []; // array of stage numbers (0-5)
+    surveys.forEach(s => {
+      const wfm = s.data?.workflowMaturity;
+      if (!wfm) return;
+      const stages = [];
+      ROLE_ORDER.forEach(role => {
+        const st = wfm[role]?.stage;
+        if (st !== null && st !== undefined && typeof st === 'number') stages.push(st);
+      });
+      if (stages.length === 0) return;
+      const avg = stages.reduce((a, b) => a + b, 0) / stages.length;
+      accountStages.push(Math.round(avg));
+    });
+
+    // 2. Count accounts per stage
+    const counts = {};
+    WFM_STAGES.forEach(s => counts[s] = 0);
+    accountStages.forEach(s => { if (counts[s] !== undefined) counts[s]++; });
+    const total = accountStages.length;
+
+    // 3. Portfolio average
+    const portfolioAvg = total > 0
+      ? (accountStages.reduce((a, b) => a + b, 0) / total)
+      : 0;
+
+    // 4. Percentages
+    const pcts = {};
+    WFM_STAGES.forEach(s => {
+      pcts[s] = total > 0 ? Math.round((counts[s] / total) * 100) : 0;
+    });
+
+    // 5. Update callout
+    const avgEl = document.getElementById('wfmAvgValue');
+    if (total > 0) {
+      avgEl.innerHTML = `${portfolioAvg.toFixed(1)} <span style="font-size:0.9rem;font-weight:400;color:#6b7280;">/ 5.0</span>`;
+    } else {
+      avgEl.innerHTML = `-- <span style="font-size:0.9rem;font-weight:400;color:#6b7280;">/ 5.0</span>`;
+    }
+
+    // 6. Render journey circles
+    const maxPct = Math.max(1, ...Object.values(pcts));
+    const journey = document.getElementById('wfmJourney');
+    journey.innerHTML = WFM_STAGES.map(stage => {
+      const pct = pcts[stage];
+      const count = counts[stage];
+      // Circle size: scale between 48px and 90px based on percentage
+      const size = Math.round(48 + (pct / maxPct) * 42);
+      const fontSize = size > 60 ? '1.1rem' : '0.9rem';
+      const color = WFM_COLORS[stage];
+      const bgColor = pct > 0 ? color : '#f3f4f6';
+      const textColor = pct > 0 ? '#1f2937' : '#9ca3af';
+      const badgeBg = pct > 0 ? (color + '30') : '#f3f4f6';
+      const badgeColor = pct > 0 ? '#374151' : '#9ca3af';
+
+      return `<div class="wfm-stage">
+        <div class="wfm-circle" style="width:${size}px;height:${size}px;background:${bgColor};font-size:${fontSize};color:${textColor};">
+          ${pct}%
+        </div>
+        <div class="wfm-count">${count} account${count !== 1 ? 's' : ''}</div>
+        <div class="wfm-stage-badge" style="background:${badgeBg};color:${badgeColor};">Stage ${stage}</div>
+        <div class="wfm-stage-title">${WFM_LABELS[stage]}</div>
+        <div class="wfm-stage-sub">${WFM_SUBTITLES[stage]}</div>
+      </div>`;
+    }).join('');
+
+    // 7. Position progress bar marker
+    const marker = document.getElementById('wfmProgressMarker');
+    if (total > 0) {
+      const markerPct = Math.max(3, Math.min(97, (portfolioAvg / 5) * 100));
+      marker.style.left = markerPct + '%';
+      marker.style.display = '';
+    } else {
+      marker.style.display = 'none';
     }
   }
 
