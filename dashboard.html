@@ -1159,15 +1159,16 @@
 
       <!-- Widget: Workflow Maturity Summary -->
       <div class="widget-card" id="workflowMaturityWidget">
-        <div class="widget-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
-          <div>
-            <div class="widget-title">Workflow Maturity Summary</div>
-            <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
-          </div>
-          <div class="stage-callout" id="wfmCallout" style="margin:0;">
-            <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
-            <div class="stage-callout-value" id="wfmAvgValue">-- <span style="font-size:0.9rem;font-weight:400;color:#6b7280;">/ 5.0</span></div>
-          </div>
+        <div class="widget-header">
+          <div class="widget-title">Workflow Maturity Summary</div>
+          <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
+        </div>
+
+        <!-- Average Maturity Callout -->
+        <div class="stage-callout" id="wfmCallout">
+          <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
+          <div class="stage-callout-value" id="wfmAvgValue">--</div>
+          <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
         </div>
 
         <div class="wfm-section-title">Maturity Journey Distribution</div>
@@ -2427,12 +2428,16 @@
       pcts[s] = total > 0 ? Math.round((counts[s] / total) * 100) : 0;
     });
 
-    // 5. Update callout
+    // 5. Update callout — show stage name like "🧪 Team Practices" and score in description
     const avgEl = document.getElementById('wfmAvgValue');
+    const avgDescEl = document.getElementById('wfmAvgDesc');
+    const roundedStage = Math.round(portfolioAvg);
     if (total > 0) {
-      avgEl.innerHTML = `${portfolioAvg.toFixed(1)} <span style="font-size:0.9rem;font-weight:400;color:#6b7280;">/ 5.0</span>`;
+      avgEl.textContent = `Stage ${roundedStage} — ${WFM_LABELS[roundedStage]}`;
+      avgDescEl.textContent = `Score: ${portfolioAvg.toFixed(1)} / 5.0 · Average across all accounts`;
     } else {
-      avgEl.innerHTML = `-- <span style="font-size:0.9rem;font-weight:400;color:#6b7280;">/ 5.0</span>`;
+      avgEl.textContent = '--';
+      avgDescEl.textContent = 'Average stage across all accounts';
     }
 
     // 6. Render journey circles
