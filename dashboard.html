@@ -508,6 +508,36 @@
       font-size: 0.8rem;
       font-weight: 600;
     }
+    /* Account Type Badges */
+    .account-type-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .account-type-enterprise { background: #dbeafe; color: #1d4ed8; }
+    .account-type-key-account { background: #fef3c7; color: #92400e; }
+    .account-type-enterprise-key { background: #d1fae5; color: #065f46; }
+    .account-type-other { background: #f3f4f6; color: #6b7280; }
+
+    /* Inline Account Type Select */
+    .account-type-select {
+      padding: 0.2rem 0.4rem;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #374151;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+    }
+    .account-type-select:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+    }
+
     .maturity-not-started { background: #f3f4f6; color: #6b7280; }
     .maturity-exploring { background: #dbeafe; color: #1d4ed8; }
     .maturity-piloting { background: #fef3c7; color: #92400e; }
@@ -786,6 +816,7 @@
           <thead>
             <tr>
               <th>Account</th>
+              <th>Type</th>
               <th>Maturity</th>
               <th>Roles</th>
               <th>AI Tools</th>
@@ -817,6 +848,15 @@
             <option value="2">Q2 (Apr-Jun)</option>
             <option value="3">Q3 (Jul-Sep)</option>
             <option value="4">Q4 (Oct-Dec)</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:150px;">
+          <label style="display:block;font-size:0.8rem;font-weight:600;color:#6b7280;margin-bottom:0.35rem;text-transform:uppercase;letter-spacing:0.05em;">Account Type</label>
+          <select class="filter-select" id="uploadAccountType" style="width:100%;">
+            <option value="enterprise">Enterprise</option>
+            <option value="key-account">Key Account</option>
+            <option value="enterprise-key">Enterprise + Key Account</option>
+            <option value="other">Other</option>
           </select>
         </div>
       </div>
@@ -1029,6 +1069,16 @@
   };
   const ROLE_ORDER = ['pm', 'ba', 'arch', 'swe', 'qa', 'qaa', 'data', 'devops', 'ux'];
 
+  // Account Types
+  const ACCOUNT_TYPES = [
+    { id: 'enterprise', label: 'Enterprise' },
+    { id: 'key-account', label: 'Key Account' },
+    { id: 'enterprise-key', label: 'Enterprise + Key Account' },
+    { id: 'other', label: 'Other' },
+  ];
+  const ACCOUNT_TYPE_LABELS = {};
+  ACCOUNT_TYPES.forEach(t => ACCOUNT_TYPE_LABELS[t.id] = t.label);
+
   // ═══════════════════════════════════════════
   // GLOBAL FILTER STATE
   // ═══════════════════════════════════════════
@@ -1078,6 +1128,8 @@
     const savedData = await loadFromIndexedDB();
     if (savedData) {
       db = new SQL.Database(savedData);
+      // Run migrations for existing databases
+      createTables();
     } else {
       db = new SQL.Database();
       createTables();
@@ -1097,9 +1149,16 @@
         schema_version TEXT NOT NULL,
         raw_json TEXT NOT NULL,
         uploaded_at TEXT NOT NULL DEFAULT (datetime('now')),
+        account_type TEXT NOT NULL DEFAULT 'other',
         UNIQUE(account_name, exported_at)
       )
     `);
+    // Migration: add account_type to existing databases that lack the column
+    try {
+      db.run("ALTER TABLE surveys ADD COLUMN account_type TEXT NOT NULL DEFAULT 'other'");
+    } catch (e) {
+      // Column already exists — ignore
+    }
     db.run(`
       CREATE TABLE IF NOT EXISTS schema_options (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1189,7 +1248,7 @@
     return errors;
   }
 
-  async function processFile(file, year, quarter) {
+  async function processFile(file, year, quarter, accountType) {
     const result = { filename: file.name, status: '', message: '' };
 
     try {
@@ -1233,8 +1292,8 @@
       }
 
       db.run(
-        'INSERT INTO surveys (account_name, exported_at, year, quarter, schema_version, raw_json) VALUES (?, ?, ?, ?, ?, ?)',
-        [data.accountName, data.exportedAt, year, quarter, data.schemaVersion, jsonText]
+        'INSERT INTO surveys (account_name, exported_at, year, quarter, schema_version, raw_json, account_type) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [data.accountName, data.exportedAt, year, quarter, data.schemaVersion, jsonText, accountType]
       );
 
     } catch (e) {
@@ -1248,12 +1307,13 @@
   async function handleFiles(files) {
     const year = parseInt(document.getElementById('uploadYear').value);
     const quarter = parseInt(document.getElementById('uploadQuarter').value);
+    const accountType = document.getElementById('uploadAccountType').value;
     const resultsDiv = document.getElementById('uploadResults');
     resultsDiv.innerHTML = '<div style="color:#6b7280;font-size:0.85rem;padding:0.5rem 0;">Processing...</div>';
 
     const results = [];
     for (const file of files) {
-      results.push(await processFile(file, year, quarter));
+      results.push(await processFile(file, year, quarter, accountType));
     }
 
     await saveToIndexedDB();
@@ -1295,7 +1355,7 @@
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
 
-    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json FROM surveys WHERE 1=1';
+    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type FROM surveys WHERE 1=1';
     const params = [];
     if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
     if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
@@ -1307,7 +1367,7 @@
     let surveys = result[0].values.map(row => ({
       id: row[0], account_name: row[1], exported_at: row[2],
       year: row[3], quarter: row[4], schema_version: row[5],
-      data: JSON.parse(row[6])
+      data: JSON.parse(row[6]), account_type: row[7] || 'other'
     }));
 
     // Apply maturity filter (post-query JS filter)
@@ -1330,7 +1390,7 @@
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
 
-    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json FROM surveys WHERE 1=1';
+    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type FROM surveys WHERE 1=1';
     const params = [];
     if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
     if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
@@ -1342,7 +1402,7 @@
     return result[0].values.map(row => ({
       id: row[0], account_name: row[1], exported_at: row[2],
       year: row[3], quarter: row[4], schema_version: row[5],
-      data: JSON.parse(row[6])
+      data: JSON.parse(row[6]), account_type: row[7] || 'other'
     }));
   }
 
@@ -1653,7 +1713,7 @@
   function renderSurveysTable(surveys) {
     const tbody = document.getElementById('surveysTableBody');
     if (surveys.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
       return;
     }
 
@@ -1678,8 +1738,18 @@
       const rowStyle = isSelected ? 'background:#eef2ff;' : '';
       const escapedName = escapeHtml(s.account_name).replace(/'/g, "\\'");
 
+      const accountType = s.account_type || 'other';
+      const typeOptions = ACCOUNT_TYPES.map(t =>
+        `<option value="${t.id}"${t.id === accountType ? ' selected' : ''}>${t.label}</option>`
+      ).join('');
+
       return `<tr style="${rowStyle}cursor:pointer;" onclick="setAccountFilter('${escapedName}')" title="Click to filter by ${escapeHtml(s.account_name)}">
         <td><strong style="${isSelected ? 'color:#4f46e5;' : ''}">${escapeHtml(s.account_name)}</strong></td>
+        <td onclick="event.stopPropagation();">
+          <select class="account-type-select" onchange="updateAccountType(${s.id}, this.value)" title="Change account type">
+            ${typeOptions}
+          </select>
+        </td>
         <td><span class="maturity-badge ${maturityClass}">${maturityLabel}</span></td>
         <td>${roleCount}</td>
         <td>${aiToolCount}</td>
@@ -1711,6 +1781,12 @@
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  async function updateAccountType(id, newType) {
+    db.run('UPDATE surveys SET account_type = ? WHERE id = ?', [newType, id]);
+    await saveToIndexedDB();
+    // No full refresh needed — the dropdown already shows the new value
   }
 
   async function deleteSurvey(id, name) {
