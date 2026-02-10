@@ -1609,6 +1609,7 @@
   let activeMaturityFilter = null; // null = all, or a stage id like 'exploring'
   let activeAccountFilter = null;  // null = all, or an account name string
   let activeLimitingFactorFilter = null; // null = all, or a factor key like 'time'
+  let activeWfmStageFilter = null; // null = all, or a stage number (0-5)
   let currentMedianStage = null; // current median stage key for stage description modal
 
   function setMaturityFilter(stage) {
@@ -1641,10 +1642,21 @@
     refreshDashboard();
   }
 
+  function setWfmStageFilter(stage) {
+    activeWfmStageFilter = (activeWfmStageFilter === stage) ? null : stage;
+    refreshDashboard();
+  }
+
+  function clearWfmStageFilter() {
+    activeWfmStageFilter = null;
+    refreshDashboard();
+  }
+
   function clearAllFilters() {
     activeMaturityFilter = null;
     activeAccountFilter = null;
     activeLimitingFactorFilter = null;
+    activeWfmStageFilter = null;
     refreshDashboard();
   }
 
@@ -2094,6 +2106,22 @@
       });
     }
 
+    // Apply workflow maturity stage filter
+    if (activeWfmStageFilter !== null) {
+      surveys = surveys.filter(s => {
+        const wfm = s.data?.workflowMaturity;
+        if (!wfm) return false;
+        const stages = [];
+        ROLE_ORDER.forEach(role => {
+          const st = wfm[role]?.stage;
+          if (st !== null && st !== undefined && typeof st === 'number') stages.push(st);
+        });
+        if (stages.length === 0) return false;
+        const avg = stages.reduce((a, b) => a + b, 0) / stages.length;
+        return Math.round(avg) === activeWfmStageFilter;
+      });
+    }
+
     return surveys;
   }
 
@@ -2176,6 +2204,9 @@
     if (activeLimitingFactorFilter) {
       filterTags += ` <span class="filter-active-tag">Factor: ${LIMITING_FACTOR_LABELS[activeLimitingFactorFilter]} <span class="filter-clear-x" onclick="clearLimitingFactorFilter()" title="Clear filter">&times;</span></span>`;
     }
+    if (activeWfmStageFilter !== null) {
+      filterTags += ` <span class="filter-active-tag">WFM: Stage ${activeWfmStageFilter} - ${WFM_LABELS[activeWfmStageFilter]} <span class="filter-clear-x" onclick="clearWfmStageFilter()" title="Clear filter">&times;</span></span>`;
+    }
     if (filterTags) {
       subtitleEl.innerHTML = `${subtitleText}${filterTags}`;
     } else {
@@ -2194,8 +2225,8 @@
     // Adoption Stage Widget — percentages reflect active filters
     renderAdoptionStageWidget(surveys);
 
-    // Workflow Maturity Summary
-    renderWorkflowMaturityWidget(surveys);
+    // Workflow Maturity Summary — shows all surveys with dimming for active filter
+    renderWorkflowMaturityWidget(allSurveys);
 
     // Distribution chart always shows all dots (dimmed/highlighted via filter state)
     renderDistributionChart(allSurveys);
@@ -2341,7 +2372,7 @@
 
     // Show/hide filter footer
     const footer = document.getElementById('widgetFooter');
-    const hasAnyFilter = activeMaturityFilter || activeAccountFilter || activeLimitingFactorFilter;
+    const hasAnyFilter = activeMaturityFilter || activeAccountFilter || activeLimitingFactorFilter || activeWfmStageFilter !== null;
     if (hasAnyFilter) {
       footer.style.display = 'flex';
       let tags = '';
@@ -2353,6 +2384,9 @@
       }
       if (activeLimitingFactorFilter) {
         tags += `<span class="filter-active-tag">Factor: ${LIMITING_FACTOR_LABELS[activeLimitingFactorFilter]} <span class="filter-clear-x" onclick="clearLimitingFactorFilter()" title="Clear filter">&times;</span></span>`;
+      }
+      if (activeWfmStageFilter !== null) {
+        tags += `<span class="filter-active-tag">WFM: Stage ${activeWfmStageFilter} - ${WFM_LABELS[activeWfmStageFilter]} <span class="filter-clear-x" onclick="clearWfmStageFilter()" title="Clear filter">&times;</span></span>`;
       }
       document.getElementById('activeFilterTags').innerHTML = tags;
     } else {
@@ -2411,18 +2445,22 @@
       const size = Math.round(48 + (pct / maxPct) * 42);
       const fontSize = size > 60 ? '1.1rem' : '0.9rem';
       const color = WFM_COLORS[stage];
-      const bgColor = pct > 0 ? color : '#f3f4f6';
-      const textColor = pct > 0 ? '#1f2937' : '#9ca3af';
+      const isActive = activeWfmStageFilter === stage;
+      const isDimmed = activeWfmStageFilter !== null && !isActive;
+      const bgColor = pct > 0 ? (isDimmed ? color + '40' : color) : '#f3f4f6';
+      const textColor = isDimmed ? '#9ca3af' : (pct > 0 ? '#1f2937' : '#9ca3af');
       const badgeBg = pct > 0 ? (color + '30') : '#f3f4f6';
-      const badgeColor = pct > 0 ? '#374151' : '#9ca3af';
+      const badgeColor = isDimmed ? '#9ca3af' : (pct > 0 ? '#374151' : '#9ca3af');
+      const activeBorder = isActive ? `box-shadow:0 0 0 3px ${color}80, 0 6px 20px rgba(0,0,0,0.12);transform:translateY(-3px);` : '';
+      const labelWeight = isActive ? 'font-weight:800;' : '';
 
-      return `<div class="wfm-stage">
+      return `<div class="wfm-stage" onclick="setWfmStageFilter(${stage})" style="cursor:pointer;${activeBorder}" title="Click to filter by Stage ${stage}">
         <div class="wfm-circle" style="width:${size}px;height:${size}px;background:${bgColor};font-size:${fontSize};color:${textColor};">
           ${pct}%
         </div>
         <div class="wfm-count">${count} account${count !== 1 ? 's' : ''}</div>
         <div class="wfm-stage-badge" style="background:${badgeBg};color:${badgeColor};">Stage ${stage}</div>
-        <div class="wfm-stage-title">${WFM_LABELS[stage]}</div>
+        <div class="wfm-stage-title" style="${labelWeight}">${WFM_LABELS[stage]}</div>
         <div class="wfm-stage-sub">${WFM_SUBTITLES[stage]}</div>
       </div>`;
     }).join('');
