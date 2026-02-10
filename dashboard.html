@@ -957,6 +957,33 @@
           </div>
         </div>
       </div>
+      <div class="filter-group" style="position:relative;">
+        <span class="filter-label">Engagement:</span>
+        <div class="multi-select" id="filterEngagementType">
+          <button class="multi-select-btn" onclick="toggleEngagementTypeMenu()" type="button">
+            <span class="multi-select-text" id="engagementTypeLabel">All Types</span>
+            <span class="multi-select-arrow">&#9662;</span>
+          </button>
+          <div class="multi-select-menu" id="engagementTypeMenu">
+            <label class="multi-select-item">
+              <input type="checkbox" value="staff" checked onchange="onEngagementTypeChange()"> Staff Augmentation
+            </label>
+            <label class="multi-select-item">
+              <input type="checkbox" value="project" checked onchange="onEngagementTypeChange()"> Project Ownership
+            </label>
+            <label class="multi-select-item">
+              <input type="checkbox" value="program" checked onchange="onEngagementTypeChange()"> Program Ownership
+            </label>
+            <label class="multi-select-item">
+              <input type="checkbox" value="outcome" checked onchange="onEngagementTypeChange()"> Business Outcome
+            </label>
+            <div class="multi-select-actions">
+              <button type="button" onclick="selectAllEngagementTypes()">Select All</button>
+              <button type="button" onclick="clearEngagementTypes()">Clear All</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <button class="btn btn-primary" id="uploadBtn">Upload Survey</button>
       <button class="btn btn-secondary" id="exportDbBtn" title="Export database backup">Backup</button>
       <label class="btn btn-secondary" title="Restore database from backup" style="margin:0;">
@@ -1417,6 +1444,16 @@
   const ACCOUNT_TYPE_LABELS = {};
   ACCOUNT_TYPES.forEach(t => ACCOUNT_TYPE_LABELS[t.id] = t.label);
 
+  // Engagement Types (Ownership)
+  const ENGAGEMENT_TYPES = [
+    { id: 'staff', label: 'Staff Augmentation' },
+    { id: 'project', label: 'Project Ownership' },
+    { id: 'program', label: 'Program Ownership' },
+    { id: 'outcome', label: 'Business Outcome' },
+  ];
+  const ENGAGEMENT_TYPE_LABELS = {};
+  ENGAGEMENT_TYPES.forEach(t => ENGAGEMENT_TYPE_LABELS[t.id] = t.label);
+
   // ═══════════════════════════════════════════
   // GLOBAL FILTER STATE
   // ═══════════════════════════════════════════
@@ -1466,8 +1503,12 @@
   // ACCOUNT TYPE MULTI-SELECT
   // ═══════════════════════════════════════════
   function toggleAccountTypeMenu() {
+    // Close engagement type menu if open
+    document.getElementById('engagementTypeMenu')?.classList.remove('open');
+    document.querySelector('#filterEngagementType .multi-select-btn')?.classList.remove('open');
+
     const menu = document.getElementById('accountTypeMenu');
-    const btn = document.querySelector('.multi-select-btn');
+    const btn = document.querySelector('#filterAccountType .multi-select-btn');
     const isOpen = menu.classList.contains('open');
     menu.classList.toggle('open');
     btn.classList.toggle('open');
@@ -1503,6 +1544,53 @@
   function clearAccountTypes() {
     document.querySelectorAll('#accountTypeMenu input[type="checkbox"]').forEach(cb => cb.checked = false);
     onAccountTypeChange();
+  }
+
+  // ═══════════════════════════════════════════
+  // ENGAGEMENT TYPE MULTI-SELECT
+  // ═══════════════════════════════════════════
+  function toggleEngagementTypeMenu() {
+    // Close account type menu if open
+    document.getElementById('accountTypeMenu')?.classList.remove('open');
+    document.querySelector('#filterAccountType .multi-select-btn')?.classList.remove('open');
+
+    const menu = document.getElementById('engagementTypeMenu');
+    const btn = document.querySelector('#filterEngagementType .multi-select-btn');
+    const isOpen = menu.classList.contains('open');
+    menu.classList.toggle('open');
+    btn.classList.toggle('open');
+    if (!isOpen) btn.focus();
+  }
+
+  function updateEngagementTypeLabel() {
+    const selected = getSelectedEngagementTypes();
+    const label = document.getElementById('engagementTypeLabel');
+    if (selected.length === 0) {
+      label.textContent = 'None';
+    } else if (selected.length === ENGAGEMENT_TYPES.length) {
+      label.textContent = 'All Types';
+    } else if (selected.length === 1) {
+      label.textContent = ENGAGEMENT_TYPE_LABELS[selected[0]];
+    } else {
+      label.textContent = `${selected.length} types`;
+    }
+  }
+
+  function onEngagementTypeChange() {
+    updateEngagementTypeLabel();
+    activeMaturityFilter = null;
+    activeAccountFilter = null;
+    refreshDashboard();
+  }
+
+  function selectAllEngagementTypes() {
+    document.querySelectorAll('#engagementTypeMenu input[type="checkbox"]').forEach(cb => cb.checked = true);
+    onEngagementTypeChange();
+  }
+
+  function clearEngagementTypes() {
+    document.querySelectorAll('#engagementTypeMenu input[type="checkbox"]').forEach(cb => cb.checked = false);
+    onEngagementTypeChange();
   }
 
   // ═══════════════════════════════════════════
@@ -1785,6 +1873,13 @@
     return selected;
   }
 
+  function getSelectedEngagementTypes() {
+    const checkboxes = document.querySelectorAll('#engagementTypeMenu input[type="checkbox"]');
+    const selected = [];
+    checkboxes.forEach(cb => { if (cb.checked) selected.push(cb.value); });
+    return selected;
+  }
+
   function getFilteredSurveys() {
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
@@ -1811,6 +1906,17 @@
       year: row[3], quarter: row[4], schema_version: row[5],
       data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || ''
     }));
+
+    // Apply engagement type filter (structural filter on JSON data)
+    const selectedEngagementTypes = getSelectedEngagementTypes();
+    if (selectedEngagementTypes.length === 0) return [];
+    if (selectedEngagementTypes.length < ENGAGEMENT_TYPES.length) {
+      surveys = surveys.filter(s => {
+        const ownership = s.data?.engagement?.ownership;
+        if (!ownership) return false;
+        return selectedEngagementTypes.some(type => ownership[type]?.selected === true);
+      });
+    }
 
     // Apply maturity filter (post-query JS filter)
     if (activeMaturityFilter) {
@@ -1856,11 +1962,24 @@
     const result = db.exec(sql, params);
     if (result.length === 0) return [];
 
-    return result[0].values.map(row => ({
+    let surveys = result[0].values.map(row => ({
       id: row[0], account_name: row[1], exported_at: row[2],
       year: row[3], quarter: row[4], schema_version: row[5],
       data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || ''
     }));
+
+    // Apply engagement type filter (structural filter on JSON data)
+    const selectedEngagementTypes = getSelectedEngagementTypes();
+    if (selectedEngagementTypes.length === 0) return [];
+    if (selectedEngagementTypes.length < ENGAGEMENT_TYPES.length) {
+      surveys = surveys.filter(s => {
+        const ownership = s.data?.engagement?.ownership;
+        if (!ownership) return false;
+        return selectedEngagementTypes.some(type => ownership[type]?.selected === true);
+      });
+    }
+
+    return surveys;
   }
 
   // ═══════════════════════════════════════════
@@ -2536,7 +2655,16 @@
       const container = document.getElementById('filterAccountType');
       if (menu && container && !container.contains(e.target)) {
         menu.classList.remove('open');
-        document.querySelector('.multi-select-btn')?.classList.remove('open');
+        document.querySelector('#filterAccountType .multi-select-btn')?.classList.remove('open');
+      }
+    });
+    // Close engagement type menu when clicking outside
+    document.addEventListener('click', e => {
+      const menu = document.getElementById('engagementTypeMenu');
+      const container = document.getElementById('filterEngagementType');
+      if (menu && container && !container.contains(e.target)) {
+        menu.classList.remove('open');
+        document.querySelector('#filterEngagementType .multi-select-btn')?.classList.remove('open');
       }
     });
 
