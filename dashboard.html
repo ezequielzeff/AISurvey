@@ -671,6 +671,93 @@
     .loading-text { color: #6b7280; font-size: 0.9rem; }
 
     /* ═══════════════════════════════════════════
+       MULTI-SELECT DROPDOWN
+       ═══════════════════════════════════════════ */
+    .multi-select {
+      position: relative;
+      display: inline-block;
+    }
+    .multi-select-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #1f2937;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+      min-width: 120px;
+    }
+    .multi-select-btn:hover { border-color: #d1d5db; }
+    .multi-select-btn:focus, .multi-select-btn.open {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    .multi-select-text {
+      flex: 1;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .multi-select-arrow {
+      font-size: 0.7rem;
+      color: #6b7280;
+      flex-shrink: 0;
+    }
+    .multi-select-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      background: #fff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      z-index: 200;
+      min-width: 200px;
+      padding: 0.4rem 0;
+    }
+    .multi-select-menu.open { display: block; }
+    .multi-select-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.85rem;
+      font-size: 0.85rem;
+      color: #374151;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .multi-select-item:hover { background: #f3f4f6; }
+    .multi-select-item input[type="checkbox"] {
+      accent-color: #4f46e5;
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+    .multi-select-actions {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.4rem 0.85rem;
+      border-top: 1px solid #f3f4f6;
+      margin-top: 0.25rem;
+    }
+    .multi-select-actions button {
+      background: none;
+      border: none;
+      color: #4f46e5;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0.15rem 0;
+    }
+    .multi-select-actions button:hover { text-decoration: underline; }
+
+    /* ═══════════════════════════════════════════
        RESPONSIVE
        ═══════════════════════════════════════════ */
     @media (max-width: 900px) {
@@ -716,15 +803,32 @@
           <option value="4">Q4</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="filter-group" style="position:relative;">
         <span class="filter-label">Type:</span>
-        <select class="filter-select" id="filterAccountType">
-          <option value="all">All Types</option>
-          <option value="enterprise">Enterprise</option>
-          <option value="key-account">Key Account</option>
-          <option value="enterprise-key">Enterprise + Key Account</option>
-          <option value="other">Other</option>
-        </select>
+        <div class="multi-select" id="filterAccountType">
+          <button class="multi-select-btn" onclick="toggleAccountTypeMenu()" type="button">
+            <span class="multi-select-text" id="accountTypeLabel">All Types</span>
+            <span class="multi-select-arrow">&#9662;</span>
+          </button>
+          <div class="multi-select-menu" id="accountTypeMenu">
+            <label class="multi-select-item">
+              <input type="checkbox" value="enterprise" checked onchange="onAccountTypeChange()"> Enterprise
+            </label>
+            <label class="multi-select-item">
+              <input type="checkbox" value="key-account" checked onchange="onAccountTypeChange()"> Key Account
+            </label>
+            <label class="multi-select-item">
+              <input type="checkbox" value="enterprise-key" checked onchange="onAccountTypeChange()"> Enterprise + Key
+            </label>
+            <label class="multi-select-item">
+              <input type="checkbox" value="other" checked onchange="onAccountTypeChange()"> Other
+            </label>
+            <div class="multi-select-actions">
+              <button type="button" onclick="selectAllAccountTypes()">Select All</button>
+              <button type="button" onclick="clearAccountTypes()">Clear All</button>
+            </div>
+          </div>
+        </div>
       </div>
       <button class="btn btn-primary" id="uploadBtn">Upload Survey</button>
       <button class="btn btn-secondary" id="exportDbBtn" title="Export database backup">Backup</button>
@@ -1122,6 +1226,49 @@
   }
 
   // ═══════════════════════════════════════════
+  // ACCOUNT TYPE MULTI-SELECT
+  // ═══════════════════════════════════════════
+  function toggleAccountTypeMenu() {
+    const menu = document.getElementById('accountTypeMenu');
+    const btn = document.querySelector('.multi-select-btn');
+    const isOpen = menu.classList.contains('open');
+    menu.classList.toggle('open');
+    btn.classList.toggle('open');
+    if (!isOpen) btn.focus();
+  }
+
+  function updateAccountTypeLabel() {
+    const selected = getSelectedAccountTypes();
+    const label = document.getElementById('accountTypeLabel');
+    if (selected.length === 0) {
+      label.textContent = 'None';
+    } else if (selected.length === ACCOUNT_TYPES.length) {
+      label.textContent = 'All Types';
+    } else if (selected.length === 1) {
+      label.textContent = ACCOUNT_TYPE_LABELS[selected[0]];
+    } else {
+      label.textContent = `${selected.length} types`;
+    }
+  }
+
+  function onAccountTypeChange() {
+    updateAccountTypeLabel();
+    activeMaturityFilter = null;
+    activeAccountFilter = null;
+    refreshDashboard();
+  }
+
+  function selectAllAccountTypes() {
+    document.querySelectorAll('#accountTypeMenu input[type="checkbox"]').forEach(cb => cb.checked = true);
+    onAccountTypeChange();
+  }
+
+  function clearAccountTypes() {
+    document.querySelectorAll('#accountTypeMenu input[type="checkbox"]').forEach(cb => cb.checked = false);
+    onAccountTypeChange();
+  }
+
+  // ═══════════════════════════════════════════
   // DATABASE
   // ═══════════════════════════════════════════
   let db = null;
@@ -1361,16 +1508,29 @@
     }
   }
 
+  function getSelectedAccountTypes() {
+    const checkboxes = document.querySelectorAll('#accountTypeMenu input[type="checkbox"]');
+    const selected = [];
+    checkboxes.forEach(cb => { if (cb.checked) selected.push(cb.value); });
+    return selected;
+  }
+
   function getFilteredSurveys() {
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
-    const accountType = document.getElementById('filterAccountType').value;
+    const selectedTypes = getSelectedAccountTypes();
+
+    // No types selected = no results
+    if (selectedTypes.length === 0) return [];
 
     let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type FROM surveys WHERE 1=1';
     const params = [];
     if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
     if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
-    if (accountType !== 'all') { sql += ' AND account_type = ?'; params.push(accountType); }
+    if (selectedTypes.length < ACCOUNT_TYPES.length) {
+      sql += ` AND account_type IN (${selectedTypes.map(() => '?').join(',')})`;
+      params.push(...selectedTypes);
+    }
     sql += ' ORDER BY account_name';
 
     const result = db.exec(sql, params);
@@ -1401,13 +1561,18 @@
   function getAllFilteredSurveys() {
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
-    const accountType = document.getElementById('filterAccountType').value;
+    const selectedTypes = getSelectedAccountTypes();
+
+    if (selectedTypes.length === 0) return [];
 
     let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type FROM surveys WHERE 1=1';
     const params = [];
     if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
     if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
-    if (accountType !== 'all') { sql += ' AND account_type = ?'; params.push(accountType); }
+    if (selectedTypes.length < ACCOUNT_TYPES.length) {
+      sql += ` AND account_type IN (${selectedTypes.map(() => '?').join(',')})`;
+      params.push(...selectedTypes);
+    }
     sql += ' ORDER BY account_name';
 
     const result = db.exec(sql, params);
@@ -1914,10 +2079,14 @@
       activeAccountFilter = null;
       refreshDashboard();
     });
-    document.getElementById('filterAccountType').addEventListener('change', () => {
-      activeMaturityFilter = null;
-      activeAccountFilter = null;
-      refreshDashboard();
+    // Close account type menu when clicking outside
+    document.addEventListener('click', e => {
+      const menu = document.getElementById('accountTypeMenu');
+      const container = document.getElementById('filterAccountType');
+      if (menu && container && !container.contains(e.target)) {
+        menu.classList.remove('open');
+        document.querySelector('.multi-select-btn')?.classList.remove('open');
+      }
     });
 
     // Database export/import/clear
