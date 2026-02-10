@@ -716,6 +716,16 @@
           <option value="4">Q4</option>
         </select>
       </div>
+      <div class="filter-group">
+        <span class="filter-label">Type:</span>
+        <select class="filter-select" id="filterAccountType">
+          <option value="all">All Types</option>
+          <option value="enterprise">Enterprise</option>
+          <option value="key-account">Key Account</option>
+          <option value="enterprise-key">Enterprise + Key Account</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
       <button class="btn btn-primary" id="uploadBtn">Upload Survey</button>
       <button class="btn btn-secondary" id="exportDbBtn" title="Export database backup">Backup</button>
       <label class="btn btn-secondary" title="Restore database from backup" style="margin:0;">
@@ -1354,11 +1364,13 @@
   function getFilteredSurveys() {
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
+    const accountType = document.getElementById('filterAccountType').value;
 
     let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type FROM surveys WHERE 1=1';
     const params = [];
     if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
     if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
+    if (accountType !== 'all') { sql += ' AND account_type = ?'; params.push(accountType); }
     sql += ' ORDER BY account_name';
 
     const result = db.exec(sql, params);
@@ -1385,15 +1397,17 @@
     return surveys;
   }
 
-  // Get all surveys for year/quarter (ignoring maturity/account filters) for the widget itself
+  // Get all surveys for year/quarter/type (ignoring maturity/account name filters) for the widget itself
   function getAllFilteredSurveys() {
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
+    const accountType = document.getElementById('filterAccountType').value;
 
     let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type FROM surveys WHERE 1=1';
     const params = [];
     if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
     if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
+    if (accountType !== 'all') { sql += ' AND account_type = ?'; params.push(accountType); }
     sql += ' ORDER BY account_name';
 
     const result = db.exec(sql, params);
@@ -1896,6 +1910,11 @@
       refreshDashboard();
     });
     document.getElementById('filterQuarter').addEventListener('change', () => {
+      activeMaturityFilter = null;
+      activeAccountFilter = null;
+      refreshDashboard();
+    });
+    document.getElementById('filterAccountType').addEventListener('change', () => {
       activeMaturityFilter = null;
       activeAccountFilter = null;
       refreshDashboard();
