@@ -2322,15 +2322,17 @@
     const pipeline = document.getElementById('stagePipeline');
     pipeline.innerHTML = MATURITY_ORDER.map((stage, i) => {
       const isActive = activeMaturityFilter === stage;
+      const isDimmed = activeMaturityFilter && !isActive;
       const borderColor = isActive ? MATURITY_COLORS[stage] : '#e5e7eb';
       const bgColor = isActive ? (MATURITY_COLORS[stage] + '15') : '#fff';
       const shadowColor = isActive ? (MATURITY_COLORS[stage] + '40') : 'transparent';
+      const dimStyle = isDimmed ? 'opacity:0.35;' : '';
       const connector = i < MATURITY_ORDER.length - 1
         ? '<div class="stage-connector">&#9654;</div>'
         : '';
       return `<div class="stage-card ${isActive ? 'active' : ''}"
                    onclick="setMaturityFilter('${stage}')"
-                   style="border-color:${borderColor};background:${bgColor};${isActive ? 'box-shadow:0 0 0 3px ' + shadowColor + ', 0 6px 20px rgba(0,0,0,0.12);' : ''}"
+                   style="${dimStyle}border-color:${borderColor};background:${bgColor};${isActive ? 'box-shadow:0 0 0 3px ' + shadowColor + ', 0 6px 20px rgba(0,0,0,0.12);' : ''}"
                    title="Click to filter by ${MATURITY_LABELS[stage]}">
         <div class="stage-card-icon">${MATURITY_ICONS[stage]}</div>
         <div class="stage-card-label">${MATURITY_LABELS[stage]}</div>
