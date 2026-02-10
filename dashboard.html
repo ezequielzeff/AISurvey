@@ -2091,7 +2091,7 @@
 
       const dmValue = escapeHtml(s.delivery_manager || '');
 
-      return `<tr style="${rowStyle}cursor:pointer;" onclick="setAccountFilter('${escapedName}')" title="Click to filter by ${escapeHtml(s.account_name)}">
+      return `<tr style="${rowStyle}cursor:pointer;" onclick="window.location.href='account-detail.html?id=${s.id}'" title="Click to view ${escapeHtml(s.account_name)} details">
         <td><strong style="${isSelected ? 'color:#4f46e5;' : ''}">${escapeHtml(s.account_name)}</strong></td>
         <td onclick="event.stopPropagation();">
           <select class="account-type-select" onchange="updateAccountType(${s.id}, this.value)" title="Change account type">
