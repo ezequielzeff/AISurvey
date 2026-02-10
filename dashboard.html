@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Adoption Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #f3f4f6;
+      color: #1f2937;
+      min-height: 100vh;
+    }
+
+    /* ═══════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════ */
+    .dashboard-header {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 1.25rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .header-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .header-back {
+      font-size: 0.85rem;
+      color: #4f46e5;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .header-back:hover { text-decoration: underline; }
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .filter-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #6b7280;
+    }
+    .filter-select {
+      padding: 0.4rem 0.75rem;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #1f2937;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+    }
+    .filter-select:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    .header-subtitle {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    /* ═══════════════════════════════════════════
+       BUTTONS
+       ═══════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: #4f46e5;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #4338ca; }
+    .btn-secondary {
+      background: #fff;
+      color: #374151;
+      border: 1.5px solid #e5e7eb;
+    }
+    .btn-secondary:hover { background: #f9fafb; border-color: #d1d5db; }
+    .btn-danger {
+      background: none;
+      color: #ef4444;
+      border: none;
+      padding: 0.25rem 0.5rem;
+      font-size: 1rem;
+    }
+    .btn-danger:hover { background: #fef2f2; }
+    .btn-icon {
+      background: none;
+      border: none;
+      padding: 0.25rem 0.5rem;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #6b7280;
+      border-radius: 6px;
+    }
+    .btn-icon:hover { background: #f3f4f6; color: #1f2937; }
+
+    /* ═══════════════════════════════════════════
+       MAIN CONTENT
+       ═══════════════════════════════════════════ */
+    .dashboard-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+    }
+
+    /* ═══════════════════════════════════════════
+       SUMMARY CARDS
+       ═══════════════════════════════════════════ */
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .summary-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .summary-card-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+    .summary-card-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    .summary-card-label {
+      font-size: 0.85rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════════
+       CHARTS GRID
+       ═══════════════════════════════════════════ */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .chart-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .chart-card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 1rem;
+    }
+    .chart-container {
+      position: relative;
+      width: 100%;
+      min-height: 250px;
+    }
+
+    /* ═══════════════════════════════════════════
+       SURVEYS TABLE
+       ═══════════════════════════════════════════ */
+    .surveys-section {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .surveys-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .surveys-section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    .surveys-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .surveys-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: #f9fafb;
+      border-bottom: 2px solid #e5e7eb;
+      font-weight: 600;
+      color: #6b7280;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .surveys-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #f3f4f6;
+      color: #374151;
+    }
+    .surveys-table tr:hover td {
+      background: #fafbfc;
+    }
+    .surveys-table .actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+    .maturity-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .maturity-not-started { background: #f3f4f6; color: #6b7280; }
+    .maturity-exploring { background: #dbeafe; color: #1d4ed8; }
+    .maturity-piloting { background: #fef3c7; color: #92400e; }
+    .maturity-scaling { background: #d1fae5; color: #065f46; }
+    .maturity-optimizing { background: #ede9fe; color: #5b21b6; }
+    .maturity-dont-know { background: #f3f4f6; color: #9ca3af; }
+
+    /* ═══════════════════════════════════════════
+       UPLOAD MODAL
+       ═══════════════════════════════════════════ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+      padding: 2rem;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+    }
+    .modal-close:hover { background: #f3f4f6; color: #1f2937; }
+    .modal h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0 0 1.5rem;
+      padding-right: 2rem;
+    }
+    .drop-zone {
+      border: 2px dashed #d1d5db;
+      border-radius: 12px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafbfc;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: #4f46e5;
+      background: #eef2ff;
+    }
+    .drop-zone-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .drop-zone-text { font-size: 0.95rem; color: #6b7280; }
+    .drop-zone-hint { font-size: 0.8rem; color: #9ca3af; margin-top: 0.25rem; }
+    .upload-results {
+      margin-top: 1.25rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .upload-result-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 0.85rem;
+    }
+    .upload-result-item:last-child { border-bottom: none; }
+    .upload-result-icon { flex-shrink: 0; }
+    .upload-result-text { color: #374151; }
+    .upload-result-error { color: #ef4444; }
+    .upload-result-warning { color: #f59e0b; }
+    .upload-result-success { color: #10b981; }
+
+    /* ═══════════════════════════════════════════
+       EMPTY STATE
+       ═══════════════════════════════════════════ */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+    }
+    .empty-state-text {
+      font-size: 0.95rem;
+      color: #6b7280;
+      margin-bottom: 1.5rem;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ═══════════════════════════════════════════
+       LOADING
+       ═══════════════════════════════════════════ */
+    .loading-overlay {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e5e7eb;
+      border-top-color: #4f46e5;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: #6b7280; font-size: 0.9rem; }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .dashboard-content { padding: 1rem; }
+      .dashboard-header { padding: 1rem; }
+      .header-top { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .header-controls { width: 100%; }
+    }
+    @media (max-width: 600px) {
+      .summary-cards { grid-template-columns: repeat(2, 1fr); }
+      .surveys-table { font-size: 0.8rem; }
+      .surveys-table th, .surveys-table td { padding: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-top">
+      <div class="header-title">📊 AI Adoption Dashboard</div>
+      <a href="index.html" class="header-back">← Back to Survey Tool</a>
+    </div>
+    <div class="header-controls">
+      <div class="filter-group">
+        <span class="filter-label">Year:</span>
+        <select class="filter-select" id="filterYear"></select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Quarter:</span>
+        <select class="filter-select" id="filterQuarter">
+          <option value="all">All</option>
+          <option value="1">Q1</option>
+          <option value="2">Q2</option>
+          <option value="3">Q3</option>
+          <option value="4">Q4</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="uploadBtn">📤 Upload Survey</button>
+      <button class="btn btn-secondary" id="exportDbBtn" title="Export database backup">💾 Backup</button>
+      <label class="btn btn-secondary" title="Restore database from backup" style="margin:0;">
+        📂 Restore
+        <input type="file" id="importDbInput" accept=".sqlite,.db" style="display:none;">
+      </label>
+    </div>
+    <div class="header-subtitle" id="headerSubtitle">Loading...</div>
+  </header>
+
+  <!-- Loading State -->
+  <div id="loadingState" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Initializing database...</div>
+  </div>
+
+  <!-- Main Content (hidden until loaded) -->
+  <div id="mainContent" class="dashboard-content" style="display:none;">
+
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <div class="empty-state-icon">📊</div>
+      <div class="empty-state-title">No surveys uploaded yet</div>
+      <div class="empty-state-text">Upload survey JSON or ZIP files to see aggregated analytics across all your AI adoption assessments.</div>
+      <button class="btn btn-primary" onclick="openUploadModal()">📤 Upload Your First Survey</button>
+    </div>
+
+    <!-- Dashboard Content (hidden when empty) -->
+    <div id="dashboardContent" style="display:none;">
+
+      <!-- Summary Cards -->
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="summary-card-icon">📋</div>
+          <div class="summary-card-value" id="totalSurveys">0</div>
+          <div class="summary-card-label">Surveys</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-icon">🎯</div>
+          <div class="summary-card-value" id="avgMaturity">—</div>
+          <div class="summary-card-label">Most Common Maturity</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-icon">🛠️</div>
+          <div class="summary-card-value" id="totalAITools">0</div>
+          <div class="summary-card-label">Distinct AI Tools Used</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-icon">👥</div>
+          <div class="summary-card-value" id="avgRoles">0</div>
+          <div class="summary-card-label">Avg Roles per Account</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-title">AI Maturity Distribution</div>
+          <div class="chart-container"><canvas id="chartMaturity"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">AI Tool Adoption</div>
+          <div class="chart-container"><canvas id="chartAITools"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Team Roles Coverage</div>
+          <div class="chart-container"><canvas id="chartRoles"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Top Use Cases (Need vs Doing)</div>
+          <div class="chart-container"><canvas id="chartUseCases"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Factors Limiting AI Adoption</div>
+          <div class="chart-container"><canvas id="chartLimiting"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Workflow Maturity — Average Stage per Role</div>
+          <div class="chart-container"><canvas id="chartWorkflow"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Compliance Requirements</div>
+          <div class="chart-container"><canvas id="chartCompliance"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Client AI Governance</div>
+          <div class="chart-container"><canvas id="chartGovernance"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Surveys Table -->
+      <div class="surveys-section">
+        <div class="surveys-section-header">
+          <div class="surveys-section-title">Uploaded Surveys</div>
+        </div>
+        <table class="surveys-table">
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th>Maturity</th>
+              <th>Roles</th>
+              <th>AI Tools</th>
+              <th>Export Date</th>
+              <th>Quarter</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="surveysTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Modal -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeUploadModal()" title="Close">&times;</button>
+      <h2>Upload Survey Files</h2>
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">📁</div>
+        <div class="drop-zone-text">Drag & drop JSON or ZIP files here</div>
+        <div class="drop-zone-hint">or click to browse</div>
+        <input type="file" id="fileInput" accept=".json,.zip" multiple style="display:none;">
+      </div>
+      <div class="upload-results" id="uploadResults"></div>
+    </div>
+  </div>
+
+<script>
+  // ═══════════════════════════════════════════
+  // SCHEMA DEFINITIONS (mirrors index.html)
+  // ═══════════════════════════════════════════
+
+  const SCHEMA_SEED = [
+    // Engagement — Ownership
+    { section: 'engagement', subsection: 'ownership', option_id: 'staff', option_label: 'Staff Augmentation', option_type: 'multi-select', display_order: 1 },
+    { section: 'engagement', subsection: 'ownership', option_id: 'project', option_label: 'Project Ownership', option_type: 'multi-select', display_order: 2 },
+    { section: 'engagement', subsection: 'ownership', option_id: 'program', option_label: 'Program Ownership', option_type: 'multi-select', display_order: 3 },
+    { section: 'engagement', subsection: 'ownership', option_id: 'outcome', option_label: 'Business Outcome', option_type: 'multi-select', display_order: 4 },
+
+    // Engagement — Payment
+    { section: 'engagement', subsection: 'aiToolPayment', option_id: 'us', option_label: 'We Are/Will', option_type: 'single-select', display_order: 1 },
+    { section: 'engagement', subsection: 'aiToolPayment', option_id: 'customer', option_label: 'Customer Is/Will', option_type: 'single-select', display_order: 2 },
+    { section: 'engagement', subsection: 'aiToolPayment', option_id: 'mix', option_label: 'It Is a Mix', option_type: 'single-select', display_order: 3 },
+    { section: 'engagement', subsection: 'aiToolPayment', option_id: 'tbd', option_label: 'To Be Determined', option_type: 'single-select', display_order: 4 },
+
+    // Engagement — Compliance
+    { section: 'engagement', subsection: 'compliance', option_id: 'hipaa', option_label: 'HIPAA', option_type: 'multi-select', display_order: 1 },
+    { section: 'engagement', subsection: 'compliance', option_id: 'gdpr', option_label: 'GDPR', option_type: 'multi-select', display_order: 2 },
+    { section: 'engagement', subsection: 'compliance', option_id: 'sox', option_label: 'SOX', option_type: 'multi-select', display_order: 3 },
+    { section: 'engagement', subsection: 'compliance', option_id: 'pci-dss', option_label: 'PCI-DSS', option_type: 'multi-select', display_order: 4 },
+    { section: 'engagement', subsection: 'compliance', option_id: 'fedramp', option_label: 'FedRAMP', option_type: 'multi-select', display_order: 5 },
+    { section: 'engagement', subsection: 'compliance', option_id: 'soc2', option_label: 'SOC 2', option_type: 'multi-select', display_order: 6 },
+    { section: 'engagement', subsection: 'compliance', option_id: 'ccpa', option_label: 'CCPA', option_type: 'multi-select', display_order: 7 },
+    { section: 'engagement', subsection: 'compliance', option_id: 'iso27001', option_label: 'ISO 27001', option_type: 'multi-select', display_order: 8 },
+
+    // Client AI Landscape — Maturity
+    { section: 'clientAILandscape', subsection: 'maturity', option_id: 'not-started', option_label: 'Not Started', option_type: 'single-select', display_order: 1 },
+    { section: 'clientAILandscape', subsection: 'maturity', option_id: 'exploring', option_label: 'Exploring', option_type: 'single-select', display_order: 2 },
+    { section: 'clientAILandscape', subsection: 'maturity', option_id: 'piloting', option_label: 'Piloting', option_type: 'single-select', display_order: 3 },
+    { section: 'clientAILandscape', subsection: 'maturity', option_id: 'scaling', option_label: 'Scaling', option_type: 'single-select', display_order: 4 },
+    { section: 'clientAILandscape', subsection: 'maturity', option_id: 'optimizing', option_label: 'Optimizing', option_type: 'single-select', display_order: 5 },
+    { section: 'clientAILandscape', subsection: 'maturity', option_id: 'dont-know', option_label: "I Don't Know", option_type: 'single-select', display_order: 6 },
+
+    // Client AI Landscape — Usage
+    { section: 'clientAILandscape', subsection: 'usage', option_id: 'dont-know', option_label: "I Don't Know", option_type: 'multi-select', display_order: 1 },
+    { section: 'clientAILandscape', subsection: 'usage', option_id: 'not-using', option_label: 'Not Using AI', option_type: 'multi-select', display_order: 2 },
+    { section: 'clientAILandscape', subsection: 'usage', option_id: 'off-the-shelf', option_label: 'Off-the-Shelf Tools', option_type: 'multi-select', display_order: 3 },
+    { section: 'clientAILandscape', subsection: 'usage', option_id: 'business-apps', option_label: 'AI in Business Apps', option_type: 'multi-select', display_order: 4 },
+    { section: 'clientAILandscape', subsection: 'usage', option_id: 'custom-solutions', option_label: 'Custom AI Solutions', option_type: 'multi-select', display_order: 5 },
+    { section: 'clientAILandscape', subsection: 'usage', option_id: 'business-processes', option_label: 'Process Automation', option_type: 'multi-select', display_order: 6 },
+    { section: 'clientAILandscape', subsection: 'usage', option_id: 'customer-facing', option_label: 'Customer-Facing AI', option_type: 'multi-select', display_order: 7 },
+
+    // Client AI Landscape — Priority
+    { section: 'clientAILandscape', subsection: 'priority', option_id: 'not-priority', option_label: 'Not a Priority', option_type: 'single-select', display_order: 1 },
+    { section: 'clientAILandscape', subsection: 'priority', option_id: 'low', option_label: 'Low Priority', option_type: 'single-select', display_order: 2 },
+    { section: 'clientAILandscape', subsection: 'priority', option_id: 'medium', option_label: 'Medium Priority', option_type: 'single-select', display_order: 3 },
+    { section: 'clientAILandscape', subsection: 'priority', option_id: 'high', option_label: 'High Priority', option_type: 'single-select', display_order: 4 },
+    { section: 'clientAILandscape', subsection: 'priority', option_id: 'dont-know', option_label: "I Don't Know", option_type: 'single-select', display_order: 5 },
+
+    // Client AI Landscape — Governance
+    { section: 'clientAILandscape', subsection: 'governance', option_id: 'none', option_label: 'No Governance', option_type: 'single-select', display_order: 1 },
+    { section: 'clientAILandscape', subsection: 'governance', option_id: 'informal', option_label: 'Informal', option_type: 'single-select', display_order: 2 },
+    { section: 'clientAILandscape', subsection: 'governance', option_id: 'developing', option_label: 'Developing', option_type: 'single-select', display_order: 3 },
+    { section: 'clientAILandscape', subsection: 'governance', option_id: 'established', option_label: 'Established', option_type: 'single-select', display_order: 4 },
+    { section: 'clientAILandscape', subsection: 'governance', option_id: 'dont-know', option_label: "I Don't Know", option_type: 'single-select', display_order: 5 },
+
+    // Client AI Landscape — Challenges
+    { section: 'clientAILandscape', subsection: 'challenges', option_id: 'unclear-roi', option_label: 'Unclear ROI', option_type: 'ranked', display_order: 1 },
+    { section: 'clientAILandscape', subsection: 'challenges', option_id: 'skills', option_label: 'Skills Gap', option_type: 'ranked', display_order: 2 },
+    { section: 'clientAILandscape', subsection: 'challenges', option_id: 'data', option_label: 'Data Issues', option_type: 'ranked', display_order: 3 },
+    { section: 'clientAILandscape', subsection: 'challenges', option_id: 'security', option_label: 'Security/Compliance', option_type: 'ranked', display_order: 4 },
+    { section: 'clientAILandscape', subsection: 'challenges', option_id: 'budget', option_label: 'Budget/Buy-in', option_type: 'ranked', display_order: 5 },
+    { section: 'clientAILandscape', subsection: 'challenges', option_id: 'infrastructure', option_label: 'Infrastructure', option_type: 'ranked', display_order: 6 },
+    { section: 'clientAILandscape', subsection: 'challenges', option_id: 'dont-know', option_label: "I Don't Know", option_type: 'ranked', display_order: 7 },
+
+    // Client AI Landscape — Approved Tools
+    { section: 'clientAILandscape', subsection: 'approvedTools', option_id: 'github-copilot', option_label: 'GitHub Copilot', option_type: 'multi-select', display_order: 1 },
+    { section: 'clientAILandscape', subsection: 'approvedTools', option_id: 'chatgpt', option_label: 'ChatGPT / OpenAI', option_type: 'multi-select', display_order: 2 },
+    { section: 'clientAILandscape', subsection: 'approvedTools', option_id: 'claude', option_label: 'Claude / Anthropic', option_type: 'multi-select', display_order: 3 },
+    { section: 'clientAILandscape', subsection: 'approvedTools', option_id: 'gemini', option_label: 'Gemini / Google', option_type: 'multi-select', display_order: 4 },
+    { section: 'clientAILandscape', subsection: 'approvedTools', option_id: 'cursor', option_label: 'Cursor', option_type: 'multi-select', display_order: 5 },
+    { section: 'clientAILandscape', subsection: 'approvedTools', option_id: 'amazon-q-kiro', option_label: 'Amazon Q / Kiro', option_type: 'multi-select', display_order: 6 },
+    { section: 'clientAILandscape', subsection: 'approvedTools', option_id: 'ms-copilot', option_label: 'Microsoft Copilot', option_type: 'multi-select', display_order: 7 },
+    { section: 'clientAILandscape', subsection: 'approvedTools', option_id: 'atlassian-rovo', option_label: 'Atlassian Rovo', option_type: 'multi-select', display_order: 8 },
+
+    // Team Roles
+    { section: 'teamRoles', subsection: 'roles', option_id: 'pm', option_label: 'Project Managers / Scrum Masters', option_type: 'multi-select', display_order: 1 },
+    { section: 'teamRoles', subsection: 'roles', option_id: 'ba', option_label: 'Business Analysts / Product Managers', option_type: 'multi-select', display_order: 2 },
+    { section: 'teamRoles', subsection: 'roles', option_id: 'arch', option_label: 'Solutions Architects', option_type: 'multi-select', display_order: 3 },
+    { section: 'teamRoles', subsection: 'roles', option_id: 'swe', option_label: 'Software Engineers', option_type: 'multi-select', display_order: 4 },
+    { section: 'teamRoles', subsection: 'roles', option_id: 'qa', option_label: 'Manual QA', option_type: 'multi-select', display_order: 5 },
+    { section: 'teamRoles', subsection: 'roles', option_id: 'qaa', option_label: 'QA Automation Engineers', option_type: 'multi-select', display_order: 6 },
+    { section: 'teamRoles', subsection: 'roles', option_id: 'data', option_label: 'Data Engineers / Scientists', option_type: 'multi-select', display_order: 7 },
+    { section: 'teamRoles', subsection: 'roles', option_id: 'devops', option_label: 'DevOps Engineers', option_type: 'multi-select', display_order: 8 },
+    { section: 'teamRoles', subsection: 'roles', option_id: 'ux', option_label: 'UI/UX Designers', option_type: 'multi-select', display_order: 9 },
+
+    // Tools — AI
+    { section: 'tools', subsection: 'ai', option_id: 'copilot', option_label: 'GitHub Copilot', option_type: 'multi-select', display_order: 1 },
+    { section: 'tools', subsection: 'ai', option_id: 'chatgpt', option_label: 'ChatGPT / OpenAI', option_type: 'multi-select', display_order: 2 },
+    { section: 'tools', subsection: 'ai', option_id: 'claude', option_label: 'Claude (Anthropic)', option_type: 'multi-select', display_order: 3 },
+    { section: 'tools', subsection: 'ai', option_id: 'claudecode', option_label: 'Claude Code', option_type: 'multi-select', display_order: 4 },
+    { section: 'tools', subsection: 'ai', option_id: 'cursor', option_label: 'Cursor', option_type: 'multi-select', display_order: 5 },
+    { section: 'tools', subsection: 'ai', option_id: 'windsurf', option_label: 'Windsurf', option_type: 'multi-select', display_order: 6 },
+    { section: 'tools', subsection: 'ai', option_id: 'gemini', option_label: 'Gemini (Google)', option_type: 'multi-select', display_order: 7 },
+    { section: 'tools', subsection: 'ai', option_id: 'amazonq', option_label: 'Amazon Q / Kiro', option_type: 'multi-select', display_order: 8 },
+    { section: 'tools', subsection: 'ai', option_id: 'mscopilot', option_label: 'Microsoft Copilot', option_type: 'multi-select', display_order: 9 },
+    { section: 'tools', subsection: 'ai', option_id: 'intellij', option_label: 'IntelliJ AI', option_type: 'multi-select', display_order: 10 },
+    { section: 'tools', subsection: 'ai', option_id: 'rovo', option_label: 'Atlassian Rovo', option_type: 'multi-select', display_order: 11 },
+    { section: 'tools', subsection: 'ai', option_id: 'v0', option_label: 'v0 (Vercel)', option_type: 'multi-select', display_order: 12 },
+    { section: 'tools', subsection: 'ai', option_id: 'bolt', option_label: 'Bolt.new', option_type: 'multi-select', display_order: 13 },
+    { section: 'tools', subsection: 'ai', option_id: 'lovable', option_label: 'Lovable', option_type: 'multi-select', display_order: 14 },
+    { section: 'tools', subsection: 'ai', option_id: 'perplexity', option_label: 'Perplexity', option_type: 'multi-select', display_order: 15 },
+
+    // Tools — Cloud
+    { section: 'tools', subsection: 'cloud', option_id: 'aws', option_label: 'Amazon Web Services (AWS)', option_type: 'multi-select', display_order: 1 },
+    { section: 'tools', subsection: 'cloud', option_id: 'gcp', option_label: 'Google Cloud Platform (GCP)', option_type: 'multi-select', display_order: 2 },
+    { section: 'tools', subsection: 'cloud', option_id: 'azure', option_label: 'Microsoft Azure', option_type: 'multi-select', display_order: 3 },
+    { section: 'tools', subsection: 'cloud', option_id: 'onprem', option_label: 'On-Premises', option_type: 'multi-select', display_order: 4 },
+
+    // Use Cases — Code Development
+    { section: 'useCases', subsection: 'code-dev', option_id: 'code-completion', option_label: 'Code completion and suggestions', option_type: 'tri-state', display_order: 1 },
+    { section: 'useCases', subsection: 'code-dev', option_id: 'code-generation', option_label: 'Generate code from natural language', option_type: 'tri-state', display_order: 2 },
+    { section: 'useCases', subsection: 'code-dev', option_id: 'code-refactoring', option_label: 'Code refactoring and optimization', option_type: 'tri-state', display_order: 3 },
+    { section: 'useCases', subsection: 'code-dev', option_id: 'code-review', option_label: 'Automated code review assistance', option_type: 'tri-state', display_order: 4 },
+    { section: 'useCases', subsection: 'code-dev', option_id: 'debugging', option_label: 'Debugging and error resolution', option_type: 'tri-state', display_order: 5 },
+    { section: 'useCases', subsection: 'code-dev', option_id: 'code-explanation', option_label: 'Code explanation and documentation', option_type: 'tri-state', display_order: 6 },
+
+    // Use Cases — Documentation
+    { section: 'useCases', subsection: 'documentation', option_id: 'api-docs', option_label: 'API documentation generation', option_type: 'tri-state', display_order: 1 },
+    { section: 'useCases', subsection: 'documentation', option_id: 'readme-generation', option_label: 'README and setup guides', option_type: 'tri-state', display_order: 2 },
+    { section: 'useCases', subsection: 'documentation', option_id: 'technical-specs', option_label: 'Technical specification writing', option_type: 'tri-state', display_order: 3 },
+    { section: 'useCases', subsection: 'documentation', option_id: 'inline-comments', option_label: 'Code comments and docstrings', option_type: 'tri-state', display_order: 4 },
+    { section: 'useCases', subsection: 'documentation', option_id: 'release-notes', option_label: 'Release notes generation', option_type: 'tri-state', display_order: 5 },
+
+    // Use Cases — Requirements
+    { section: 'useCases', subsection: 'requirements', option_id: 'user-stories', option_label: 'User story creation and refinement', option_type: 'tri-state', display_order: 1 },
+    { section: 'useCases', subsection: 'requirements', option_id: 'requirements-analysis', option_label: 'Requirements gap analysis', option_type: 'tri-state', display_order: 2 },
+    { section: 'useCases', subsection: 'requirements', option_id: 'acceptance-criteria', option_label: 'Acceptance criteria generation', option_type: 'tri-state', display_order: 3 },
+    { section: 'useCases', subsection: 'requirements', option_id: 'impact-analysis', option_label: 'Impact analysis for changes', option_type: 'tri-state', display_order: 4 },
+    { section: 'useCases', subsection: 'requirements', option_id: 'backlog-refinement', option_label: 'Backlog grooming assistance', option_type: 'tri-state', display_order: 5 },
+
+    // Use Cases — Project Management
+    { section: 'useCases', subsection: 'pm', option_id: 'meeting-summaries', option_label: 'Meeting summaries and action items', option_type: 'tri-state', display_order: 1 },
+    { section: 'useCases', subsection: 'pm', option_id: 'status-reports', option_label: 'Status report generation', option_type: 'tri-state', display_order: 2 },
+    { section: 'useCases', subsection: 'pm', option_id: 'risk-identification', option_label: 'Risk identification and mitigation', option_type: 'tri-state', display_order: 3 },
+    { section: 'useCases', subsection: 'pm', option_id: 'estimation', option_label: 'Effort estimation assistance', option_type: 'tri-state', display_order: 4 },
+    { section: 'useCases', subsection: 'pm', option_id: 'stakeholder-comms', option_label: 'Stakeholder communication drafts', option_type: 'tri-state', display_order: 5 },
+
+    // Use Cases — Design & UX
+    { section: 'useCases', subsection: 'design-ux', option_id: 'design-feedback', option_label: 'Design critique and feedback', option_type: 'tri-state', display_order: 1 },
+    { section: 'useCases', subsection: 'design-ux', option_id: 'copy-writing', option_label: 'UI copy and microcopy writing', option_type: 'tri-state', display_order: 2 },
+    { section: 'useCases', subsection: 'design-ux', option_id: 'accessibility', option_label: 'Accessibility recommendations', option_type: 'tri-state', display_order: 3 },
+    { section: 'useCases', subsection: 'design-ux', option_id: 'user-research', option_label: 'User research analysis', option_type: 'tri-state', display_order: 4 },
+    { section: 'useCases', subsection: 'design-ux', option_id: 'persona-creation', option_label: 'Persona and journey mapping', option_type: 'tri-state', display_order: 5 },
+
+    // Use Cases — Data & Analytics
+    { section: 'useCases', subsection: 'data-analytics', option_id: 'sql-generation', option_label: 'SQL query generation', option_type: 'tri-state', display_order: 1 },
+    { section: 'useCases', subsection: 'data-analytics', option_id: 'data-transformation', option_label: 'Data transformation scripts', option_type: 'tri-state', display_order: 2 },
+    { section: 'useCases', subsection: 'data-analytics', option_id: 'data-analysis', option_label: 'Data analysis and insights', option_type: 'tri-state', display_order: 3 },
+    { section: 'useCases', subsection: 'data-analytics', option_id: 'pipeline-development', option_label: 'Data pipeline development', option_type: 'tri-state', display_order: 4 },
+    { section: 'useCases', subsection: 'data-analytics', option_id: 'data-quality', option_label: 'Data quality checks', option_type: 'tri-state', display_order: 5 },
+
+    // Workflow Maturity Stages
+    { section: 'workflowMaturity', subsection: 'stages', option_id: '0', option_label: 'Stage 0 — No AI Usage', option_type: 'stage', display_order: 0 },
+    { section: 'workflowMaturity', subsection: 'stages', option_id: '1', option_label: 'Stage 1 — Individual AI Usage', option_type: 'stage', display_order: 1 },
+    { section: 'workflowMaturity', subsection: 'stages', option_id: '2', option_label: 'Stage 2 — Team AI Practices', option_type: 'stage', display_order: 2 },
+    { section: 'workflowMaturity', subsection: 'stages', option_id: '3', option_label: 'Stage 3 — AI-Chained Tasks', option_type: 'stage', display_order: 3 },
+    { section: 'workflowMaturity', subsection: 'stages', option_id: '4', option_label: 'Stage 4 — Event-Triggered AI', option_type: 'stage', display_order: 4 },
+    { section: 'workflowMaturity', subsection: 'stages', option_id: '5', option_label: 'Stage 5 — Semi-Agentic AI', option_type: 'stage', display_order: 5 },
+
+    // Limiting Factors
+    { section: 'limitingFactors', subsection: 'factors', option_id: 'time', option_label: 'Lack of time / competing priorities', option_type: 'ranked', display_order: 1 },
+    { section: 'limitingFactors', subsection: 'factors', option_id: 'knowledge', option_label: 'Lack of knowledge or practical skills', option_type: 'ranked', display_order: 2 },
+    { section: 'limitingFactors', subsection: 'factors', option_id: 'unclear-value', option_label: 'Unclear value or relevant use cases', option_type: 'ranked', display_order: 3 },
+    { section: 'limitingFactors', subsection: 'factors', option_id: 'client', option_label: 'Client or stakeholder not ready or supportive', option_type: 'ranked', display_order: 4 },
+    { section: 'limitingFactors', subsection: 'factors', option_id: 'access', option_label: 'Lack of access to tools, data, budget, or clear governance', option_type: 'ranked', display_order: 5 },
+    { section: 'limitingFactors', subsection: 'factors', option_id: 'other', option_label: 'Other', option_type: 'ranked', display_order: 6 },
+  ];
+
+  // Label lookups for display
+  const MATURITY_LABELS = { 'not-started': 'Not Started', 'exploring': 'Exploring', 'piloting': 'Piloting', 'scaling': 'Scaling', 'optimizing': 'Optimizing', 'dont-know': "Don't Know" };
+  const MATURITY_ORDER = ['not-started', 'exploring', 'piloting', 'scaling', 'optimizing', 'dont-know'];
+  const GOVERNANCE_LABELS = { 'none': 'No Governance', 'informal': 'Informal', 'developing': 'Developing', 'established': 'Established', 'dont-know': "Don't Know" };
+  const GOVERNANCE_ORDER = ['none', 'informal', 'developing', 'established', 'dont-know'];
+
+  const ROLE_LABELS = {
+    pm: 'PM / Scrum', ba: 'BA / PM', arch: 'Architects', swe: 'Software Eng.',
+    qa: 'Manual QA', qaa: 'QA Automation', data: 'Data Eng.', devops: 'DevOps', ux: 'UI/UX'
+  };
+  const ROLE_ORDER = ['pm', 'ba', 'arch', 'swe', 'qa', 'qaa', 'data', 'devops', 'ux'];
+
+  // ═══════════════════════════════════════════
+  // DATABASE
+  // ═══════════════════════════════════════════
+  let db = null;
+  const IDB_NAME = 'AISurveyDashboard';
+  const IDB_STORE = 'database';
+  const IDB_KEY = 'sqliteDb';
+
+  async function initDatabase() {
+    const SQL = await initSqlJs({
+      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+    });
+
+    // Try to load from IndexedDB
+    const savedData = await loadFromIndexedDB();
+    if (savedData) {
+      db = new SQL.Database(savedData);
+    } else {
+      db = new SQL.Database();
+      createTables();
+      seedSchemaOptions();
+      await saveToIndexedDB();
+    }
+  }
+
+  function createTables() {
+    db.run(`
+      CREATE TABLE IF NOT EXISTS surveys (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        account_name TEXT NOT NULL,
+        exported_at TEXT NOT NULL,
+        year INTEGER NOT NULL,
+        quarter INTEGER NOT NULL,
+        schema_version TEXT NOT NULL,
+        raw_json TEXT NOT NULL,
+        uploaded_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(account_name, exported_at)
+      )
+    `);
+    db.run(`
+      CREATE TABLE IF NOT EXISTS schema_options (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        section TEXT NOT NULL,
+        subsection TEXT NOT NULL,
+        option_id TEXT NOT NULL,
+        option_label TEXT NOT NULL,
+        option_type TEXT NOT NULL,
+        display_order INTEGER DEFAULT 0,
+        UNIQUE(section, subsection, option_id)
+      )
+    `);
+  }
+
+  function seedSchemaOptions() {
+    const stmt = db.prepare('INSERT OR IGNORE INTO schema_options (section, subsection, option_id, option_label, option_type, display_order) VALUES (?, ?, ?, ?, ?, ?)');
+    SCHEMA_SEED.forEach(s => {
+      stmt.run([s.section, s.subsection, s.option_id, s.option_label, s.option_type, s.display_order]);
+    });
+    stmt.free();
+  }
+
+  // ═══════════════════════════════════════════
+  // IndexedDB Persistence
+  // ═══════════════════════════════════════════
+  function openIDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = () => {
+        req.result.createObjectStore(IDB_STORE);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function saveToIndexedDB() {
+    const data = db.export();
+    const idb = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx = idb.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).put(data, IDB_KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function loadFromIndexedDB() {
+    try {
+      const idb = await openIDB();
+      return new Promise((resolve, reject) => {
+        const tx = idb.transaction(IDB_STORE, 'readonly');
+        const req = tx.objectStore(IDB_STORE).get(IDB_KEY);
+        req.onsuccess = () => resolve(req.result ? new Uint8Array(req.result) : null);
+        req.onerror = () => reject(req.error);
+      });
+    } catch { return null; }
+  }
+
+  // ═══════════════════════════════════════════
+  // UPLOAD
+  // ═══════════════════════════════════════════
+  function openUploadModal() {
+    document.getElementById('uploadModal').classList.add('open');
+    document.getElementById('uploadResults').innerHTML = '';
+  }
+  function closeUploadModal() {
+    document.getElementById('uploadModal').classList.remove('open');
+  }
+
+  function extractYearQuarter(isoDate) {
+    const d = new Date(isoDate);
+    return { year: d.getFullYear(), quarter: Math.ceil((d.getMonth() + 1) / 3) };
+  }
+
+  function validateSurveyJSON(data) {
+    const errors = [];
+    if (!data.schemaVersion) errors.push('Missing schemaVersion');
+    if (!data.accountName) errors.push('Missing accountName');
+    if (!data.exportedAt) errors.push('Missing exportedAt');
+    else if (isNaN(new Date(data.exportedAt).getTime())) errors.push('Invalid exportedAt date');
+    return errors;
+  }
+
+  async function processFile(file) {
+    const result = { filename: file.name, status: '', message: '' };
+
+    try {
+      let jsonText = null;
+
+      if (file.name.endsWith('.zip')) {
+        const zip = await JSZip.loadAsync(file);
+        const jsonFile = Object.keys(zip.files).find(name => name.endsWith('.json'));
+        if (!jsonFile) {
+          result.status = 'error';
+          result.message = 'No JSON file found inside ZIP';
+          return result;
+        }
+        jsonText = await zip.files[jsonFile].async('text');
+      } else if (file.name.endsWith('.json')) {
+        jsonText = await file.text();
+      } else {
+        result.status = 'error';
+        result.message = 'Unsupported file type (use .json or .zip)';
+        return result;
+      }
+
+      const data = JSON.parse(jsonText);
+      const errors = validateSurveyJSON(data);
+      if (errors.length > 0) {
+        result.status = 'error';
+        result.message = errors.join(', ');
+        return result;
+      }
+
+      const { year, quarter } = extractYearQuarter(data.exportedAt);
+
+      // Check for duplicate
+      const existing = db.exec('SELECT id FROM surveys WHERE account_name = ? AND exported_at = ?', [data.accountName, data.exportedAt]);
+      if (existing.length > 0 && existing[0].values.length > 0) {
+        // Replace existing
+        db.run('DELETE FROM surveys WHERE account_name = ? AND exported_at = ?', [data.accountName, data.exportedAt]);
+        result.status = 'warning';
+        result.message = `Replaced existing survey for "${data.accountName}"`;
+      } else {
+        result.status = 'success';
+        result.message = `Imported "${data.accountName}" (${year} Q${quarter})`;
+      }
+
+      db.run(
+        'INSERT INTO surveys (account_name, exported_at, year, quarter, schema_version, raw_json) VALUES (?, ?, ?, ?, ?, ?)',
+        [data.accountName, data.exportedAt, year, quarter, data.schemaVersion, jsonText]
+      );
+
+    } catch (e) {
+      result.status = 'error';
+      result.message = `Parse error: ${e.message}`;
+    }
+
+    return result;
+  }
+
+  async function handleFiles(files) {
+    const resultsDiv = document.getElementById('uploadResults');
+    resultsDiv.innerHTML = '<div style="color:#6b7280;font-size:0.85rem;padding:0.5rem 0;">Processing...</div>';
+
+    const results = [];
+    for (const file of files) {
+      results.push(await processFile(file));
+    }
+
+    await saveToIndexedDB();
+
+    // Display results
+    resultsDiv.innerHTML = results.map(r => {
+      const icon = r.status === 'success' ? '✅' : r.status === 'warning' ? '⚠️' : '❌';
+      const cls = r.status === 'success' ? 'upload-result-success' : r.status === 'warning' ? 'upload-result-warning' : 'upload-result-error';
+      return `<div class="upload-result-item">
+        <span class="upload-result-icon">${icon}</span>
+        <span class="upload-result-text ${cls}"><strong>${r.filename}</strong> — ${r.message}</span>
+      </div>`;
+    }).join('');
+
+    // Refresh dashboard
+    populateFilters();
+    refreshDashboard();
+  }
+
+  // ═══════════════════════════════════════════
+  // FILTERS
+  // ═══════════════════════════════════════════
+  function populateFilters() {
+    const yearSelect = document.getElementById('filterYear');
+    const rows = db.exec('SELECT DISTINCT year FROM surveys ORDER BY year DESC');
+    const years = rows.length > 0 ? rows[0].values.map(r => r[0]) : [];
+
+    const currentVal = yearSelect.value;
+    yearSelect.innerHTML = '<option value="all">All Years</option>';
+    years.forEach(y => {
+      yearSelect.innerHTML += `<option value="${y}"${y == currentVal ? ' selected' : ''}>${y}</option>`;
+    });
+    if (currentVal && currentVal !== 'all' && years.includes(parseInt(currentVal))) {
+      yearSelect.value = currentVal;
+    }
+  }
+
+  function getFilteredSurveys() {
+    const year = document.getElementById('filterYear').value;
+    const quarter = document.getElementById('filterQuarter').value;
+
+    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json FROM surveys WHERE 1=1';
+    const params = [];
+    if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
+    if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
+    sql += ' ORDER BY account_name';
+
+    const result = db.exec(sql, params);
+    if (result.length === 0) return [];
+
+    return result[0].values.map(row => ({
+      id: row[0], account_name: row[1], exported_at: row[2],
+      year: row[3], quarter: row[4], schema_version: row[5],
+      data: JSON.parse(row[6])
+    }));
+  }
+
+  // ═══════════════════════════════════════════
+  // DASHBOARD RENDERING
+  // ═══════════════════════════════════════════
+  let charts = {};
+
+  function refreshDashboard() {
+    const surveys = getFilteredSurveys();
+    const totalAll = db.exec('SELECT COUNT(*) FROM surveys');
+    const totalCount = totalAll.length > 0 ? totalAll[0].values[0][0] : 0;
+
+    // Update subtitle
+    const year = document.getElementById('filterYear').value;
+    const quarter = document.getElementById('filterQuarter').value;
+    let filterDesc = '';
+    if (year !== 'all') filterDesc += year;
+    if (quarter !== 'all') filterDesc += (filterDesc ? ' ' : '') + 'Q' + quarter;
+    document.getElementById('headerSubtitle').textContent = surveys.length > 0
+      ? `Showing ${surveys.length} survey${surveys.length !== 1 ? 's' : ''}${filterDesc ? ' for ' + filterDesc : ''}`
+      : (totalCount > 0 ? 'No surveys match the selected filters' : 'No surveys uploaded yet');
+
+    // Show/hide states
+    document.getElementById('emptyState').style.display = totalCount === 0 ? 'block' : 'none';
+    document.getElementById('dashboardContent').style.display = totalCount > 0 ? 'block' : 'none';
+
+    if (totalCount === 0) return;
+
+    // Summary cards
+    updateSummaryCards(surveys);
+
+    // Charts
+    renderMaturityChart(surveys);
+    renderAIToolsChart(surveys);
+    renderRolesChart(surveys);
+    renderUseCasesChart(surveys);
+    renderLimitingChart(surveys);
+    renderWorkflowChart(surveys);
+    renderComplianceChart(surveys);
+    renderGovernanceChart(surveys);
+
+    // Table
+    renderSurveysTable(surveys);
+  }
+
+  function updateSummaryCards(surveys) {
+    document.getElementById('totalSurveys').textContent = surveys.length;
+
+    // Most common maturity
+    if (surveys.length > 0) {
+      const maturityCounts = {};
+      surveys.forEach(s => {
+        const val = s.data?.clientAILandscape?.maturity?.value;
+        if (val && val !== 'dont-know') maturityCounts[val] = (maturityCounts[val] || 0) + 1;
+      });
+      const topMaturity = Object.entries(maturityCounts).sort((a, b) => b[1] - a[1])[0];
+      document.getElementById('avgMaturity').textContent = topMaturity ? (MATURITY_LABELS[topMaturity[0]] || topMaturity[0]) : '—';
+    } else {
+      document.getElementById('avgMaturity').textContent = '—';
+    }
+
+    // Distinct AI tools used
+    const aiToolSet = new Set();
+    surveys.forEach(s => {
+      const aiSection = s.data?.toolsAndInfrastructure?.ai;
+      if (!aiSection) return;
+      Object.keys(aiSection).forEach(k => {
+        if (k.startsWith('_') || k === 'custom' || k === 'dont-know' || k === 'not-applicable' || k === 'visible') return;
+        if (aiSection[k]?.selected) aiToolSet.add(k);
+      });
+    });
+    document.getElementById('totalAITools').textContent = aiToolSet.size;
+
+    // Average roles per account
+    if (surveys.length > 0) {
+      let totalRoles = 0;
+      surveys.forEach(s => {
+        const roles = s.data?.teamRoles?.roles;
+        if (!roles) return;
+        Object.keys(roles).forEach(k => {
+          if (!k.startsWith('_') && roles[k]?.selected) totalRoles++;
+        });
+      });
+      document.getElementById('avgRoles').textContent = (totalRoles / surveys.length).toFixed(1);
+    } else {
+      document.getElementById('avgRoles').textContent = '0';
+    }
+  }
+
+  // ═══════════════════════════════════════════
+  // CHART HELPERS
+  // ═══════════════════════════════════════════
+  const CHART_COLORS = {
+    primary: '#4f46e5',
+    primaryLight: 'rgba(79, 70, 229, 0.7)',
+    secondary: '#06b6d4',
+    secondaryLight: 'rgba(6, 182, 212, 0.7)',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    gray: '#9ca3af',
+    palette: ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1']
+  };
+
+  function destroyChart(id) {
+    if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+  }
+
+  function createBarChart(canvasId, labels, data, options = {}) {
+    destroyChart(canvasId);
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    charts[canvasId] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: Array.isArray(data) ? data : [{
+          data,
+          backgroundColor: options.colors || CHART_COLORS.primaryLight,
+          borderColor: options.borderColors || CHART_COLORS.primary,
+          borderWidth: 1,
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        indexAxis: options.horizontal ? 'y' : 'x',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: !!options.showLegend },
+        },
+        scales: {
+          x: { beginAtZero: true, ticks: { stepSize: 1 } },
+          y: { beginAtZero: true, ticks: { stepSize: 1 } },
+        }
+      }
+    });
+  }
+
+  // ═══════════════════════════════════════════
+  // INDIVIDUAL CHARTS
+  // ═══════════════════════════════════════════
+
+  function renderMaturityChart(surveys) {
+    const counts = {};
+    MATURITY_ORDER.forEach(k => counts[k] = 0);
+    surveys.forEach(s => {
+      const val = s.data?.clientAILandscape?.maturity?.value;
+      if (val) counts[val] = (counts[val] || 0) + 1;
+    });
+    const labels = MATURITY_ORDER.filter(k => k !== 'dont-know').map(k => MATURITY_LABELS[k]);
+    const data = MATURITY_ORDER.filter(k => k !== 'dont-know').map(k => counts[k]);
+    const colors = ['#9ca3af', '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'];
+    createBarChart('chartMaturity', labels, data, { horizontal: true, colors });
+  }
+
+  function renderAIToolsChart(surveys) {
+    const aiToolsSchema = SCHEMA_SEED.filter(s => s.section === 'tools' && s.subsection === 'ai');
+    const counts = {};
+    aiToolsSchema.forEach(t => counts[t.option_id] = 0);
+
+    surveys.forEach(s => {
+      const aiSection = s.data?.toolsAndInfrastructure?.ai;
+      if (!aiSection) return;
+      Object.keys(aiSection).forEach(k => {
+        if (k.startsWith('_') || k === 'custom' || k === 'dont-know' || k === 'not-applicable' || k === 'visible') return;
+        if (aiSection[k]?.selected) counts[k] = (counts[k] || 0) + 1;
+      });
+    });
+
+    // Sort by count descending, show top 10
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).filter(([, c]) => c > 0);
+    if (sorted.length === 0) {
+      destroyChart('chartAITools');
+      return;
+    }
+    const toolLabels = sorted.map(([id]) => {
+      const schema = aiToolsSchema.find(t => t.option_id === id);
+      return schema ? schema.option_label : id;
+    });
+    createBarChart('chartAITools', toolLabels, sorted.map(([, c]) => c), { horizontal: true });
+  }
+
+  function renderRolesChart(surveys) {
+    const counts = {};
+    ROLE_ORDER.forEach(r => counts[r] = 0);
+
+    surveys.forEach(s => {
+      const roles = s.data?.teamRoles?.roles;
+      if (!roles) return;
+      ROLE_ORDER.forEach(r => {
+        if (roles[r]?.selected) counts[r]++;
+      });
+    });
+
+    const labels = ROLE_ORDER.map(r => ROLE_LABELS[r]);
+    const data = ROLE_ORDER.map(r => counts[r]);
+    createBarChart('chartRoles', labels, data, { horizontal: true, colors: CHART_COLORS.secondaryLight, borderColors: CHART_COLORS.secondary });
+  }
+
+  function renderUseCasesChart(surveys) {
+    const useCaseItems = SCHEMA_SEED.filter(s => s.section === 'useCases');
+    const needCounts = {};
+    const doingCounts = {};
+    useCaseItems.forEach(uc => { needCounts[uc.option_id] = 0; doingCounts[uc.option_id] = 0; });
+
+    surveys.forEach(s => {
+      if (!s.data?.useCases) return;
+      Object.values(s.data.useCases).forEach(cat => {
+        if (typeof cat !== 'object' || cat._meta) return;
+        Object.entries(cat).forEach(([id, val]) => {
+          if (id.startsWith('_') || id === 'custom') return;
+          if (val?.status === 'need') needCounts[id] = (needCounts[id] || 0) + 1;
+          else if (val?.status === 'doing') doingCounts[id] = (doingCounts[id] || 0) + 1;
+        });
+      });
+    });
+
+    // Top 10 by total (need + doing)
+    const allIds = [...new Set([...Object.keys(needCounts), ...Object.keys(doingCounts)])];
+    const sorted = allIds.map(id => ({
+      id,
+      need: needCounts[id] || 0,
+      doing: doingCounts[id] || 0,
+      total: (needCounts[id] || 0) + (doingCounts[id] || 0)
+    })).sort((a, b) => b.total - a.total).slice(0, 10).filter(x => x.total > 0);
+
+    if (sorted.length === 0) { destroyChart('chartUseCases'); return; }
+
+    const labels = sorted.map(x => {
+      const schema = useCaseItems.find(uc => uc.option_id === x.id);
+      let label = schema ? schema.option_label : x.id;
+      if (label.length > 30) label = label.substring(0, 28) + '...';
+      return label;
+    });
+
+    destroyChart('chartUseCases');
+    const ctx = document.getElementById('chartUseCases').getContext('2d');
+    charts['chartUseCases'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Need', data: sorted.map(x => x.need), backgroundColor: 'rgba(79, 70, 229, 0.7)', borderRadius: 4 },
+          { label: 'Doing', data: sorted.map(x => x.doing), backgroundColor: 'rgba(16, 185, 129, 0.7)', borderRadius: 4 },
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: 'top' } },
+        scales: { x: { beginAtZero: true, stacked: false, ticks: { stepSize: 1 } }, y: {} }
+      }
+    });
+  }
+
+  function renderLimitingChart(surveys) {
+    const factorSchema = SCHEMA_SEED.filter(s => s.section === 'limitingFactors');
+    const primaryCounts = {};
+    const secondaryCounts = {};
+    factorSchema.forEach(f => { primaryCounts[f.option_id] = 0; secondaryCounts[f.option_id] = 0; });
+
+    surveys.forEach(s => {
+      if (!s.data?.limitingFactors) return;
+      Object.entries(s.data.limitingFactors).forEach(([id, val]) => {
+        if (id.startsWith('_')) return;
+        if (val?.rank === 1) primaryCounts[id] = (primaryCounts[id] || 0) + 1;
+        else if (val?.rank === 2) secondaryCounts[id] = (secondaryCounts[id] || 0) + 1;
+      });
+    });
+
+    const ids = factorSchema.filter(f => f.option_id !== 'other').map(f => f.option_id);
+    const labels = ids.map(id => {
+      const s = factorSchema.find(f => f.option_id === id);
+      let label = s ? s.option_label : id;
+      if (label.length > 35) label = label.substring(0, 33) + '...';
+      return label;
+    });
+
+    destroyChart('chartLimiting');
+    const ctx = document.getElementById('chartLimiting').getContext('2d');
+    charts['chartLimiting'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Primary (#1)', data: ids.map(id => primaryCounts[id]), backgroundColor: 'rgba(239, 68, 68, 0.7)', borderRadius: 4 },
+          { label: 'Secondary (#2)', data: ids.map(id => secondaryCounts[id]), backgroundColor: 'rgba(251, 191, 36, 0.7)', borderRadius: 4 },
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: 'top' } },
+        scales: { x: { beginAtZero: true, stacked: true, ticks: { stepSize: 1 } }, y: {} }
+      }
+    });
+  }
+
+  function renderWorkflowChart(surveys) {
+    const roleSums = {};
+    const roleCounts = {};
+    ROLE_ORDER.forEach(r => { roleSums[r] = 0; roleCounts[r] = 0; });
+
+    surveys.forEach(s => {
+      if (!s.data?.workflowMaturity) return;
+      ROLE_ORDER.forEach(r => {
+        const entry = s.data.workflowMaturity[r];
+        if (entry && entry.stage !== null && entry.stage !== undefined) {
+          roleSums[r] += entry.stage;
+          roleCounts[r]++;
+        }
+      });
+    });
+
+    const labels = ROLE_ORDER.map(r => ROLE_LABELS[r]);
+    const data = ROLE_ORDER.map(r => roleCounts[r] > 0 ? parseFloat((roleSums[r] / roleCounts[r]).toFixed(1)) : 0);
+
+    destroyChart('chartWorkflow');
+    const ctx = document.getElementById('chartWorkflow').getContext('2d');
+    charts['chartWorkflow'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: CHART_COLORS.palette.slice(0, ROLE_ORDER.length).map(c => c + 'bb'),
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, max: 5, ticks: { stepSize: 1, callback: v => 'Stage ' + v } },
+          x: {}
+        }
+      }
+    });
+  }
+
+  function renderComplianceChart(surveys) {
+    const complianceSchema = SCHEMA_SEED.filter(s => s.section === 'engagement' && s.subsection === 'compliance');
+    const counts = {};
+    complianceSchema.forEach(c => counts[c.option_id] = 0);
+
+    surveys.forEach(s => {
+      if (!s.data?.engagement?.compliance) return;
+      Object.entries(s.data.engagement.compliance).forEach(([id, val]) => {
+        if (id.startsWith('_') || id === 'custom') return;
+        if (val?.selected) counts[id] = (counts[id] || 0) + 1;
+      });
+    });
+
+    const sorted = complianceSchema.sort((a, b) => (counts[b.option_id] || 0) - (counts[a.option_id] || 0));
+    const labels = sorted.map(c => c.option_label);
+    const data = sorted.map(c => counts[c.option_id]);
+
+    createBarChart('chartCompliance', labels, data, { horizontal: true, colors: 'rgba(16, 185, 129, 0.7)', borderColors: '#10b981' });
+  }
+
+  function renderGovernanceChart(surveys) {
+    const counts = {};
+    GOVERNANCE_ORDER.forEach(k => counts[k] = 0);
+
+    surveys.forEach(s => {
+      const val = s.data?.clientAILandscape?.governance?.value;
+      if (val) counts[val] = (counts[val] || 0) + 1;
+    });
+
+    const filtered = GOVERNANCE_ORDER.filter(k => counts[k] > 0);
+    if (filtered.length === 0) { destroyChart('chartGovernance'); return; }
+
+    destroyChart('chartGovernance');
+    const ctx = document.getElementById('chartGovernance').getContext('2d');
+    charts['chartGovernance'] = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: filtered.map(k => GOVERNANCE_LABELS[k]),
+        datasets: [{
+          data: filtered.map(k => counts[k]),
+          backgroundColor: CHART_COLORS.palette.slice(0, filtered.length),
+          borderWidth: 2,
+          borderColor: '#fff',
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'right' },
+        }
+      }
+    });
+  }
+
+  // ═══════════════════════════════════════════
+  // SURVEYS TABLE
+  // ═══════════════════════════════════════════
+  function renderSurveysTable(surveys) {
+    const tbody = document.getElementById('surveysTableBody');
+    if (surveys.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = surveys.map(s => {
+      const maturity = s.data?.clientAILandscape?.maturity?.value || '—';
+      const maturityLabel = MATURITY_LABELS[maturity] || maturity;
+      const maturityClass = maturity !== '—' ? `maturity-${maturity}` : '';
+
+      let roleCount = 0;
+      const roles = s.data?.teamRoles?.roles;
+      if (roles) Object.values(roles).forEach(v => { if (v?.selected) roleCount++; });
+
+      let aiToolCount = 0;
+      const aiSection = s.data?.toolsAndInfrastructure?.ai;
+      if (aiSection) Object.entries(aiSection).forEach(([k, v]) => {
+        if (!k.startsWith('_') && k !== 'custom' && k !== 'dont-know' && k !== 'not-applicable' && k !== 'visible' && v?.selected) aiToolCount++;
+      });
+
+      const exportDate = new Date(s.exported_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      return `<tr>
+        <td><strong>${escapeHtml(s.account_name)}</strong></td>
+        <td><span class="maturity-badge ${maturityClass}">${maturityLabel}</span></td>
+        <td>${roleCount}</td>
+        <td>${aiToolCount}</td>
+        <td>${exportDate}</td>
+        <td>Q${s.quarter} ${s.year}</td>
+        <td class="actions">
+          <button class="btn-icon" title="Download JSON" onclick="downloadSurvey(${s.id})">📥</button>
+          <button class="btn-icon" title="Delete survey" onclick="deleteSurvey(${s.id}, '${escapeHtml(s.account_name)}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function downloadSurvey(id) {
+    const result = db.exec('SELECT account_name, raw_json FROM surveys WHERE id = ?', [id]);
+    if (result.length === 0) return;
+    const name = result[0].values[0][0];
+    const json = result[0].values[0][1];
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name.replace(/[^a-zA-Z0-9_-]/g, '_')}_survey.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  async function deleteSurvey(id, name) {
+    if (!confirm(`Delete the survey for "${name}"? This cannot be undone.`)) return;
+    db.run('DELETE FROM surveys WHERE id = ?', [id]);
+    await saveToIndexedDB();
+    populateFilters();
+    refreshDashboard();
+  }
+
+  // ═══════════════════════════════════════════
+  // DATABASE EXPORT / IMPORT
+  // ═══════════════════════════════════════════
+  function exportDatabase() {
+    const data = db.export();
+    const blob = new Blob([data], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ai-survey-dashboard-backup-${new Date().toISOString().slice(0, 10)}.sqlite`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  async function importDatabase(file) {
+    try {
+      const buffer = await file.arrayBuffer();
+      const SQL = await initSqlJs({
+        locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${f}`
+      });
+      const newDb = new SQL.Database(new Uint8Array(buffer));
+      // Verify it has the expected tables
+      const tables = newDb.exec("SELECT name FROM sqlite_master WHERE type='table'");
+      const tableNames = tables.length > 0 ? tables[0].values.map(r => r[0]) : [];
+      if (!tableNames.includes('surveys')) {
+        alert('Invalid backup file: missing "surveys" table.');
+        newDb.close();
+        return;
+      }
+      if (db) db.close();
+      db = newDb;
+      await saveToIndexedDB();
+      populateFilters();
+      refreshDashboard();
+      alert('Database restored successfully!');
+    } catch (e) {
+      alert('Error restoring database: ' + e.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════
+  // EVENT LISTENERS
+  // ═══════════════════════════════════════════
+  function setupEventListeners() {
+    // Upload button
+    document.getElementById('uploadBtn').addEventListener('click', openUploadModal);
+
+    // Modal overlay close
+    document.getElementById('uploadModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('uploadModal')) closeUploadModal();
+    });
+
+    // Escape key
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeUploadModal();
+    });
+
+    // Drop zone
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', e => {
+      if (e.target.files.length > 0) handleFiles(e.target.files);
+      e.target.value = '';
+    });
+
+    // Filters
+    document.getElementById('filterYear').addEventListener('change', refreshDashboard);
+    document.getElementById('filterQuarter').addEventListener('change', refreshDashboard);
+
+    // Database export/import
+    document.getElementById('exportDbBtn').addEventListener('click', exportDatabase);
+    document.getElementById('importDbInput').addEventListener('change', e => {
+      if (e.target.files.length > 0) importDatabase(e.target.files[0]);
+      e.target.value = '';
+    });
+  }
+
+  // ═══════════════════════════════════════════
+  // INIT
+  // ════════════════════════════════════════���══
+  async function init() {
+    try {
+      await initDatabase();
+      setupEventListeners();
+      populateFilters();
+
+      // Hide loading, show content
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+
+      refreshDashboard();
+    } catch (e) {
+      document.getElementById('loadingState').innerHTML = `
+        <div style="color:#ef4444;text-align:center;padding:2rem;">
+          <div style="font-size:2rem;margin-bottom:1rem;">⚠️</div>
+          <div style="font-weight:600;margin-bottom:0.5rem;">Failed to initialize database</div>
+          <div style="font-size:0.85rem;color:#6b7280;">${e.message}</div>
+        </div>`;
+      console.error('Init error:', e);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
