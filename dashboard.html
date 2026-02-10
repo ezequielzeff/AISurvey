@@ -355,6 +355,13 @@
       height: 200px;
     }
 
+    /* Limiting Factors Chart */
+    .lf-chart-container {
+      position: relative;
+      width: 100%;
+      height: 260px;
+    }
+
     /* Widget Legend */
     .widget-legend {
       display: flex;
@@ -1041,6 +1048,19 @@
         </div>
       </div>
 
+      <!-- Widget: Limiting Factors -->
+      <div class="widget-card" id="limitingFactorsWidget">
+        <div class="widget-header">
+          <div class="widget-title">Limiting Factors</div>
+          <div class="widget-subtitle">What holds teams back from adopting AI</div>
+          <div class="widget-question">Which factors are most frequently limiting AI adoption across the portfolio?</div>
+        </div>
+        <div class="lf-chart-container">
+          <canvas id="chartLimitingFactors"></canvas>
+        </div>
+        <div class="widget-legend" id="lfLegend"></div>
+      </div>
+
       <!-- Surveys Table -->
       <div class="surveys-section">
         <div class="surveys-section-header">
@@ -1338,6 +1358,18 @@
   };
   const GOVERNANCE_LABELS = { 'none': 'No Governance', 'informal': 'Informal', 'developing': 'Developing', 'established': 'Established', 'dont-know': "Don't Know" };
   const GOVERNANCE_ORDER = ['none', 'informal', 'developing', 'established', 'dont-know'];
+
+  // Limiting Factors
+  const LIMITING_FACTOR_LABELS = {
+    time: 'Lack of time',
+    knowledge: 'Lack of knowledge',
+    'unclear-value': 'Unclear value',
+    client: 'Client not ready',
+    access: 'Lack of access',
+    other: 'Other'
+  };
+  const LIMITING_FACTOR_ORDER = ['time', 'knowledge', 'unclear-value', 'client', 'access', 'other'];
+  const LF_COLORS = { primary: '#4f46e5', secondary: '#93c5fd' };
 
   const ROLE_LABELS = {
     pm: 'PM / Scrum', ba: 'BA / PM', arch: 'Architects', swe: 'Software Eng.',
@@ -1820,6 +1852,9 @@
     // (maturity + account filters only affect visual highlights, not percentages)
     renderAdoptionStageWidget(allSurveys);
 
+    // Limiting Factors Widget
+    renderLimitingFactorsWidget(allSurveys);
+
     // Table always shows all surveys for the year/quarter (so user can click to filter/unfilter)
     renderSurveysTable(allSurveys);
   }
@@ -2068,6 +2103,126 @@
         }
       }
     });
+  }
+
+  // ═══════════════════════════════════════════
+  // LIMITING FACTORS WIDGET
+  // ═══════════════════════════════════════════
+
+  function renderLimitingFactorsWidget(surveys) {
+    destroyChart('chartLimitingFactors');
+
+    // Count how many times each factor appears as primary (rank 1) or secondary (rank 2)
+    const primaryCounts = {};
+    const secondaryCounts = {};
+    LIMITING_FACTOR_ORDER.forEach(k => { primaryCounts[k] = 0; secondaryCounts[k] = 0; });
+
+    const totalSurveys = surveys.length;
+
+    surveys.forEach(s => {
+      const lf = s.data?.limitingFactors;
+      if (!lf) return;
+      Object.entries(lf).forEach(([k, v]) => {
+        if (k.startsWith('_')) return;
+        if (v?.rank === 1) primaryCounts[k]++;
+        else if (v?.rank === 2) secondaryCounts[k]++;
+      });
+    });
+
+    // Sort factors by total mentions (primary + secondary) descending
+    const sorted = [...LIMITING_FACTOR_ORDER].sort((a, b) => {
+      const totalA = primaryCounts[a] + secondaryCounts[a];
+      const totalB = primaryCounts[b] + secondaryCounts[b];
+      return totalB - totalA;
+    });
+
+    // Calculate percentages
+    const primaryPcts = {};
+    const secondaryPcts = {};
+    sorted.forEach(k => {
+      primaryPcts[k] = totalSurveys > 0 ? Math.round((primaryCounts[k] / totalSurveys) * 100) : 0;
+      secondaryPcts[k] = totalSurveys > 0 ? Math.round((secondaryCounts[k] / totalSurveys) * 100) : 0;
+    });
+
+    const labels = sorted.map(k => LIMITING_FACTOR_LABELS[k] || k);
+
+    const ctx = document.getElementById('chartLimitingFactors').getContext('2d');
+    charts['chartLimitingFactors'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Primary',
+            data: sorted.map(k => primaryPcts[k]),
+            backgroundColor: LF_COLORS.primary,
+            borderRadius: 4,
+            barPercentage: 0.7,
+            categoryPercentage: 0.8
+          },
+          {
+            label: 'Secondary',
+            data: sorted.map(k => secondaryPcts[k]),
+            backgroundColor: LF_COLORS.secondary,
+            borderRadius: 4,
+            barPercentage: 0.7,
+            categoryPercentage: 0.8
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const factorKey = sorted[context.dataIndex];
+                const rank = context.datasetIndex === 0 ? 'Primary' : 'Secondary';
+                const count = context.datasetIndex === 0 ? primaryCounts[factorKey] : secondaryCounts[factorKey];
+                return `${rank}: ${context.raw}% (${count} of ${totalSurveys})`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            max: 100,
+            ticks: {
+              callback: v => v + '%',
+              font: { size: 11 },
+              color: '#9ca3af'
+            },
+            grid: { color: '#f3f4f6' },
+            border: { display: false }
+          },
+          y: {
+            stacked: true,
+            ticks: {
+              font: { size: 12, weight: '500' },
+              color: '#374151'
+            },
+            grid: { display: false },
+            border: { display: false }
+          }
+        }
+      }
+    });
+
+    // Render legend
+    const legend = document.getElementById('lfLegend');
+    legend.innerHTML = `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${LF_COLORS.primary};"></div>
+        <span>Primary factor</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${LF_COLORS.secondary};"></div>
+        <span>Secondary factor</span>
+      </div>`;
   }
 
   // ═══════════════════════════════════════════
