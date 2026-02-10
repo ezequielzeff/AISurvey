@@ -3427,8 +3427,7 @@
     // Render flags
     let toolsRendered = false;
     // engagementRendered removed — listeners now in setupEventListeners()
-
-    let clientAIRendered = false;
+    // clientAIRendered removed — listeners now in setupEventListeners()
 
     // Compliance options data
     const complianceOptions = [
@@ -3633,7 +3632,6 @@
 
         // Reset render flags so steps re-initialize
         toolsRendered = false;
-        clientAIRendered = false;
         
         // Reset UI elements
         renderRoles();
@@ -4307,129 +4305,6 @@
       updateClientAIGovernanceUI();
       updateChallengeUI();
       updateClientApprovedToolsUI();
-
-      if (!clientAIRendered) {
-        // Maturity (journey pipeline)
-        document.getElementById('maturityStages').addEventListener('click', (e) => {
-          const card = e.target.closest('.option-card') || e.target.closest('.journey-stage');
-          if (card && card.dataset.value) {
-            clientAIMaturity = card.dataset.value;
-            updateClientAIMaturityUI();
-            autoSave();
-          }
-        });
-
-        // Usage (multi-select)
-        document.getElementById('clientUsageOptions').addEventListener('click', (e) => {
-          const card = e.target.closest('.option-card');
-          if (card) {
-            const value = card.dataset.value;
-            if (value === 'not-using' || value === 'dont-know') {
-              // Exclusive options — warn if clearing existing selections
-              const otherSelections = Array.from(clientAIUsage).filter(v => v !== 'not-using' && v !== 'dont-know');
-              if (otherSelections.length > 0) {
-                const label = value === 'dont-know' ? "I Don't Know" : "Not Using AI";
-                if (!confirm(`Selecting "${label}" will clear your other selections. Continue?`)) return;
-              }
-              clientAIUsage.clear();
-              clientAIUsage.add(value);
-            } else {
-              clientAIUsage.delete('not-using');
-              clientAIUsage.delete('dont-know');
-              if (clientAIUsage.has(value)) {
-                clientAIUsage.delete(value);
-              } else {
-                clientAIUsage.add(value);
-              }
-            }
-            updateClientAIUsageUI();
-            autoSave();
-          }
-        });
-
-        // Priority (single select)
-        document.getElementById('clientPriorityOptions').addEventListener('click', (e) => {
-          const card = e.target.closest('.option-card');
-          if (card) {
-            clientAIPriority = card.dataset.value;
-            updateClientAIPriorityUI();
-            autoSave();
-          }
-        });
-
-        // Governance (single select)
-        document.getElementById('clientGovernanceOptions').addEventListener('click', (e) => {
-          const card = e.target.closest('.option-card');
-          if (card) {
-            clientAIGovernance = card.dataset.value;
-            updateClientAIGovernanceUI();
-            autoSave();
-          }
-        });
-
-        // Challenges (multi-select with primary/secondary)
-        document.getElementById('clientChallengeOptions').addEventListener('click', (e) => {
-          const card = e.target.closest('.option-card');
-          if (card) {
-            toggleChallenge(card.dataset.value);
-          }
-        });
-
-        // Approved AI Tools (single select)
-        document.getElementById('clientApprovedToolsOptions').addEventListener('click', (e) => {
-          const card = e.target.closest('.option-card');
-          if (card) {
-            clientApprovedTools = card.dataset.value;
-            updateClientApprovedToolsUI();
-            autoSave();
-          }
-        });
-        // Approved tools chips (predefined)
-        document.getElementById('approvedToolsChips').addEventListener('click', (e) => {
-          const chip = e.target.closest('.compliance-chip');
-          if (chip) {
-            const value = chip.dataset.value;
-            if (selectedApprovedTools.has(value)) {
-              selectedApprovedTools.delete(value);
-            } else {
-              selectedApprovedTools.add(value);
-            }
-            updateApprovedToolsChipsUI();
-            autoSave();
-          }
-        });
-        // Custom approved tools chips
-        document.getElementById('customApprovedToolsChips').addEventListener('click', (e) => {
-          const deleteBtn = e.target.closest('.compliance-delete');
-          if (deleteBtn) {
-            const chip = deleteBtn.closest('.compliance-chip');
-            const id = chip.dataset.value;
-            selectedApprovedTools.delete(id);
-            customApprovedTools = customApprovedTools.filter(t => t.id !== id);
-            renderCustomApprovedToolsChips();
-            autoSave();
-            return;
-          }
-          const chip = e.target.closest('.compliance-chip');
-          if (chip) {
-            const value = chip.dataset.value;
-            if (selectedApprovedTools.has(value)) {
-              selectedApprovedTools.delete(value);
-            } else {
-              selectedApprovedTools.add(value);
-            }
-            updateCustomApprovedToolsChipUI();
-            autoSave();
-          }
-        });
-        // Add custom approved tool
-        document.getElementById('addApprovedToolBtn').addEventListener('click', addCustomApprovedTool);
-        document.getElementById('customApprovedToolInput').addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') addCustomApprovedTool();
-        });
-
-        clientAIRendered = true;
-      }
     }
 
     function updateClientAIMaturityUI() {
@@ -5436,6 +5311,110 @@
       // Step 6 (Client AI) — displayed as Step 2
       document.getElementById('step6Back').addEventListener('click', () => goToStep(5));
       document.getElementById('step6Next').addEventListener('click', () => { if (validateStep(6)) goToStep(1); });
+      // Client AI Landscape — option card listeners
+      document.getElementById('maturityStages').addEventListener('click', (e) => {
+        const card = e.target.closest('.option-card') || e.target.closest('.journey-stage');
+        if (card && card.dataset.value) {
+          clientAIMaturity = card.dataset.value;
+          updateClientAIMaturityUI();
+          autoSave();
+        }
+      });
+      document.getElementById('clientUsageOptions').addEventListener('click', (e) => {
+        const card = e.target.closest('.option-card');
+        if (card) {
+          const value = card.dataset.value;
+          if (value === 'not-using' || value === 'dont-know') {
+            const otherSelections = Array.from(clientAIUsage).filter(v => v !== 'not-using' && v !== 'dont-know');
+            if (otherSelections.length > 0) {
+              const label = value === 'dont-know' ? "I Don't Know" : "Not Using AI";
+              if (!confirm(`Selecting "${label}" will clear your other selections. Continue?`)) return;
+            }
+            clientAIUsage.clear();
+            clientAIUsage.add(value);
+          } else {
+            clientAIUsage.delete('not-using');
+            clientAIUsage.delete('dont-know');
+            if (clientAIUsage.has(value)) {
+              clientAIUsage.delete(value);
+            } else {
+              clientAIUsage.add(value);
+            }
+          }
+          updateClientAIUsageUI();
+          autoSave();
+        }
+      });
+      document.getElementById('clientPriorityOptions').addEventListener('click', (e) => {
+        const card = e.target.closest('.option-card');
+        if (card) {
+          clientAIPriority = card.dataset.value;
+          updateClientAIPriorityUI();
+          autoSave();
+        }
+      });
+      document.getElementById('clientGovernanceOptions').addEventListener('click', (e) => {
+        const card = e.target.closest('.option-card');
+        if (card) {
+          clientAIGovernance = card.dataset.value;
+          updateClientAIGovernanceUI();
+          autoSave();
+        }
+      });
+      document.getElementById('clientChallengeOptions').addEventListener('click', (e) => {
+        const card = e.target.closest('.option-card');
+        if (card) {
+          toggleChallenge(card.dataset.value);
+        }
+      });
+      document.getElementById('clientApprovedToolsOptions').addEventListener('click', (e) => {
+        const card = e.target.closest('.option-card');
+        if (card) {
+          clientApprovedTools = card.dataset.value;
+          updateClientApprovedToolsUI();
+          autoSave();
+        }
+      });
+      document.getElementById('approvedToolsChips').addEventListener('click', (e) => {
+        const chip = e.target.closest('.compliance-chip');
+        if (chip) {
+          const value = chip.dataset.value;
+          if (selectedApprovedTools.has(value)) {
+            selectedApprovedTools.delete(value);
+          } else {
+            selectedApprovedTools.add(value);
+          }
+          updateApprovedToolsChipsUI();
+          autoSave();
+        }
+      });
+      document.getElementById('customApprovedToolsChips').addEventListener('click', (e) => {
+        const deleteBtn = e.target.closest('.compliance-delete');
+        if (deleteBtn) {
+          const chip = deleteBtn.closest('.compliance-chip');
+          const id = chip.dataset.value;
+          selectedApprovedTools.delete(id);
+          customApprovedTools = customApprovedTools.filter(t => t.id !== id);
+          renderCustomApprovedToolsChips();
+          autoSave();
+          return;
+        }
+        const chip = e.target.closest('.compliance-chip');
+        if (chip) {
+          const value = chip.dataset.value;
+          if (selectedApprovedTools.has(value)) {
+            selectedApprovedTools.delete(value);
+          } else {
+            selectedApprovedTools.add(value);
+          }
+          updateCustomApprovedToolsChipUI();
+          autoSave();
+        }
+      });
+      document.getElementById('addApprovedToolBtn').addEventListener('click', addCustomApprovedTool);
+      document.getElementById('customApprovedToolInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addCustomApprovedTool();
+      });
 
       // Step 1 (Roles) — displayed as Step 3
       document.getElementById('step1Back').addEventListener('click', () => goToStep(6));
