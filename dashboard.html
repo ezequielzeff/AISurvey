@@ -1006,7 +1006,7 @@
         </div>
 
         <!-- Average Stage Callout -->
-        <div class="stage-callout" id="stageCallout">
+        <div class="stage-callout" id="stageCallout" onclick="openStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">
           <div class="stage-callout-label">Average Portfolio Stage</div>
           <div class="stage-callout-value" id="stageCalloutValue">--</div>
           <div class="stage-callout-desc">Median stage across all clients</div>
@@ -1161,6 +1161,14 @@
         <h3>The big difference across stages</h3>
         <p>Early stages are about learning and reducing uncertainty. Middle stages are about proving value and managing risk. Later stages are about institutionalizing and optimizing impact.</p>
       </div>
+    </div>
+  </div>
+
+  <!-- Stage Description Modal (single stage) -->
+  <div class="info-modal-overlay" id="stageDescriptionModal">
+    <div class="info-modal" style="max-width:560px;">
+      <button class="info-modal-close" onclick="closeStageDescriptionModal()" title="Close">&times;</button>
+      <div id="stageDescriptionContent"></div>
     </div>
   </div>
 
@@ -1356,6 +1364,28 @@
     'optimizing': '⚡',
     'dont-know': '❓'
   };
+  const MATURITY_DESCRIPTIONS = {
+    'not-started': {
+      title: '🚫 Not Started — "AI is not on the agenda"',
+      desc: 'At this stage, AI is essentially absent from the client\'s strategy. There are no initiatives, no owners, and no clear awareness of where AI could add value. If AI is mentioned, it\'s usually abstract or perceived as something for "big tech companies," not something actionable for them. Decisions are driven by existing processes and tools, and there is often uncertainty or skepticism around AI\'s relevance, cost, or risk.'
+    },
+    'exploring': {
+      title: '🔍 Exploring — "We are trying to understand AI"',
+      desc: 'Here the client has curiosity, but not commitment. AI is being researched, discussed, or experimented with informally — maybe through demos, workshops, vendor conversations, or isolated experiments by motivated individuals. There is no production usage, no clear ROI expectations, and no governance. Learning is the goal, not outcomes. This stage is about sense-making, not delivery.'
+    },
+    'piloting': {
+      title: '🧪 Piloting — "We are testing if AI actually works for us"',
+      desc: 'This is a key inflection point. The client is running concrete POCs tied to real problems (often in limited scopes like SDLC, support, or analytics). There is some budget, some sponsorship, and early success criteria — but AI is still treated as an experiment. Results are evaluated cautiously, risks are contained, and decisions about scaling are pending. AI exists, but it\'s not yet trusted or systemic.'
+    },
+    'scaling': {
+      title: '📈 Scaling — "AI is becoming part of how we operate"',
+      desc: 'Now AI has proven value. Successful pilots are expanded across teams, functions, or products. Investment increases, governance starts to matter, and repeatability becomes important. The client begins to standardize tools, define ownership, train people, and integrate AI into workflows. The focus shifts from "does this work?" to "how do we roll this out safely and consistently?"'
+    },
+    'optimizing': {
+      title: '⚡ Optimizing — "AI is embedded and continuously improved"',
+      desc: 'At this stage, AI is no longer a project — it\'s infrastructure. AI is embedded into core processes and products, measured with KPIs, and continuously refined. The client actively optimizes models, workflows, and cost/value tradeoffs. People are trained by default, governance is mature, and AI decisions are part of normal business planning. The question is no longer whether to use AI, but how to do it better.'
+    }
+  };
   const GOVERNANCE_LABELS = { 'none': 'No Governance', 'informal': 'Informal', 'developing': 'Developing', 'established': 'Established', 'dont-know': "Don't Know" };
   const GOVERNANCE_ORDER = ['none', 'informal', 'developing', 'established', 'dont-know'];
 
@@ -1393,6 +1423,7 @@
   let activeMaturityFilter = null; // null = all, or a stage id like 'exploring'
   let activeAccountFilter = null;  // null = all, or an account name string
   let activeLimitingFactorFilter = null; // null = all, or a factor key like 'time'
+  let currentMedianStage = null; // current median stage key for stage description modal
 
   function setMaturityFilter(stage) {
     activeMaturityFilter = (activeMaturityFilter === stage) ? null : stage;
@@ -1596,6 +1627,20 @@
   }
   function closeMaturityInfoModal() {
     document.getElementById('maturityInfoModal').classList.remove('open');
+  }
+
+  function openStageDescriptionModal() {
+    if (!currentMedianStage) return;
+    const info = MATURITY_DESCRIPTIONS[currentMedianStage];
+    if (!info) return;
+    document.getElementById('stageDescriptionContent').innerHTML = `
+      <h2 style="margin-top:0;font-size:1.25rem;">${info.title}</h2>
+      <p style="color:#444;font-size:0.97rem;line-height:1.7;">${info.desc}</p>`;
+    document.getElementById('stageDescriptionModal').classList.add('open');
+  }
+
+  function closeStageDescriptionModal() {
+    document.getElementById('stageDescriptionModal').classList.remove('open');
   }
 
   // ═══════════════════════════════════════════
@@ -1953,6 +1998,7 @@
     }
     const avgPosition = totalKnown > 0 ? medianIndex / (MATURITY_STAGES.length - 1) : 0.5;
     const avgStage = totalKnown > 0 ? MATURITY_STAGES[Math.round(medianIndex)] : null;
+    currentMedianStage = avgStage;
 
     // Update callout
     const calloutValue = document.getElementById('stageCalloutValue');
@@ -2440,10 +2486,20 @@
     document.getElementById('uploadModal').addEventListener('click', e => {
       if (e.target === document.getElementById('uploadModal')) closeUploadModal();
     });
+    document.getElementById('maturityInfoModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('maturityInfoModal')) closeMaturityInfoModal();
+    });
+    document.getElementById('stageDescriptionModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('stageDescriptionModal')) closeStageDescriptionModal();
+    });
 
     // Escape key
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') closeUploadModal();
+      if (e.key === 'Escape') {
+        closeUploadModal();
+        closeMaturityInfoModal();
+        closeStageDescriptionModal();
+      }
     });
 
     // Drop zone
