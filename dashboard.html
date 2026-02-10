@@ -735,7 +735,7 @@
         <div class="stage-callout" id="stageCallout">
           <div class="stage-callout-label">Average Portfolio Stage</div>
           <div class="stage-callout-value" id="stageCalloutValue">--</div>
-          <div class="stage-callout-desc">Most common stage across all clients</div>
+          <div class="stage-callout-desc">Weighted average stage across all clients</div>
         </div>
 
         <!-- Stage Pipeline -->
@@ -1427,27 +1427,19 @@
       pcts[k] = totalKnown > 0 ? Math.round((counts[k] / totalKnown) * 100) : 0;
     });
 
-    // Determine most common stage (mode)
-    let modeStage = null;
-    let modeCount = 0;
-    MATURITY_STAGES.forEach(k => {
-      if (counts[k] > modeCount) {
-        modeCount = counts[k];
-        modeStage = k;
-      }
-    });
-
-    // Calculate weighted average position (0-1) for progress bar
+    // Calculate weighted average index and round to nearest stage
     let weightedSum = 0;
     MATURITY_STAGES.forEach((k, i) => {
       weightedSum += counts[k] * i;
     });
-    const avgPosition = totalKnown > 0 ? weightedSum / (totalKnown * (MATURITY_STAGES.length - 1)) : 0.5;
+    const avgIndex = totalKnown > 0 ? weightedSum / totalKnown : -1;
+    const avgPosition = totalKnown > 0 ? avgIndex / (MATURITY_STAGES.length - 1) : 0.5;
+    const avgStage = totalKnown > 0 ? MATURITY_STAGES[Math.round(avgIndex)] : null;
 
-    // Update callout
+    // Update callout — uses same weighted average as the progress bar
     const calloutValue = document.getElementById('stageCalloutValue');
-    if (modeStage) {
-      calloutValue.innerHTML = `${MATURITY_ICONS[modeStage]} ${MATURITY_LABELS[modeStage]}`;
+    if (avgStage) {
+      calloutValue.innerHTML = `${MATURITY_ICONS[avgStage]} ${MATURITY_LABELS[avgStage]}`;
     } else {
       calloutValue.textContent = '--';
     }
