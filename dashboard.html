@@ -2578,27 +2578,40 @@
       </div>${connector}`;
     }).join('');
 
-    // Update progress bar marker — align with the 5 real stages (excluding Don't Know)
+    // Update progress bar marker
     const marker = document.getElementById('progressMarker');
     const progressBar = document.querySelector('.progress-gradient-bar');
     const pipelineEl = document.getElementById('stagePipeline');
     const stageCards = pipelineEl.querySelectorAll('.stage-card');
-    const dontKnowIdx = MATURITY_ORDER.indexOf('dont-know');
-    const firstRealIdx = dontKnowIdx === 0 ? 1 : 0;
-    const lastRealIdx = dontKnowIdx === MATURITY_ORDER.length - 1 ? MATURITY_ORDER.length - 2 : MATURITY_ORDER.length - 1;
-    if (stageCards.length > lastRealIdx && progressBar) {
-      const pipelineRect = pipelineEl.getBoundingClientRect();
-      const firstRealCard = stageCards[firstRealIdx];
-      const lastRealCard = stageCards[lastRealIdx];
-      const barRect = progressBar.getBoundingClientRect();
-      // Center of first and last real stage cards relative to the progress bar
-      const startPct = ((firstRealCard.getBoundingClientRect().left + firstRealCard.offsetWidth / 2) - barRect.left) / barRect.width * 100;
-      const endPct = ((lastRealCard.getBoundingClientRect().left + lastRealCard.offsetWidth / 2) - barRect.left) / barRect.width * 100;
-      const markerPct = Math.max(2, Math.min(98, startPct + avgPosition * (endPct - startPct)));
-      marker.style.left = markerPct + '%';
-    } else {
-      const markerPct = Math.max(5, Math.min(95, avgPosition * 100));
-      marker.style.left = markerPct + '%';
+    const barRect = progressBar ? progressBar.getBoundingClientRect() : null;
+
+    if (barRect && stageCards.length > 0) {
+      // When a maturity filter is active, snap marker to the center of the selected stage card
+      if (activeMaturityFilter) {
+        const filterIdx = MATURITY_ORDER.indexOf(activeMaturityFilter);
+        if (filterIdx >= 0 && filterIdx < stageCards.length) {
+          const cardRect = stageCards[filterIdx].getBoundingClientRect();
+          const cardCenter = cardRect.left + cardRect.width / 2;
+          const markerPct = Math.max(2, Math.min(98, ((cardCenter - barRect.left) / barRect.width) * 100));
+          marker.style.left = markerPct + '%';
+        }
+      } else {
+        // No filter: position based on median across real stages (excluding Don't Know)
+        const dontKnowIdx = MATURITY_ORDER.indexOf('dont-know');
+        const firstRealIdx = dontKnowIdx === 0 ? 1 : 0;
+        const lastRealIdx = dontKnowIdx === MATURITY_ORDER.length - 1 ? MATURITY_ORDER.length - 2 : MATURITY_ORDER.length - 1;
+        if (stageCards.length > lastRealIdx) {
+          const firstRealCard = stageCards[firstRealIdx];
+          const lastRealCard = stageCards[lastRealIdx];
+          const startPct = ((firstRealCard.getBoundingClientRect().left + firstRealCard.offsetWidth / 2) - barRect.left) / barRect.width * 100;
+          const endPct = ((lastRealCard.getBoundingClientRect().left + lastRealCard.offsetWidth / 2) - barRect.left) / barRect.width * 100;
+          const markerPct = Math.max(2, Math.min(98, startPct + avgPosition * (endPct - startPct)));
+          marker.style.left = markerPct + '%';
+        } else {
+          const markerPct = Math.max(5, Math.min(95, avgPosition * 100));
+          marker.style.left = markerPct + '%';
+        }
+      }
     }
 
     // Render legend (all stages including dont-know)
@@ -2670,12 +2683,10 @@
       ? (filteredAccountStages.reduce((a, b) => a + b, 0) / filteredTotal)
       : 0;
 
-    // 2. Percentages — use filtered data when WFM filter active, all data otherwise
-    const displayTotal = activeWfmStageFilter !== null ? filteredTotal : allTotal;
-    const displayCounts = activeWfmStageFilter !== null ? filteredCounts : allCounts;
+    // 2. Percentages — always use filtered data for percentages
     const pcts = {};
     WFM_STAGES.forEach(s => {
-      pcts[s] = displayTotal > 0 ? Math.round((displayCounts[s] / displayTotal) * 100) : 0;
+      pcts[s] = filteredTotal > 0 ? Math.round((filteredCounts[s] / filteredTotal) * 100) : 0;
     });
 
     // 3. Update callout — reflects FILTERED data, show stage name and score
@@ -2691,12 +2702,12 @@
       avgDescEl.textContent = 'No accounts match current filters';
     }
 
-    // 6. Render journey circles (hybrid: filtered % when filter active, all % otherwise)
+    // 6. Render journey circles (always use filtered data for %, hybrid label for WFM filter)
     const maxPct = Math.max(1, ...Object.values(pcts));
     const journey = document.getElementById('wfmJourney');
     journey.innerHTML = WFM_STAGES.map(stage => {
       const pct = pcts[stage];
-      const count = displayCounts[stage];
+      const count = filteredCounts[stage];
       const countLabel = activeWfmStageFilter !== null
         ? `${count} of ${allCounts[stage]} total`
         : `${count} account${count !== 1 ? 's' : ''}`;
