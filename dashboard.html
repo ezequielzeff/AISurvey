@@ -432,6 +432,7 @@
         📂 Restore
         <input type="file" id="importDbInput" accept=".sqlite,.db" style="display:none;">
       </label>
+      <button class="btn btn-secondary" id="clearDbBtn" title="Delete all surveys and reset the database" style="color:#ef4444;border-color:#fecaca;">🗑️ Clear Database</button>
     </div>
     <div class="header-subtitle" id="headerSubtitle">Loading...</div>
   </header>
@@ -1491,6 +1492,20 @@
     }
   }
 
+  async function clearDatabase() {
+    const countResult = db.exec('SELECT COUNT(*) FROM surveys');
+    const count = countResult.length > 0 ? countResult[0].values[0][0] : 0;
+    if (count === 0) {
+      alert('The database is already empty.');
+      return;
+    }
+    if (!confirm(`This will permanently delete all ${count} survey${count !== 1 ? 's' : ''} from the database.\n\nThis action cannot be undone. Consider creating a backup first.\n\nAre you sure?`)) return;
+    db.run('DELETE FROM surveys');
+    await saveToIndexedDB();
+    populateFilters();
+    refreshDashboard();
+  }
+
   // ═══════════════════════════════════════════
   // EVENT LISTENERS
   // ═══════════════════════════════════════════
@@ -1529,12 +1544,13 @@
     document.getElementById('filterYear').addEventListener('change', refreshDashboard);
     document.getElementById('filterQuarter').addEventListener('change', refreshDashboard);
 
-    // Database export/import
+    // Database export/import/clear
     document.getElementById('exportDbBtn').addEventListener('click', exportDatabase);
     document.getElementById('importDbInput').addEventListener('change', e => {
       if (e.target.files.length > 0) importDatabase(e.target.files[0]);
       e.target.value = '';
     });
+    document.getElementById('clearDbBtn').addEventListener('click', clearDatabase);
   }
 
   // ═══════════════════════════════════════════
