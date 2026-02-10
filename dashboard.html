@@ -1392,6 +1392,7 @@
   // ═══════════════════════════════════════════
   let activeMaturityFilter = null; // null = all, or a stage id like 'exploring'
   let activeAccountFilter = null;  // null = all, or an account name string
+  let activeLimitingFactorFilter = null; // null = all, or a factor key like 'time'
 
   function setMaturityFilter(stage) {
     activeMaturityFilter = (activeMaturityFilter === stage) ? null : stage;
@@ -1413,9 +1414,20 @@
     refreshDashboard();
   }
 
+  function setLimitingFactorFilter(factor) {
+    activeLimitingFactorFilter = (activeLimitingFactorFilter === factor) ? null : factor;
+    refreshDashboard();
+  }
+
+  function clearLimitingFactorFilter() {
+    activeLimitingFactorFilter = null;
+    refreshDashboard();
+  }
+
   function clearAllFilters() {
     activeMaturityFilter = null;
     activeAccountFilter = null;
+    activeLimitingFactorFilter = null;
     refreshDashboard();
   }
 
@@ -1767,6 +1779,14 @@
       surveys = surveys.filter(s => s.account_name === activeAccountFilter);
     }
 
+    // Apply limiting factor filter
+    if (activeLimitingFactorFilter) {
+      surveys = surveys.filter(s => {
+        const lf = s.data?.limitingFactors?.[activeLimitingFactorFilter];
+        return lf && (lf.rank === 1 || lf.rank === 2);
+      });
+    }
+
     return surveys;
   }
 
@@ -1833,6 +1853,9 @@
     if (activeAccountFilter) {
       filterTags += ` <span class="filter-active-tag">Account: ${escapeHtml(activeAccountFilter)} <span class="filter-clear-x" onclick="clearAccountFilter()" title="Clear filter">&times;</span></span>`;
     }
+    if (activeLimitingFactorFilter) {
+      filterTags += ` <span class="filter-active-tag">Factor: ${LIMITING_FACTOR_LABELS[activeLimitingFactorFilter]} <span class="filter-clear-x" onclick="clearLimitingFactorFilter()" title="Clear filter">&times;</span></span>`;
+    }
     if (filterTags) {
       subtitleEl.innerHTML = `${subtitleText}${filterTags}`;
     } else {
@@ -1854,8 +1877,8 @@
     // Distribution chart always shows all dots (dimmed/highlighted via filter state)
     renderDistributionChart(allSurveys);
 
-    // Limiting Factors Widget
-    renderLimitingFactorsWidget(surveys);
+    // Limiting Factors Widget — shows all factors (dimmed/highlighted via filter state)
+    renderLimitingFactorsWidget(allSurveys);
 
     // Surveys table — filtered by active filters
     renderSurveysTable(surveys);
@@ -1970,7 +1993,7 @@
 
     // Show/hide filter footer
     const footer = document.getElementById('widgetFooter');
-    const hasAnyFilter = activeMaturityFilter || activeAccountFilter;
+    const hasAnyFilter = activeMaturityFilter || activeAccountFilter || activeLimitingFactorFilter;
     if (hasAnyFilter) {
       footer.style.display = 'flex';
       let tags = '';
@@ -1979,6 +2002,9 @@
       }
       if (activeAccountFilter) {
         tags += `<span class="filter-active-tag">Account: ${escapeHtml(activeAccountFilter)} <span class="filter-clear-x" onclick="clearAccountFilter()" title="Clear filter">&times;</span></span>`;
+      }
+      if (activeLimitingFactorFilter) {
+        tags += `<span class="filter-active-tag">Factor: ${LIMITING_FACTOR_LABELS[activeLimitingFactorFilter]} <span class="filter-clear-x" onclick="clearLimitingFactorFilter()" title="Clear filter">&times;</span></span>`;
       }
       document.getElementById('activeFilterTags').innerHTML = tags;
     } else {
@@ -2145,6 +2171,21 @@
 
     const labels = sorted.map(k => LIMITING_FACTOR_LABELS[k] || k);
 
+    // Per-bar colors: dim bars not matching the active filter
+    const primaryBgColors = sorted.map(k => {
+      if (activeLimitingFactorFilter && activeLimitingFactorFilter !== k) return LF_COLORS.primary + '30';
+      return LF_COLORS.primary;
+    });
+    const secondaryBgColors = sorted.map(k => {
+      if (activeLimitingFactorFilter && activeLimitingFactorFilter !== k) return LF_COLORS.secondary + '30';
+      return LF_COLORS.secondary;
+    });
+    const yTickColors = sorted.map(k => {
+      if (activeLimitingFactorFilter && activeLimitingFactorFilter !== k) return '#d1d5db';
+      if (activeLimitingFactorFilter === k) return '#1f2937';
+      return '#374151';
+    });
+
     const ctx = document.getElementById('chartLimitingFactors').getContext('2d');
     charts['chartLimitingFactors'] = new Chart(ctx, {
       type: 'bar',
@@ -2154,7 +2195,7 @@
           {
             label: 'Primary',
             data: sorted.map(k => primaryPcts[k]),
-            backgroundColor: LF_COLORS.primary,
+            backgroundColor: primaryBgColors,
             borderRadius: 4,
             barPercentage: 0.7,
             categoryPercentage: 0.8
@@ -2162,7 +2203,7 @@
           {
             label: 'Secondary',
             data: sorted.map(k => secondaryPcts[k]),
-            backgroundColor: LF_COLORS.secondary,
+            backgroundColor: secondaryBgColors,
             borderRadius: 4,
             barPercentage: 0.7,
             categoryPercentage: 0.8
@@ -2201,12 +2242,25 @@
           y: {
             stacked: true,
             ticks: {
-              font: { size: 12, weight: '500' },
-              color: '#374151'
+              font: function(context) {
+                const k = sorted[context.index];
+                const isActive = activeLimitingFactorFilter === k;
+                return { size: 12, weight: isActive ? '700' : '500' };
+              },
+              color: yTickColors
             },
             grid: { display: false },
             border: { display: false }
           }
+        },
+        onClick: (event, elements) => {
+          if (elements.length > 0) {
+            const factorKey = sorted[elements[0].index];
+            setLimitingFactorFilter(factorKey);
+          }
+        },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
         }
       }
     });
