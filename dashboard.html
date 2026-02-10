@@ -1009,7 +1009,7 @@
         <div class="stage-callout" id="stageCallout">
           <div class="stage-callout-label">Average Portfolio Stage</div>
           <div class="stage-callout-value" id="stageCalloutValue">--</div>
-          <div class="stage-callout-desc">Weighted average stage across all clients</div>
+          <div class="stage-callout-desc">Median stage across all clients</div>
         </div>
 
         <!-- Stage Pipeline -->
@@ -1939,14 +1939,20 @@
       pcts[k] = totalAll > 0 ? Math.round((counts[k] / totalAll) * 100) : 0;
     });
 
-    // Calculate weighted average index (excluding dont-know)
-    let weightedSum = 0;
+    // Calculate median stage index (excluding dont-know)
+    const knownIndices = [];
     MATURITY_STAGES.forEach((k, i) => {
-      weightedSum += counts[k] * i;
+      for (let n = 0; n < counts[k]; n++) knownIndices.push(i);
     });
-    const avgIndex = totalKnown > 0 ? weightedSum / totalKnown : -1;
-    const avgPosition = totalKnown > 0 ? avgIndex / (MATURITY_STAGES.length - 1) : 0.5;
-    const avgStage = totalKnown > 0 ? MATURITY_STAGES[Math.round(avgIndex)] : null;
+    let medianIndex = -1;
+    if (knownIndices.length > 0) {
+      const mid = Math.floor(knownIndices.length / 2);
+      medianIndex = knownIndices.length % 2 === 1
+        ? knownIndices[mid]
+        : (knownIndices[mid - 1] + knownIndices[mid]) / 2;
+    }
+    const avgPosition = totalKnown > 0 ? medianIndex / (MATURITY_STAGES.length - 1) : 0.5;
+    const avgStage = totalKnown > 0 ? MATURITY_STAGES[Math.round(medianIndex)] : null;
 
     // Update callout
     const calloutValue = document.getElementById('stageCalloutValue');
