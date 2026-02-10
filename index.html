@@ -4168,7 +4168,7 @@
       // Toggle expanded container for workflow maturity step
       const mainContainer = document.querySelector('.main-container');
       if (mainContainer) {
-        mainContainer.classList.toggle('expanded', step === 9);
+        mainContainer.classList.toggle('expanded', step === 9 || step === 4);
       }
 
       // Update sidebar
@@ -4733,7 +4733,7 @@
         return;
       }
 
-      let html = `<table class="role-tool-matrix">
+      let html = `<div class="matrix-container"><table class="role-tool-matrix">
         <thead>
           <tr>
             <th>Role</th>
@@ -4753,7 +4753,7 @@
         html += `</tr>`;
       });
 
-      html += `</tbody></table>`;
+      html += `</tbody></table></div>`;
       container.innerHTML = html;
 
       // Attach event listeners
