@@ -1165,7 +1165,7 @@
         </div>
 
         <!-- Average Maturity Callout -->
-        <div class="stage-callout" id="wfmCallout">
+        <div class="stage-callout" id="wfmCallout" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">
           <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
           <div class="stage-callout-value" id="wfmAvgValue">--</div>
           <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
@@ -1583,6 +1583,14 @@
     0: '#d1d5db', 1: '#f87171', 2: '#fbbf24',
     3: '#fbbf24', 4: '#4ade80', 5: '#22c55e'
   };
+  const WFM_DESCRIPTIONS = {
+    0: { title: 'Stage 0 — No AI Usage', desc: 'AI is not used in delivery workflows. Tools may be blocked or discouraged, no AI policy or guidance exists, and any usage is unofficial "shadow AI." Leadership has not discussed AI adoption.' },
+    1: { title: 'Stage 1 — Individual AI Usage', desc: 'AI is used by individuals only. Tool usage varies widely across team members with no shared standards. Outputs differ by person and knowledge is not reusable. Each person experiments independently.' },
+    2: { title: 'Stage 2 — Team AI Practices', desc: 'Shared, manual AI usage at team level. The team maintains prompt libraries, references AI in ceremonies, produces repeatable outputs, and includes AI practices in onboarding. Usage is consistent but still manually triggered.' },
+    3: { title: 'Stage 3 — AI-Chained Tasks', desc: 'Sequential AI steps from one intent. Multiple prompts are chained together for complex tasks using documented, reused workflows. Scripts or templates standardize interactions and work items follow predictable AI-assisted flows.' },
+    4: { title: 'Stage 4 — Event-Triggered AI', desc: 'AI reacts automatically to SDLC events. Bots post comments to collaboration tools, integrations exist with project management and CI/CD pipelines, AI tasks execute without manual triggering, reducing repetitive interactions.' },
+    5: { title: 'Stage 5 — Semi-Agentic AI', desc: 'AI recommends, humans decide. Dashboards display AI-generated insights and metrics, AI provides confidence and risk scores, regular recommendation reports are produced, and human review/approval gates exist before AI actions take effect.' }
+  };
 
   // Account Types
   const ACCOUNT_TYPES = [
@@ -1612,6 +1620,7 @@
   let activeLimitingFactorFilter = null; // null = all, or a factor key like 'time'
   let activeWfmStageFilter = null; // null = all, or a stage number (0-5)
   let currentMedianStage = null; // current median stage key for stage description modal
+  let currentWfmStage = null; // current WFM average stage number for description modal
 
   function setMaturityFilter(stage) {
     activeMaturityFilter = (activeMaturityFilter === stage) ? null : stage;
@@ -1898,6 +1907,16 @@
   }
   function closeWfmInfoModal() {
     document.getElementById('wfmInfoModal').classList.remove('open');
+  }
+
+  function openWfmStageDescriptionModal() {
+    if (currentWfmStage === null) return;
+    const info = WFM_DESCRIPTIONS[currentWfmStage];
+    if (!info) return;
+    document.getElementById('stageDescriptionContent').innerHTML = `
+      <h2 style="margin-top:0;font-size:1.25rem;">${info.title}</h2>
+      <p style="color:#444;font-size:0.97rem;line-height:1.7;">${info.desc}</p>`;
+    document.getElementById('stageDescriptionModal').classList.add('open');
   }
 
   // ═══════════════════════════════════════════
@@ -2226,8 +2245,8 @@
     // Adoption Stage Widget — percentages reflect active filters
     renderAdoptionStageWidget(surveys);
 
-    // Account AI Agentic Workflow — shows all surveys with dimming for active filter
-    renderWorkflowMaturityWidget(allSurveys);
+    // Account AI Agentic Workflow — callout reflects filters, circles show all with dimming
+    renderWorkflowMaturityWidget(surveys, allSurveys);
 
     // Distribution chart always shows all dots (dimmed/highlighted via filter state)
     renderDistributionChart(allSurveys);
@@ -2397,57 +2416,64 @@
     }
   }
 
-  function renderWorkflowMaturityWidget(surveys) {
-    // 1. Compute per-account workflow maturity stage
-    const accountStages = []; // array of stage numbers (0-5)
-    surveys.forEach(s => {
-      const wfm = s.data?.workflowMaturity;
-      if (!wfm) return;
+  function renderWorkflowMaturityWidget(filteredSurveys, allSurveys) {
+    // Helper: compute per-account WFM stages from a survey set
+    function computeAccountStages(surveyList) {
       const stages = [];
-      ROLE_ORDER.forEach(role => {
-        const st = wfm[role]?.stage;
-        if (st !== null && st !== undefined && typeof st === 'number') stages.push(st);
+      surveyList.forEach(s => {
+        const wfm = s.data?.workflowMaturity;
+        if (!wfm) return;
+        const roleStages = [];
+        ROLE_ORDER.forEach(role => {
+          const st = wfm[role]?.stage;
+          if (st !== null && st !== undefined && typeof st === 'number') roleStages.push(st);
+        });
+        if (roleStages.length === 0) return;
+        const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
+        stages.push(Math.round(avg));
       });
-      if (stages.length === 0) return;
-      const avg = stages.reduce((a, b) => a + b, 0) / stages.length;
-      accountStages.push(Math.round(avg));
-    });
-
-    // 2. Count accounts per stage
-    const counts = {};
-    WFM_STAGES.forEach(s => counts[s] = 0);
-    accountStages.forEach(s => { if (counts[s] !== undefined) counts[s]++; });
-    const total = accountStages.length;
-
-    // 3. Portfolio average
-    const portfolioAvg = total > 0
-      ? (accountStages.reduce((a, b) => a + b, 0) / total)
-      : 0;
-
-    // 4. Percentages
-    const pcts = {};
-    WFM_STAGES.forEach(s => {
-      pcts[s] = total > 0 ? Math.round((counts[s] / total) * 100) : 0;
-    });
-
-    // 5. Update callout — show stage name like "🧪 Team Practices" and score in description
-    const avgEl = document.getElementById('wfmAvgValue');
-    const avgDescEl = document.getElementById('wfmAvgDesc');
-    const roundedStage = Math.round(portfolioAvg);
-    if (total > 0) {
-      avgEl.textContent = `Stage ${roundedStage} — ${WFM_LABELS[roundedStage]}`;
-      avgDescEl.textContent = `Score: ${portfolioAvg.toFixed(1)} / 5.0 · Average across all accounts`;
-    } else {
-      avgEl.textContent = '--';
-      avgDescEl.textContent = 'Average stage across all accounts';
+      return stages;
     }
 
-    // 6. Render journey circles
+    // 1a. Compute from ALL surveys (for circles / distribution)
+    const allAccountStages = computeAccountStages(allSurveys);
+    const allCounts = {};
+    WFM_STAGES.forEach(s => allCounts[s] = 0);
+    allAccountStages.forEach(s => { if (allCounts[s] !== undefined) allCounts[s]++; });
+    const allTotal = allAccountStages.length;
+
+    // 1b. Compute from FILTERED surveys (for callout / marker)
+    const filteredAccountStages = computeAccountStages(filteredSurveys);
+    const filteredTotal = filteredAccountStages.length;
+    const filteredAvg = filteredTotal > 0
+      ? (filteredAccountStages.reduce((a, b) => a + b, 0) / filteredTotal)
+      : 0;
+
+    // 2. Percentages (from all surveys for circle sizes)
+    const pcts = {};
+    WFM_STAGES.forEach(s => {
+      pcts[s] = allTotal > 0 ? Math.round((allCounts[s] / allTotal) * 100) : 0;
+    });
+
+    // 3. Update callout — reflects FILTERED data, show stage name and score
+    const avgEl = document.getElementById('wfmAvgValue');
+    const avgDescEl = document.getElementById('wfmAvgDesc');
+    const roundedStage = Math.round(filteredAvg);
+    currentWfmStage = filteredTotal > 0 ? roundedStage : null;
+    if (filteredTotal > 0) {
+      avgEl.textContent = `Stage ${roundedStage} — ${WFM_LABELS[roundedStage]}`;
+      avgDescEl.textContent = `Score: ${filteredAvg.toFixed(1)} / 5.0 · Average across ${filteredTotal} account${filteredTotal !== 1 ? 's' : ''}`;
+    } else {
+      avgEl.textContent = '--';
+      avgDescEl.textContent = 'No accounts match current filters';
+    }
+
+    // 6. Render journey circles (from ALL surveys, with dimming)
     const maxPct = Math.max(1, ...Object.values(pcts));
     const journey = document.getElementById('wfmJourney');
     journey.innerHTML = WFM_STAGES.map(stage => {
       const pct = pcts[stage];
-      const count = counts[stage];
+      const count = allCounts[stage];
       // Circle size: scale between 48px and 90px based on percentage
       const size = Math.round(48 + (pct / maxPct) * 42);
       const fontSize = size > 60 ? '1.1rem' : '0.9rem';
@@ -2472,10 +2498,10 @@
       </div>`;
     }).join('');
 
-    // 7. Position progress bar marker — shift to active filter stage if set
+    // 7. Position progress bar marker — uses filtered average, or active filter stage
     const marker = document.getElementById('wfmProgressMarker');
-    const markerValue = activeWfmStageFilter !== null ? activeWfmStageFilter : portfolioAvg;
-    if (total > 0) {
+    const markerValue = activeWfmStageFilter !== null ? activeWfmStageFilter : filteredAvg;
+    if (filteredTotal > 0) {
       const markerPct = Math.max(3, Math.min(97, (markerValue / 5) * 100));
       marker.style.left = markerPct + '%';
       marker.style.display = '';
