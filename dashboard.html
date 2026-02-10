@@ -82,6 +82,10 @@
     .header-subtitle {
       font-size: 0.85rem;
       color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
     }
 
     /* ═══════════════════════════════════════════
@@ -172,7 +176,254 @@
     }
 
     /* ═══════════════════════════════════════════
-       CHARTS GRID
+       WIDGET CARD
+       ═══════════════════════════════════════════ */
+    .widget-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .widget-header {
+      margin-bottom: 1.25rem;
+    }
+    .widget-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .widget-subtitle {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-top: 0.2rem;
+    }
+    .widget-question {
+      font-size: 0.9rem;
+      color: #4b5563;
+      font-style: italic;
+      margin-top: 0.75rem;
+      padding: 0.6rem 0.85rem;
+      background: #f9fafb;
+      border-radius: 8px;
+      border-left: 3px solid #4f46e5;
+    }
+
+    /* Stage Callout */
+    .stage-callout {
+      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+      border: 1px solid #c7d2fe;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+      display: inline-flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .stage-callout-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6366f1;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .stage-callout-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #312e81;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .stage-callout-desc {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    /* Stage Pipeline */
+    .stage-pipeline {
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      gap: 0;
+      margin: 1.5rem 0 1rem;
+    }
+    .stage-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.85rem 0.75rem;
+      border-radius: 12px;
+      border: 2px solid #e5e7eb;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex: 1;
+      max-width: 160px;
+      min-width: 100px;
+      text-align: center;
+      position: relative;
+      background: #fff;
+    }
+    .stage-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      z-index: 2;
+    }
+    .stage-card.active {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      z-index: 2;
+    }
+    .stage-card-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.35rem;
+    }
+    .stage-card-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #374151;
+      line-height: 1.2;
+      margin-bottom: 0.25rem;
+    }
+    .stage-card-pct {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #1f2937;
+    }
+    .stage-card-count {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      margin-top: 0.1rem;
+    }
+    .stage-connector {
+      display: flex;
+      align-items: center;
+      color: #d1d5db;
+      font-size: 1.1rem;
+      padding: 0 0.15rem;
+      flex-shrink: 0;
+    }
+
+    /* Gradient Progress Bar */
+    .progress-section {
+      margin: 1rem 0 1.5rem;
+      padding: 0 0.5rem;
+    }
+    .progress-gradient-bar {
+      height: 10px;
+      border-radius: 5px;
+      background: linear-gradient(to right, #9ca3af, #3b82f6, #f59e0b, #10b981, #8b5cf6);
+      position: relative;
+      margin: 0.75rem 0 0.4rem;
+    }
+    .progress-marker {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #1f2937;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      transition: left 0.5s ease;
+    }
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+
+    /* Distribution Chart */
+    .distribution-section {
+      margin-top: 1.5rem;
+    }
+    .distribution-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 0.75rem;
+    }
+    .distribution-chart-container {
+      position: relative;
+      width: 100%;
+      height: 200px;
+    }
+
+    /* Widget Legend */
+    .widget-legend {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Widget Footer (filter controls) */
+    .widget-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #f3f4f6;
+    }
+    .filter-active-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #eef2ff;
+      color: #4f46e5;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      border: 1px solid #c7d2fe;
+    }
+    .filter-clear-btn {
+      background: none;
+      border: 1px solid #d1d5db;
+      color: #6b7280;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-clear-btn:hover {
+      background: #f9fafb;
+      color: #374151;
+      border-color: #9ca3af;
+    }
+    .filter-clear-x {
+      cursor: pointer;
+      font-weight: 700;
+      margin-left: 0.2rem;
+      font-size: 0.9rem;
+    }
+
+    /* ═══════════════════════════════════════════
+       CHARTS GRID (kept for future widgets)
        ═══════════════════════════════════════════ */
     .charts-grid {
       display: grid;
@@ -395,11 +646,17 @@
       .dashboard-header { padding: 1rem; }
       .header-top { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
       .header-controls { width: 100%; }
+      .stage-pipeline { flex-wrap: wrap; gap: 0.5rem; }
+      .stage-connector { display: none; }
+      .stage-card { min-width: 80px; }
     }
     @media (max-width: 600px) {
       .summary-cards { grid-template-columns: repeat(2, 1fr); }
       .surveys-table { font-size: 0.8rem; }
       .surveys-table th, .surveys-table td { padding: 0.5rem; }
+      .widget-card { padding: 1.25rem; }
+      .stage-card { padding: 0.6rem 0.5rem; }
+      .stage-card-icon { font-size: 1.2rem; }
     }
   </style>
 </head>
@@ -408,8 +665,8 @@
   <!-- Header -->
   <header class="dashboard-header">
     <div class="header-top">
-      <div class="header-title">📊 AI Adoption Dashboard</div>
-      <a href="index.html" class="header-back">← Back to Survey Tool</a>
+      <div class="header-title">AI Adoption Dashboard</div>
+      <a href="index.html" class="header-back">Back to Survey Tool</a>
     </div>
     <div class="header-controls">
       <div class="filter-group">
@@ -426,13 +683,13 @@
           <option value="4">Q4</option>
         </select>
       </div>
-      <button class="btn btn-primary" id="uploadBtn">📤 Upload Survey</button>
-      <button class="btn btn-secondary" id="exportDbBtn" title="Export database backup">💾 Backup</button>
+      <button class="btn btn-primary" id="uploadBtn">Upload Survey</button>
+      <button class="btn btn-secondary" id="exportDbBtn" title="Export database backup">Backup</button>
       <label class="btn btn-secondary" title="Restore database from backup" style="margin:0;">
-        📂 Restore
+        Restore
         <input type="file" id="importDbInput" accept=".sqlite,.db" style="display:none;">
       </label>
-      <button class="btn btn-secondary" id="clearDbBtn" title="Delete all surveys and reset the database" style="color:#ef4444;border-color:#fecaca;">🗑️ Clear Database</button>
+      <button class="btn btn-secondary" id="clearDbBtn" title="Delete all surveys and reset the database" style="color:#ef4444;border-color:#fecaca;">Clear Database</button>
     </div>
     <div class="header-subtitle" id="headerSubtitle">Loading...</div>
   </header>
@@ -451,7 +708,7 @@
       <div class="empty-state-icon">📊</div>
       <div class="empty-state-title">No surveys uploaded yet</div>
       <div class="empty-state-text">Upload survey JSON or ZIP files to see aggregated analytics across all your AI adoption assessments.</div>
-      <button class="btn btn-primary" onclick="openUploadModal()">📤 Upload Your First Survey</button>
+      <button class="btn btn-primary" onclick="openUploadModal()">Upload Your First Survey</button>
     </div>
 
     <!-- Dashboard Content (hidden when empty) -->
@@ -464,56 +721,59 @@
           <div class="summary-card-value" id="totalSurveys">0</div>
           <div class="summary-card-label">Surveys</div>
         </div>
-        <div class="summary-card">
-          <div class="summary-card-icon">🎯</div>
-          <div class="summary-card-value" id="avgMaturity">—</div>
-          <div class="summary-card-label">Most Common Maturity</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-card-icon">🛠️</div>
-          <div class="summary-card-value" id="totalAITools">0</div>
-          <div class="summary-card-label">Distinct AI Tools Used</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-card-icon">👥</div>
-          <div class="summary-card-value" id="avgRoles">0</div>
-          <div class="summary-card-label">Avg Roles per Account</div>
-        </div>
       </div>
 
-      <!-- Charts -->
-      <div class="charts-grid">
-        <div class="chart-card">
-          <div class="chart-card-title">AI Maturity Distribution</div>
-          <div class="chart-container"><canvas id="chartMaturity"></canvas></div>
+      <!-- Widget: Client AI Adoption Stage -->
+      <div class="widget-card" id="adoptionStageWidget">
+        <div class="widget-header">
+          <div class="widget-title">Client AI Adoption Stage</div>
+          <div class="widget-subtitle">Portfolio-wide adoption maturity</div>
+          <div class="widget-question">At what stage is the client in their AI adoption journey?</div>
         </div>
-        <div class="chart-card">
-          <div class="chart-card-title">AI Tool Adoption</div>
-          <div class="chart-container"><canvas id="chartAITools"></canvas></div>
+
+        <!-- Average Stage Callout -->
+        <div class="stage-callout" id="stageCallout">
+          <div class="stage-callout-label">Average Portfolio Stage</div>
+          <div class="stage-callout-value" id="stageCalloutValue">--</div>
+          <div class="stage-callout-desc">Most common stage across all clients</div>
         </div>
-        <div class="chart-card">
-          <div class="chart-card-title">Team Roles Coverage</div>
-          <div class="chart-container"><canvas id="chartRoles"></canvas></div>
+
+        <!-- Stage Pipeline -->
+        <div class="stage-pipeline" id="stagePipeline">
+          <!-- Populated by JS -->
         </div>
-        <div class="chart-card">
-          <div class="chart-card-title">Top Use Cases (Need vs Doing)</div>
-          <div class="chart-container"><canvas id="chartUseCases"></canvas></div>
+
+        <!-- Gradient Progress Bar -->
+        <div class="progress-section">
+          <div class="progress-gradient-bar">
+            <div class="progress-marker" id="progressMarker" style="left:50%;"></div>
+          </div>
+          <div class="progress-labels">
+            <span>Less Mature</span>
+            <span>More Mature</span>
+          </div>
         </div>
-        <div class="chart-card">
-          <div class="chart-card-title">Factors Limiting AI Adoption</div>
-          <div class="chart-container"><canvas id="chartLimiting"></canvas></div>
+
+        <!-- Distribution Chart -->
+        <div class="distribution-section">
+          <div class="distribution-title">Client Distribution</div>
+          <div class="distribution-chart-container">
+            <canvas id="chartDistribution"></canvas>
+          </div>
         </div>
-        <div class="chart-card">
-          <div class="chart-card-title">Workflow Maturity — Average Stage per Role</div>
-          <div class="chart-container"><canvas id="chartWorkflow"></canvas></div>
+
+        <!-- Legend -->
+        <div class="widget-legend" id="widgetLegend">
+          <!-- Populated by JS -->
         </div>
-        <div class="chart-card">
-          <div class="chart-card-title">Compliance Requirements</div>
-          <div class="chart-container"><canvas id="chartCompliance"></canvas></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-card-title">Client AI Governance</div>
-          <div class="chart-container"><canvas id="chartGovernance"></canvas></div>
+
+        <!-- Filter Footer (shown when filter active) -->
+        <div class="widget-footer" id="widgetFooter" style="display:none;">
+          <div class="filter-active-tag" id="activeFilterTag">
+            Filtered: <span id="activeFilterName"></span>
+            <span class="filter-clear-x" onclick="clearMaturityFilter()" title="Clear filter">&times;</span>
+          </div>
+          <button class="filter-clear-btn" onclick="clearMaturityFilter()">Clear Filter</button>
         </div>
       </div>
 
@@ -553,10 +813,10 @@
         <div style="flex:1;min-width:120px;">
           <label style="display:block;font-size:0.8rem;font-weight:600;color:#6b7280;margin-bottom:0.35rem;text-transform:uppercase;letter-spacing:0.05em;">Quarter</label>
           <select class="filter-select" id="uploadQuarter" style="width:100%;">
-            <option value="1">Q1 (Jan–Mar)</option>
-            <option value="2">Q2 (Apr–Jun)</option>
-            <option value="3">Q3 (Jul–Sep)</option>
-            <option value="4">Q4 (Oct–Dec)</option>
+            <option value="1">Q1 (Jan-Mar)</option>
+            <option value="2">Q2 (Apr-Jun)</option>
+            <option value="3">Q3 (Jul-Sep)</option>
+            <option value="4">Q4 (Oct-Dec)</option>
           </select>
         </div>
       </div>
@@ -726,12 +986,12 @@
     { section: 'useCases', subsection: 'data-analytics', option_id: 'data-quality', option_label: 'Data quality checks', option_type: 'tri-state', display_order: 5 },
 
     // Workflow Maturity Stages
-    { section: 'workflowMaturity', subsection: 'stages', option_id: '0', option_label: 'Stage 0 — No AI Usage', option_type: 'stage', display_order: 0 },
-    { section: 'workflowMaturity', subsection: 'stages', option_id: '1', option_label: 'Stage 1 — Individual AI Usage', option_type: 'stage', display_order: 1 },
-    { section: 'workflowMaturity', subsection: 'stages', option_id: '2', option_label: 'Stage 2 — Team AI Practices', option_type: 'stage', display_order: 2 },
-    { section: 'workflowMaturity', subsection: 'stages', option_id: '3', option_label: 'Stage 3 — AI-Chained Tasks', option_type: 'stage', display_order: 3 },
-    { section: 'workflowMaturity', subsection: 'stages', option_id: '4', option_label: 'Stage 4 — Event-Triggered AI', option_type: 'stage', display_order: 4 },
-    { section: 'workflowMaturity', subsection: 'stages', option_id: '5', option_label: 'Stage 5 — Semi-Agentic AI', option_type: 'stage', display_order: 5 },
+    { section: 'workflowMaturity', subsection: 'stages', option_id: '0', option_label: 'Stage 0 - No AI Usage', option_type: 'stage', display_order: 0 },
+    { section: 'workflowMaturity', subsection: 'stages', option_id: '1', option_label: 'Stage 1 - Individual AI Usage', option_type: 'stage', display_order: 1 },
+    { section: 'workflowMaturity', subsection: 'stages', option_id: '2', option_label: 'Stage 2 - Team AI Practices', option_type: 'stage', display_order: 2 },
+    { section: 'workflowMaturity', subsection: 'stages', option_id: '3', option_label: 'Stage 3 - AI-Chained Tasks', option_type: 'stage', display_order: 3 },
+    { section: 'workflowMaturity', subsection: 'stages', option_id: '4', option_label: 'Stage 4 - Event-Triggered AI', option_type: 'stage', display_order: 4 },
+    { section: 'workflowMaturity', subsection: 'stages', option_id: '5', option_label: 'Stage 5 - Semi-Agentic AI', option_type: 'stage', display_order: 5 },
 
     // Limiting Factors
     { section: 'limitingFactors', subsection: 'factors', option_id: 'time', option_label: 'Lack of time / competing priorities', option_type: 'ranked', display_order: 1 },
@@ -745,6 +1005,21 @@
   // Label lookups for display
   const MATURITY_LABELS = { 'not-started': 'Not Started', 'exploring': 'Exploring', 'piloting': 'Piloting', 'scaling': 'Scaling', 'optimizing': 'Optimizing', 'dont-know': "Don't Know" };
   const MATURITY_ORDER = ['not-started', 'exploring', 'piloting', 'scaling', 'optimizing', 'dont-know'];
+  const MATURITY_STAGES = ['not-started', 'exploring', 'piloting', 'scaling', 'optimizing']; // without dont-know
+  const MATURITY_COLORS = {
+    'not-started': '#9ca3af',
+    'exploring': '#3b82f6',
+    'piloting': '#f59e0b',
+    'scaling': '#10b981',
+    'optimizing': '#8b5cf6'
+  };
+  const MATURITY_ICONS = {
+    'not-started': '🚫',
+    'exploring': '🔍',
+    'piloting': '🧪',
+    'scaling': '📈',
+    'optimizing': '⚡'
+  };
   const GOVERNANCE_LABELS = { 'none': 'No Governance', 'informal': 'Informal', 'developing': 'Developing', 'established': 'Established', 'dont-know': "Don't Know" };
   const GOVERNANCE_ORDER = ['none', 'informal', 'developing', 'established', 'dont-know'];
 
@@ -753,6 +1028,21 @@
     qa: 'Manual QA', qaa: 'QA Automation', data: 'Data Eng.', devops: 'DevOps', ux: 'UI/UX'
   };
   const ROLE_ORDER = ['pm', 'ba', 'arch', 'swe', 'qa', 'qaa', 'data', 'devops', 'ux'];
+
+  // ═══════════════════════════════════════════
+  // GLOBAL FILTER STATE
+  // ═══════════════════════════════════════════
+  let activeMaturityFilter = null; // null = all, or a stage id like 'exploring'
+
+  function setMaturityFilter(stage) {
+    activeMaturityFilter = (activeMaturityFilter === stage) ? null : stage;
+    refreshDashboard();
+  }
+
+  function clearMaturityFilter() {
+    activeMaturityFilter = null;
+    refreshDashboard();
+  }
 
   // ═══════════════════════════════════════════
   // DATABASE
@@ -919,10 +1209,10 @@
         // Replace existing
         db.run('DELETE FROM surveys WHERE account_name = ? AND exported_at = ?', [data.accountName, data.exportedAt]);
         result.status = 'warning';
-        result.message = `Replaced existing survey for "${data.accountName}" → ${year} Q${quarter}`;
+        result.message = `Replaced existing survey for "${data.accountName}" -> ${year} Q${quarter}`;
       } else {
         result.status = 'success';
-        result.message = `Imported "${data.accountName}" → ${year} Q${quarter}`;
+        result.message = `Imported "${data.accountName}" -> ${year} Q${quarter}`;
       }
 
       db.run(
@@ -957,7 +1247,7 @@
       const cls = r.status === 'success' ? 'upload-result-success' : r.status === 'warning' ? 'upload-result-warning' : 'upload-result-error';
       return `<div class="upload-result-item">
         <span class="upload-result-icon">${icon}</span>
-        <span class="upload-result-text ${cls}"><strong>${r.filename}</strong> — ${r.message}</span>
+        <span class="upload-result-text ${cls}"><strong>${r.filename}</strong> - ${r.message}</span>
       </div>`;
     }).join('');
 
@@ -997,6 +1287,36 @@
     const result = db.exec(sql, params);
     if (result.length === 0) return [];
 
+    let surveys = result[0].values.map(row => ({
+      id: row[0], account_name: row[1], exported_at: row[2],
+      year: row[3], quarter: row[4], schema_version: row[5],
+      data: JSON.parse(row[6])
+    }));
+
+    // Apply maturity filter (post-query JS filter)
+    if (activeMaturityFilter) {
+      surveys = surveys.filter(s =>
+        s.data?.clientAILandscape?.maturity?.value === activeMaturityFilter
+      );
+    }
+
+    return surveys;
+  }
+
+  // Get all surveys for year/quarter (ignoring maturity filter) for the widget itself
+  function getAllFilteredSurveys() {
+    const year = document.getElementById('filterYear').value;
+    const quarter = document.getElementById('filterQuarter').value;
+
+    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json FROM surveys WHERE 1=1';
+    const params = [];
+    if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
+    if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
+    sql += ' ORDER BY account_name';
+
+    const result = db.exec(sql, params);
+    if (result.length === 0) return [];
+
     return result[0].values.map(row => ({
       id: row[0], account_name: row[1], exported_at: row[2],
       year: row[3], quarter: row[4], schema_version: row[5],
@@ -1011,6 +1331,7 @@
 
   function refreshDashboard() {
     const surveys = getFilteredSurveys();
+    const allSurveys = getAllFilteredSurveys(); // for the widget (unfiltered by maturity)
     const totalAll = db.exec('SELECT COUNT(*) FROM surveys');
     const totalCount = totalAll.length > 0 ? totalAll[0].values[0][0] : 0;
 
@@ -1020,9 +1341,22 @@
     let filterDesc = '';
     if (year !== 'all') filterDesc += year;
     if (quarter !== 'all') filterDesc += (filterDesc ? ' ' : '') + 'Q' + quarter;
-    document.getElementById('headerSubtitle').textContent = surveys.length > 0
-      ? `Showing ${surveys.length} survey${surveys.length !== 1 ? 's' : ''}${filterDesc ? ' for ' + filterDesc : ''}`
-      : (totalCount > 0 ? 'No surveys match the selected filters' : 'No surveys uploaded yet');
+
+    let subtitleText = '';
+    if (surveys.length > 0) {
+      subtitleText = `Showing ${surveys.length} survey${surveys.length !== 1 ? 's' : ''}${filterDesc ? ' for ' + filterDesc : ''}`;
+    } else if (totalCount > 0) {
+      subtitleText = 'No surveys match the selected filters';
+    } else {
+      subtitleText = 'No surveys uploaded yet';
+    }
+
+    const subtitleEl = document.getElementById('headerSubtitle');
+    if (activeMaturityFilter) {
+      subtitleEl.innerHTML = `${subtitleText} <span class="filter-active-tag">Filtered: ${MATURITY_LABELS[activeMaturityFilter]} <span class="filter-clear-x" onclick="clearMaturityFilter()" title="Clear filter">&times;</span></span>`;
+    } else {
+      subtitleEl.textContent = subtitleText;
+    }
 
     // Show/hide states
     document.getElementById('emptyState').style.display = totalCount === 0 ? 'block' : 'none';
@@ -1033,62 +1367,15 @@
     // Summary cards
     updateSummaryCards(surveys);
 
-    // Charts
-    renderMaturityChart(surveys);
-    renderAIToolsChart(surveys);
-    renderRolesChart(surveys);
-    renderUseCasesChart(surveys);
-    renderLimitingChart(surveys);
-    renderWorkflowChart(surveys);
-    renderComplianceChart(surveys);
-    renderGovernanceChart(surveys);
+    // Adoption Stage Widget (uses allSurveys so it always shows full distribution)
+    renderAdoptionStageWidget(allSurveys);
 
-    // Table
+    // Table (uses filtered surveys)
     renderSurveysTable(surveys);
   }
 
   function updateSummaryCards(surveys) {
     document.getElementById('totalSurveys').textContent = surveys.length;
-
-    // Most common maturity
-    if (surveys.length > 0) {
-      const maturityCounts = {};
-      surveys.forEach(s => {
-        const val = s.data?.clientAILandscape?.maturity?.value;
-        if (val && val !== 'dont-know') maturityCounts[val] = (maturityCounts[val] || 0) + 1;
-      });
-      const topMaturity = Object.entries(maturityCounts).sort((a, b) => b[1] - a[1])[0];
-      document.getElementById('avgMaturity').textContent = topMaturity ? (MATURITY_LABELS[topMaturity[0]] || topMaturity[0]) : '—';
-    } else {
-      document.getElementById('avgMaturity').textContent = '—';
-    }
-
-    // Distinct AI tools used
-    const aiToolSet = new Set();
-    surveys.forEach(s => {
-      const aiSection = s.data?.toolsAndInfrastructure?.ai;
-      if (!aiSection) return;
-      Object.keys(aiSection).forEach(k => {
-        if (k.startsWith('_') || k === 'custom' || k === 'dont-know' || k === 'not-applicable' || k === 'visible') return;
-        if (aiSection[k]?.selected) aiToolSet.add(k);
-      });
-    });
-    document.getElementById('totalAITools').textContent = aiToolSet.size;
-
-    // Average roles per account
-    if (surveys.length > 0) {
-      let totalRoles = 0;
-      surveys.forEach(s => {
-        const roles = s.data?.teamRoles?.roles;
-        if (!roles) return;
-        Object.keys(roles).forEach(k => {
-          if (!k.startsWith('_') && roles[k]?.selected) totalRoles++;
-        });
-      });
-      document.getElementById('avgRoles').textContent = (totalRoles / surveys.length).toFixed(1);
-    } else {
-      document.getElementById('avgRoles').textContent = '0';
-    }
   }
 
   // ═══════════════════════════════════════════
@@ -1116,291 +1403,165 @@
     }
   }
 
-  function createBarChart(canvasId, labels, data, options = {}) {
-    destroyChart(canvasId);
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    // Determine if data is pre-built datasets (array of objects with .data) or a plain number array
-    const isDatasets = Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && data[0] !== null && 'data' in data[0];
-    const datasets = isDatasets ? data : [{
-      data,
-      backgroundColor: options.colors || CHART_COLORS.primaryLight,
-      borderColor: options.borderColors || CHART_COLORS.primary,
-      borderWidth: 1,
-      borderRadius: 4,
-    }];
-    charts[canvasId] = new Chart(ctx, {
-      type: 'bar',
-      data: { labels, datasets },
-      options: {
-        indexAxis: options.horizontal ? 'y' : 'x',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: !!options.showLegend },
-        },
-        scales: {
-          x: { beginAtZero: true, ticks: { stepSize: 1 } },
-          y: { beginAtZero: true, ticks: { stepSize: 1 } },
-        }
-      }
-    });
-  }
-
   // ═══════════════════════════════════════════
-  // INDIVIDUAL CHARTS
+  // ADOPTION STAGE WIDGET
   // ═══════════════════════════════════════════
 
-  function renderMaturityChart(surveys) {
+  function renderAdoptionStageWidget(surveys) {
+    // Calculate maturity counts (excluding dont-know)
     const counts = {};
-    MATURITY_ORDER.forEach(k => counts[k] = 0);
+    MATURITY_STAGES.forEach(k => counts[k] = 0);
+    let totalKnown = 0;
+
     surveys.forEach(s => {
       const val = s.data?.clientAILandscape?.maturity?.value;
-      if (val) counts[val] = (counts[val] || 0) + 1;
-    });
-    const labels = MATURITY_ORDER.filter(k => k !== 'dont-know').map(k => MATURITY_LABELS[k]);
-    const data = MATURITY_ORDER.filter(k => k !== 'dont-know').map(k => counts[k]);
-    const colors = ['#9ca3af', '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'];
-    createBarChart('chartMaturity', labels, data, { horizontal: true, colors });
-  }
-
-  function renderAIToolsChart(surveys) {
-    const aiToolsSchema = SCHEMA_SEED.filter(s => s.section === 'tools' && s.subsection === 'ai');
-    const counts = {};
-    aiToolsSchema.forEach(t => counts[t.option_id] = 0);
-
-    surveys.forEach(s => {
-      const aiSection = s.data?.toolsAndInfrastructure?.ai;
-      if (!aiSection) return;
-      Object.keys(aiSection).forEach(k => {
-        if (k.startsWith('_') || k === 'custom' || k === 'dont-know' || k === 'not-applicable' || k === 'visible') return;
-        if (aiSection[k]?.selected) counts[k] = (counts[k] || 0) + 1;
-      });
+      if (val && val !== 'dont-know' && MATURITY_STAGES.includes(val)) {
+        counts[val]++;
+        totalKnown++;
+      }
     });
 
-    // Sort by count descending, show top 10
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).filter(([, c]) => c > 0);
-    if (sorted.length === 0) {
-      destroyChart('chartAITools');
-      return;
+    // Calculate percentages
+    const pcts = {};
+    MATURITY_STAGES.forEach(k => {
+      pcts[k] = totalKnown > 0 ? Math.round((counts[k] / totalKnown) * 100) : 0;
+    });
+
+    // Determine most common stage (mode)
+    let modeStage = null;
+    let modeCount = 0;
+    MATURITY_STAGES.forEach(k => {
+      if (counts[k] > modeCount) {
+        modeCount = counts[k];
+        modeStage = k;
+      }
+    });
+
+    // Calculate weighted average position (0-1) for progress bar
+    let weightedSum = 0;
+    MATURITY_STAGES.forEach((k, i) => {
+      weightedSum += counts[k] * i;
+    });
+    const avgPosition = totalKnown > 0 ? weightedSum / (totalKnown * (MATURITY_STAGES.length - 1)) : 0.5;
+
+    // Update callout
+    const calloutValue = document.getElementById('stageCalloutValue');
+    if (modeStage) {
+      calloutValue.innerHTML = `${MATURITY_ICONS[modeStage]} ${MATURITY_LABELS[modeStage]}`;
+    } else {
+      calloutValue.textContent = '--';
     }
-    const toolLabels = sorted.map(([id]) => {
-      const schema = aiToolsSchema.find(t => t.option_id === id);
-      return schema ? schema.option_label : id;
-    });
-    createBarChart('chartAITools', toolLabels, sorted.map(([, c]) => c), { horizontal: true });
+
+    // Render stage pipeline
+    const pipeline = document.getElementById('stagePipeline');
+    pipeline.innerHTML = MATURITY_STAGES.map((stage, i) => {
+      const isActive = activeMaturityFilter === stage;
+      const borderColor = isActive ? MATURITY_COLORS[stage] : '#e5e7eb';
+      const bgColor = isActive ? (MATURITY_COLORS[stage] + '15') : '#fff';
+      const shadowColor = isActive ? (MATURITY_COLORS[stage] + '40') : 'transparent';
+      const connector = i < MATURITY_STAGES.length - 1
+        ? '<div class="stage-connector">&#9654;</div>'
+        : '';
+      return `<div class="stage-card ${isActive ? 'active' : ''}"
+                   onclick="setMaturityFilter('${stage}')"
+                   style="border-color:${borderColor};background:${bgColor};${isActive ? 'box-shadow:0 0 0 3px ' + shadowColor + ', 0 6px 20px rgba(0,0,0,0.12);' : ''}"
+                   title="Click to filter by ${MATURITY_LABELS[stage]}">
+        <div class="stage-card-icon">${MATURITY_ICONS[stage]}</div>
+        <div class="stage-card-label">${MATURITY_LABELS[stage]}</div>
+        <div class="stage-card-pct" style="color:${MATURITY_COLORS[stage]};">${pcts[stage]}%</div>
+        <div class="stage-card-count">${counts[stage]} client${counts[stage] !== 1 ? 's' : ''}</div>
+      </div>${connector}`;
+    }).join('');
+
+    // Update progress bar marker
+    const marker = document.getElementById('progressMarker');
+    const markerPct = Math.max(5, Math.min(95, avgPosition * 100));
+    marker.style.left = markerPct + '%';
+
+    // Render distribution chart
+    renderDistributionChart(counts);
+
+    // Render legend
+    const legend = document.getElementById('widgetLegend');
+    legend.innerHTML = MATURITY_STAGES.map(stage =>
+      `<div class="legend-item">
+        <div class="legend-dot" style="background:${MATURITY_COLORS[stage]};"></div>
+        <span>${MATURITY_LABELS[stage]}</span>
+      </div>`
+    ).join('');
+
+    // Show/hide filter footer
+    const footer = document.getElementById('widgetFooter');
+    if (activeMaturityFilter) {
+      footer.style.display = 'flex';
+      document.getElementById('activeFilterName').textContent = MATURITY_LABELS[activeMaturityFilter];
+    } else {
+      footer.style.display = 'none';
+    }
   }
 
-  function renderRolesChart(surveys) {
-    const counts = {};
-    ROLE_ORDER.forEach(r => counts[r] = 0);
+  function renderDistributionChart(counts) {
+    destroyChart('chartDistribution');
+    const ctx = document.getElementById('chartDistribution').getContext('2d');
 
-    surveys.forEach(s => {
-      const roles = s.data?.teamRoles?.roles;
-      if (!roles) return;
-      ROLE_ORDER.forEach(r => {
-        if (roles[r]?.selected) counts[r]++;
-      });
-    });
-
-    const labels = ROLE_ORDER.map(r => ROLE_LABELS[r]);
-    const data = ROLE_ORDER.map(r => counts[r]);
-    createBarChart('chartRoles', labels, data, { horizontal: true, colors: CHART_COLORS.secondaryLight, borderColors: CHART_COLORS.secondary });
-  }
-
-  function renderUseCasesChart(surveys) {
-    const useCaseItems = SCHEMA_SEED.filter(s => s.section === 'useCases');
-    const needCounts = {};
-    const doingCounts = {};
-    useCaseItems.forEach(uc => { needCounts[uc.option_id] = 0; doingCounts[uc.option_id] = 0; });
-
-    surveys.forEach(s => {
-      if (!s.data?.useCases) return;
-      Object.values(s.data.useCases).forEach(cat => {
-        if (typeof cat !== 'object' || cat._meta) return;
-        Object.entries(cat).forEach(([id, val]) => {
-          if (id.startsWith('_') || id === 'custom') return;
-          if (val?.status === 'need') needCounts[id] = (needCounts[id] || 0) + 1;
-          else if (val?.status === 'doing') doingCounts[id] = (doingCounts[id] || 0) + 1;
-        });
-      });
-    });
-
-    // Top 10 by total (need + doing)
-    const allIds = [...new Set([...Object.keys(needCounts), ...Object.keys(doingCounts)])];
-    const sorted = allIds.map(id => ({
-      id,
-      need: needCounts[id] || 0,
-      doing: doingCounts[id] || 0,
-      total: (needCounts[id] || 0) + (doingCounts[id] || 0)
-    })).sort((a, b) => b.total - a.total).slice(0, 10).filter(x => x.total > 0);
-
-    if (sorted.length === 0) { destroyChart('chartUseCases'); return; }
-
-    const labels = sorted.map(x => {
-      const schema = useCaseItems.find(uc => uc.option_id === x.id);
-      let label = schema ? schema.option_label : x.id;
-      if (label.length > 30) label = label.substring(0, 28) + '...';
-      return label;
-    });
-
-    destroyChart('chartUseCases');
-    const ctx = document.getElementById('chartUseCases').getContext('2d');
-    charts['chartUseCases'] = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Need', data: sorted.map(x => x.need), backgroundColor: 'rgba(79, 70, 229, 0.7)', borderRadius: 4 },
-          { label: 'Doing', data: sorted.map(x => x.doing), backgroundColor: 'rgba(16, 185, 129, 0.7)', borderRadius: 4 },
-        ]
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: true, position: 'top' } },
-        scales: { x: { beginAtZero: true, stacked: false, ticks: { stepSize: 1 } }, y: {} }
+    const labels = MATURITY_STAGES.map(k => MATURITY_LABELS[k]);
+    const data = MATURITY_STAGES.map(k => counts[k]);
+    const bgColors = MATURITY_STAGES.map(k => {
+      if (activeMaturityFilter && activeMaturityFilter !== k) {
+        return MATURITY_COLORS[k] + '40'; // dimmed
       }
+      return MATURITY_COLORS[k] + 'cc'; // full opacity
     });
-  }
+    const borderColors = MATURITY_STAGES.map(k => MATURITY_COLORS[k]);
 
-  function renderLimitingChart(surveys) {
-    const factorSchema = SCHEMA_SEED.filter(s => s.section === 'limitingFactors');
-    const primaryCounts = {};
-    const secondaryCounts = {};
-    factorSchema.forEach(f => { primaryCounts[f.option_id] = 0; secondaryCounts[f.option_id] = 0; });
-
-    surveys.forEach(s => {
-      if (!s.data?.limitingFactors) return;
-      Object.entries(s.data.limitingFactors).forEach(([id, val]) => {
-        if (id.startsWith('_')) return;
-        if (val?.rank === 1) primaryCounts[id] = (primaryCounts[id] || 0) + 1;
-        else if (val?.rank === 2) secondaryCounts[id] = (secondaryCounts[id] || 0) + 1;
-      });
-    });
-
-    const ids = factorSchema.filter(f => f.option_id !== 'other').map(f => f.option_id);
-    const labels = ids.map(id => {
-      const s = factorSchema.find(f => f.option_id === id);
-      let label = s ? s.option_label : id;
-      if (label.length > 35) label = label.substring(0, 33) + '...';
-      return label;
-    });
-
-    destroyChart('chartLimiting');
-    const ctx = document.getElementById('chartLimiting').getContext('2d');
-    charts['chartLimiting'] = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Primary (#1)', data: ids.map(id => primaryCounts[id]), backgroundColor: 'rgba(239, 68, 68, 0.7)', borderRadius: 4 },
-          { label: 'Secondary (#2)', data: ids.map(id => secondaryCounts[id]), backgroundColor: 'rgba(251, 191, 36, 0.7)', borderRadius: 4 },
-        ]
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: true, position: 'top' } },
-        scales: { x: { beginAtZero: true, stacked: true, ticks: { stepSize: 1 } }, y: {} }
-      }
-    });
-  }
-
-  function renderWorkflowChart(surveys) {
-    const roleSums = {};
-    const roleCounts = {};
-    ROLE_ORDER.forEach(r => { roleSums[r] = 0; roleCounts[r] = 0; });
-
-    surveys.forEach(s => {
-      if (!s.data?.workflowMaturity) return;
-      ROLE_ORDER.forEach(r => {
-        const entry = s.data.workflowMaturity[r];
-        if (entry && entry.stage !== null && entry.stage !== undefined) {
-          roleSums[r] += entry.stage;
-          roleCounts[r]++;
-        }
-      });
-    });
-
-    const labels = ROLE_ORDER.map(r => ROLE_LABELS[r]);
-    const data = ROLE_ORDER.map(r => roleCounts[r] > 0 ? parseFloat((roleSums[r] / roleCounts[r]).toFixed(1)) : 0);
-
-    destroyChart('chartWorkflow');
-    const ctx = document.getElementById('chartWorkflow').getContext('2d');
-    charts['chartWorkflow'] = new Chart(ctx, {
+    charts['chartDistribution'] = new Chart(ctx, {
       type: 'bar',
       data: {
         labels,
         datasets: [{
           data,
-          backgroundColor: CHART_COLORS.palette.slice(0, ROLE_ORDER.length).map(c => c + 'bb'),
-          borderRadius: 4,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, max: 5, ticks: { stepSize: 1, callback: v => 'Stage ' + v } },
-          x: {}
-        }
-      }
-    });
-  }
-
-  function renderComplianceChart(surveys) {
-    const complianceSchema = SCHEMA_SEED.filter(s => s.section === 'engagement' && s.subsection === 'compliance');
-    const counts = {};
-    complianceSchema.forEach(c => counts[c.option_id] = 0);
-
-    surveys.forEach(s => {
-      if (!s.data?.engagement?.compliance) return;
-      Object.entries(s.data.engagement.compliance).forEach(([id, val]) => {
-        if (id.startsWith('_') || id === 'custom') return;
-        if (val?.selected) counts[id] = (counts[id] || 0) + 1;
-      });
-    });
-
-    const sorted = complianceSchema.sort((a, b) => (counts[b.option_id] || 0) - (counts[a.option_id] || 0));
-    const labels = sorted.map(c => c.option_label);
-    const data = sorted.map(c => counts[c.option_id]);
-
-    createBarChart('chartCompliance', labels, data, { horizontal: true, colors: 'rgba(16, 185, 129, 0.7)', borderColors: '#10b981' });
-  }
-
-  function renderGovernanceChart(surveys) {
-    const counts = {};
-    GOVERNANCE_ORDER.forEach(k => counts[k] = 0);
-
-    surveys.forEach(s => {
-      const val = s.data?.clientAILandscape?.governance?.value;
-      if (val) counts[val] = (counts[val] || 0) + 1;
-    });
-
-    const filtered = GOVERNANCE_ORDER.filter(k => counts[k] > 0);
-    if (filtered.length === 0) { destroyChart('chartGovernance'); return; }
-
-    destroyChart('chartGovernance');
-    const ctx = document.getElementById('chartGovernance').getContext('2d');
-    charts['chartGovernance'] = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: filtered.map(k => GOVERNANCE_LABELS[k]),
-        datasets: [{
-          data: filtered.map(k => counts[k]),
-          backgroundColor: CHART_COLORS.palette.slice(0, filtered.length),
+          backgroundColor: bgColors,
+          borderColor: borderColors,
           borderWidth: 2,
-          borderColor: '#fff',
+          borderRadius: 6,
+          borderSkipped: false,
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { display: true, position: 'right' },
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const total = data.reduce((a, b) => a + b, 0);
+                const pct = total > 0 ? Math.round((context.raw / total) * 100) : 0;
+                return `${context.raw} client${context.raw !== 1 ? 's' : ''} (${pct}%)`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1, font: { size: 11 } },
+            grid: { color: '#f3f4f6' },
+            title: { display: true, text: 'Clients', font: { size: 11, weight: '600' }, color: '#9ca3af' }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11, weight: '600' }, color: '#6b7280' }
+          }
+        },
+        onClick: (event, elements) => {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            setMaturityFilter(MATURITY_STAGES[index]);
+          }
+        },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
         }
       }
     });
@@ -1417,9 +1578,9 @@
     }
 
     tbody.innerHTML = surveys.map(s => {
-      const maturity = s.data?.clientAILandscape?.maturity?.value || '—';
+      const maturity = s.data?.clientAILandscape?.maturity?.value || '-';
       const maturityLabel = MATURITY_LABELS[maturity] || maturity;
-      const maturityClass = maturity !== '—' ? `maturity-${maturity}` : '';
+      const maturityClass = maturity !== '-' ? `maturity-${maturity}` : '';
 
       let roleCount = 0;
       const roles = s.data?.teamRoles?.roles;
@@ -1528,6 +1689,7 @@
     if (!confirm(`This will permanently delete all ${count} survey${count !== 1 ? 's' : ''} from the database.\n\nThis action cannot be undone. Consider creating a backup first.\n\nAre you sure?`)) return;
     db.run('DELETE FROM surveys');
     await saveToIndexedDB();
+    activeMaturityFilter = null;
     populateFilters();
     refreshDashboard();
   }
@@ -1567,8 +1729,14 @@
     });
 
     // Filters
-    document.getElementById('filterYear').addEventListener('change', refreshDashboard);
-    document.getElementById('filterQuarter').addEventListener('change', refreshDashboard);
+    document.getElementById('filterYear').addEventListener('change', () => {
+      activeMaturityFilter = null;
+      refreshDashboard();
+    });
+    document.getElementById('filterQuarter').addEventListener('change', () => {
+      activeMaturityFilter = null;
+      refreshDashboard();
+    });
 
     // Database export/import/clear
     document.getElementById('exportDbBtn').addEventListener('click', exportDatabase);
@@ -1581,7 +1749,7 @@
 
   // ═══════════════════════════════════════════
   // INIT
-  // ════════════════════════════════════════���══
+  // ═══════════════════════════════════════════
   async function init() {
     try {
       await initDatabase();
@@ -1596,7 +1764,7 @@
     } catch (e) {
       document.getElementById('loadingState').innerHTML = `
         <div style="color:#ef4444;text-align:center;padding:2rem;">
-          <div style="font-size:2rem;margin-bottom:1rem;">⚠️</div>
+          <div style="font-size:2rem;margin-bottom:1rem;">&#9888;&#65039;</div>
           <div style="font-weight:600;margin-bottom:0.5rem;">Failed to initialize database</div>
           <div style="font-size:0.85rem;color:#6b7280;">${e.message}</div>
         </div>`;
