@@ -1848,15 +1848,17 @@
     // Summary cards (show count of filtered surveys)
     updateSummaryCards(surveys);
 
-    // Adoption Stage Widget — always shows full distribution for selected year/quarter/type
-    // (maturity + account filters only affect visual highlights, not percentages)
-    renderAdoptionStageWidget(allSurveys);
+    // Adoption Stage Widget — percentages reflect active filters
+    renderAdoptionStageWidget(surveys);
+
+    // Distribution chart always shows all dots (dimmed/highlighted via filter state)
+    renderDistributionChart(allSurveys);
 
     // Limiting Factors Widget
-    renderLimitingFactorsWidget(allSurveys);
+    renderLimitingFactorsWidget(surveys);
 
-    // Table always shows all surveys for the year/quarter (so user can click to filter/unfilter)
-    renderSurveysTable(allSurveys);
+    // Surveys table — filtered by active filters
+    renderSurveysTable(surveys);
   }
 
   function updateSummaryCards(surveys) {
@@ -1956,9 +1958,6 @@
     const marker = document.getElementById('progressMarker');
     const markerPct = Math.max(5, Math.min(95, avgPosition * 100));
     marker.style.left = markerPct + '%';
-
-    // Render distribution chart (scatter — includes dont-know)
-    renderDistributionChart(surveys);
 
     // Render legend (all stages including dont-know)
     const legend = document.getElementById('widgetLegend');
