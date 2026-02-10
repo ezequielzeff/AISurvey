@@ -491,8 +491,11 @@
       border-bottom: 1px solid #f3f4f6;
       color: #374151;
     }
-    .surveys-table tr:hover td {
-      background: #fafbfc;
+    .surveys-table tbody tr:hover td {
+      background: #eef2ff;
+    }
+    .surveys-table tbody tr {
+      transition: background 0.15s;
     }
     .surveys-table .actions {
       display: flex;
@@ -767,13 +770,10 @@
           <!-- Populated by JS -->
         </div>
 
-        <!-- Filter Footer (shown when filter active) -->
+        <!-- Filter Footer (shown when any filter active) -->
         <div class="widget-footer" id="widgetFooter" style="display:none;">
-          <div class="filter-active-tag" id="activeFilterTag">
-            Filtered: <span id="activeFilterName"></span>
-            <span class="filter-clear-x" onclick="clearMaturityFilter()" title="Clear filter">&times;</span>
-          </div>
-          <button class="filter-clear-btn" onclick="clearMaturityFilter()">Clear Filter</button>
+          <div id="activeFilterTags" style="display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
+          <button class="filter-clear-btn" onclick="clearAllFilters()">Clear All Filters</button>
         </div>
       </div>
 
@@ -1033,6 +1033,7 @@
   // GLOBAL FILTER STATE
   // ═══════════════════════════════════════════
   let activeMaturityFilter = null; // null = all, or a stage id like 'exploring'
+  let activeAccountFilter = null;  // null = all, or an account name string
 
   function setMaturityFilter(stage) {
     activeMaturityFilter = (activeMaturityFilter === stage) ? null : stage;
@@ -1041,6 +1042,22 @@
 
   function clearMaturityFilter() {
     activeMaturityFilter = null;
+    refreshDashboard();
+  }
+
+  function setAccountFilter(accountName) {
+    activeAccountFilter = (activeAccountFilter === accountName) ? null : accountName;
+    refreshDashboard();
+  }
+
+  function clearAccountFilter() {
+    activeAccountFilter = null;
+    refreshDashboard();
+  }
+
+  function clearAllFilters() {
+    activeMaturityFilter = null;
+    activeAccountFilter = null;
     refreshDashboard();
   }
 
@@ -1300,10 +1317,15 @@
       );
     }
 
+    // Apply account filter
+    if (activeAccountFilter) {
+      surveys = surveys.filter(s => s.account_name === activeAccountFilter);
+    }
+
     return surveys;
   }
 
-  // Get all surveys for year/quarter (ignoring maturity filter) for the widget itself
+  // Get all surveys for year/quarter (ignoring maturity/account filters) for the widget itself
   function getAllFilteredSurveys() {
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
@@ -1352,8 +1374,15 @@
     }
 
     const subtitleEl = document.getElementById('headerSubtitle');
+    let filterTags = '';
     if (activeMaturityFilter) {
-      subtitleEl.innerHTML = `${subtitleText} <span class="filter-active-tag">Filtered: ${MATURITY_LABELS[activeMaturityFilter]} <span class="filter-clear-x" onclick="clearMaturityFilter()" title="Clear filter">&times;</span></span>`;
+      filterTags += ` <span class="filter-active-tag">Stage: ${MATURITY_LABELS[activeMaturityFilter]} <span class="filter-clear-x" onclick="clearMaturityFilter()" title="Clear filter">&times;</span></span>`;
+    }
+    if (activeAccountFilter) {
+      filterTags += ` <span class="filter-active-tag">Account: ${escapeHtml(activeAccountFilter)} <span class="filter-clear-x" onclick="clearAccountFilter()" title="Clear filter">&times;</span></span>`;
+    }
+    if (filterTags) {
+      subtitleEl.innerHTML = `${subtitleText}${filterTags}`;
     } else {
       subtitleEl.textContent = subtitleText;
     }
@@ -1364,14 +1393,14 @@
 
     if (totalCount === 0) return;
 
-    // Summary cards
+    // Summary cards (show count of filtered surveys)
     updateSummaryCards(surveys);
 
     // Adoption Stage Widget (uses allSurveys so it always shows full distribution)
     renderAdoptionStageWidget(allSurveys);
 
-    // Table (uses filtered surveys)
-    renderSurveysTable(surveys);
+    // Table always shows all surveys for the year/quarter (so user can click to filter/unfilter)
+    renderSurveysTable(allSurveys);
   }
 
   function updateSummaryCards(surveys) {
@@ -1470,8 +1499,8 @@
     const markerPct = Math.max(5, Math.min(95, avgPosition * 100));
     marker.style.left = markerPct + '%';
 
-    // Render distribution chart
-    renderDistributionChart(counts);
+    // Render distribution chart (scatter — needs individual survey data)
+    renderDistributionChart(surveys);
 
     // Render legend
     const legend = document.getElementById('widgetLegend');
@@ -1484,41 +1513,87 @@
 
     // Show/hide filter footer
     const footer = document.getElementById('widgetFooter');
-    if (activeMaturityFilter) {
+    const hasAnyFilter = activeMaturityFilter || activeAccountFilter;
+    if (hasAnyFilter) {
       footer.style.display = 'flex';
-      document.getElementById('activeFilterName').textContent = MATURITY_LABELS[activeMaturityFilter];
+      let tags = '';
+      if (activeMaturityFilter) {
+        tags += `<span class="filter-active-tag">Stage: ${MATURITY_LABELS[activeMaturityFilter]} <span class="filter-clear-x" onclick="clearMaturityFilter()" title="Clear filter">&times;</span></span>`;
+      }
+      if (activeAccountFilter) {
+        tags += `<span class="filter-active-tag">Account: ${escapeHtml(activeAccountFilter)} <span class="filter-clear-x" onclick="clearAccountFilter()" title="Clear filter">&times;</span></span>`;
+      }
+      document.getElementById('activeFilterTags').innerHTML = tags;
     } else {
       footer.style.display = 'none';
     }
   }
 
-  function renderDistributionChart(counts) {
+  function renderDistributionChart(surveys) {
     destroyChart('chartDistribution');
     const ctx = document.getElementById('chartDistribution').getContext('2d');
 
-    const labels = MATURITY_STAGES.map(k => MATURITY_LABELS[k]);
-    const data = MATURITY_STAGES.map(k => counts[k]);
-    const bgColors = MATURITY_STAGES.map(k => {
-      if (activeMaturityFilter && activeMaturityFilter !== k) {
-        return MATURITY_COLORS[k] + '40'; // dimmed
+    // Build scatter points: each survey becomes a dot at its stage's x position
+    // Stack dots vertically when multiple accounts share a stage (jitter by row)
+    const stageSlots = {}; // stage -> array of account names
+    MATURITY_STAGES.forEach(k => stageSlots[k] = []);
+
+    surveys.forEach(s => {
+      const val = s.data?.clientAILandscape?.maturity?.value;
+      if (val && val !== 'dont-know' && MATURITY_STAGES.includes(val)) {
+        stageSlots[val].push(s.account_name);
       }
-      return MATURITY_COLORS[k] + 'cc'; // full opacity
     });
-    const borderColors = MATURITY_STAGES.map(k => MATURITY_COLORS[k]);
+
+    // Create one dataset per stage for color coding
+    const datasets = MATURITY_STAGES.map((stage, stageIdx) => {
+      const accounts = stageSlots[stage];
+      const points = accounts.map((name, rowIdx) => ({
+        x: stageIdx,
+        y: rowIdx,
+        accountName: name
+      }));
+
+      const stageFilteredOut = activeMaturityFilter && activeMaturityFilter !== stage;
+
+      // Per-point colors: dim dots not matching filters, highlight selected account
+      const bgColors = points.map(pt => {
+        const accountDimmed = activeAccountFilter && pt.accountName !== activeAccountFilter;
+        if (stageFilteredOut || accountDimmed) return MATURITY_COLORS[stage] + '30';
+        return MATURITY_COLORS[stage] + 'cc';
+      });
+      const borderColors = points.map(pt => {
+        const isSelected = activeAccountFilter && pt.accountName === activeAccountFilter;
+        if (isSelected) return '#1f2937';
+        return MATURITY_COLORS[stage];
+      });
+      const radii = points.map(pt => {
+        const isSelected = activeAccountFilter && pt.accountName === activeAccountFilter;
+        return isSelected ? 14 : 10;
+      });
+      const borderWidths = points.map(pt => {
+        const isSelected = activeAccountFilter && pt.accountName === activeAccountFilter;
+        return isSelected ? 3 : 2;
+      });
+
+      return {
+        data: points,
+        backgroundColor: bgColors,
+        borderColor: borderColors,
+        borderWidth: borderWidths,
+        pointRadius: radii,
+        pointHoverRadius: 14,
+        pointStyle: 'circle',
+        label: MATURITY_LABELS[stage],
+      };
+    });
+
+    // Find max y for axis range
+    const maxDots = Math.max(1, ...MATURITY_STAGES.map(k => stageSlots[k].length));
 
     charts['chartDistribution'] = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          data,
-          backgroundColor: bgColors,
-          borderColor: borderColors,
-          borderWidth: 2,
-          borderRadius: 6,
-          borderSkipped: false,
-        }]
-      },
+      type: 'scatter',
+      data: { datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -1526,30 +1601,43 @@
           legend: { display: false },
           tooltip: {
             callbacks: {
+              title: function() { return ''; },
               label: function(context) {
-                const total = data.reduce((a, b) => a + b, 0);
-                const pct = total > 0 ? Math.round((context.raw / total) * 100) : 0;
-                return `${context.raw} client${context.raw !== 1 ? 's' : ''} (${pct}%)`;
+                const pt = context.raw;
+                const stageName = MATURITY_LABELS[MATURITY_STAGES[pt.x]];
+                return `${pt.accountName} — ${stageName}`;
               }
             }
           }
         },
         scales: {
-          y: {
-            beginAtZero: true,
-            ticks: { stepSize: 1, font: { size: 11 } },
-            grid: { color: '#f3f4f6' },
-            title: { display: true, text: 'Clients', font: { size: 11, weight: '600' }, color: '#9ca3af' }
-          },
           x: {
+            type: 'linear',
+            min: -0.5,
+            max: MATURITY_STAGES.length - 0.5,
+            ticks: {
+              stepSize: 1,
+              callback: function(value) {
+                return MATURITY_STAGES[value] ? MATURITY_LABELS[MATURITY_STAGES[value]] : '';
+              },
+              font: { size: 11, weight: '600' },
+              color: '#6b7280'
+            },
+            grid: { display: false }
+          },
+          y: {
+            min: -0.5,
+            max: maxDots - 0.5,
+            ticks: { display: false },
             grid: { display: false },
-            ticks: { font: { size: 11, weight: '600' }, color: '#6b7280' }
+            border: { display: false }
           }
         },
         onClick: (event, elements) => {
           if (elements.length > 0) {
-            const index = elements[0].index;
-            setMaturityFilter(MATURITY_STAGES[index]);
+            const pt = datasets[elements[0].datasetIndex].data[elements[0].index];
+            // Clicking a dot filters by that account
+            setAccountFilter(pt.accountName);
           }
         },
         onHover: (event, elements) => {
@@ -1586,16 +1674,20 @@
 
       const exportDate = new Date(s.exported_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-      return `<tr>
-        <td><strong>${escapeHtml(s.account_name)}</strong></td>
+      const isSelected = activeAccountFilter === s.account_name;
+      const rowStyle = isSelected ? 'background:#eef2ff;' : '';
+      const escapedName = escapeHtml(s.account_name).replace(/'/g, "\\'");
+
+      return `<tr style="${rowStyle}cursor:pointer;" onclick="setAccountFilter('${escapedName}')" title="Click to filter by ${escapeHtml(s.account_name)}">
+        <td><strong style="${isSelected ? 'color:#4f46e5;' : ''}">${escapeHtml(s.account_name)}</strong></td>
         <td><span class="maturity-badge ${maturityClass}">${maturityLabel}</span></td>
         <td>${roleCount}</td>
         <td>${aiToolCount}</td>
         <td>${exportDate}</td>
         <td>Q${s.quarter} ${s.year}</td>
-        <td class="actions">
+        <td class="actions" onclick="event.stopPropagation();">
           <button class="btn-icon" title="Download JSON" onclick="downloadSurvey(${s.id})">📥</button>
-          <button class="btn-icon" title="Delete survey" onclick="deleteSurvey(${s.id}, '${escapeHtml(s.account_name)}')">🗑️</button>
+          <button class="btn-icon" title="Delete survey" onclick="deleteSurvey(${s.id}, '${escapedName}')">🗑️</button>
         </td>
       </tr>`;
     }).join('');
@@ -1682,6 +1774,7 @@
     db.run('DELETE FROM surveys');
     await saveToIndexedDB();
     activeMaturityFilter = null;
+    activeAccountFilter = null;
     populateFilters();
     refreshDashboard();
   }
@@ -1723,10 +1816,12 @@
     // Filters
     document.getElementById('filterYear').addEventListener('change', () => {
       activeMaturityFilter = null;
+      activeAccountFilter = null;
       refreshDashboard();
     });
     document.getElementById('filterQuarter').addEventListener('change', () => {
       activeMaturityFilter = null;
+      activeAccountFilter = null;
       refreshDashboard();
     });
 
