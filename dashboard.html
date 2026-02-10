@@ -368,21 +368,6 @@
       color: #9ca3af;
     }
 
-    /* Distribution Chart */
-    .distribution-section {
-      margin-top: 1.5rem;
-    }
-    .distribution-title {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #374151;
-      margin-bottom: 0.75rem;
-    }
-    .distribution-chart-container {
-      position: relative;
-      width: 100%;
-      height: 200px;
-    }
 
     /* Limiting Factors Chart */
     .lf-chart-container {
@@ -1165,19 +1150,19 @@
         </div>
       </div>
 
-      <!-- Widget: Client AI Adoption Stage -->
+      <!-- Widget: Account AI Adoption Stage -->
       <div class="widget-card" id="adoptionStageWidget">
         <div class="widget-header">
-          <div class="widget-title">Client AI Adoption Stage</div>
+          <div class="widget-title">Account AI Adoption Stage</div>
           <div class="widget-subtitle">Portfolio-wide adoption maturity</div>
-          <div class="widget-question">At what stage is the client in their AI adoption journey? <a href="#" class="more-info-link" onclick="event.preventDefault();openMaturityInfoModal();">More info</a></div>
+          <div class="widget-question">At what stage is the account in their AI adoption journey? <a href="#" class="more-info-link" onclick="event.preventDefault();openMaturityInfoModal();">More info</a></div>
         </div>
 
         <!-- Average Stage Callout -->
         <div class="stage-callout" id="stageCallout" onclick="openStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">
           <div class="stage-callout-label">Average Portfolio Stage</div>
           <div class="stage-callout-value" id="stageCalloutValue">--</div>
-          <div class="stage-callout-desc">Median stage across all clients</div>
+          <div class="stage-callout-desc">Median stage across all accounts</div>
         </div>
 
         <!-- Stage Pipeline -->
@@ -1193,14 +1178,6 @@
           <div class="progress-labels">
             <span>Less Mature</span>
             <span>More Mature</span>
-          </div>
-        </div>
-
-        <!-- Distribution Chart -->
-        <div class="distribution-section">
-          <div class="distribution-title">Client Distribution</div>
-          <div class="distribution-chart-container">
-            <canvas id="chartDistribution"></canvas>
           </div>
         </div>
 
@@ -1272,7 +1249,7 @@
             <tr>
               <th class="sortable sort-asc" data-sort="account">Account</th>
               <th class="sortable" data-sort="type">Type</th>
-              <th class="sortable" data-sort="maturity">Client AI Maturity</th>
+              <th class="sortable" data-sort="maturity">Account AI Maturity</th>
               <th class="sortable" data-sort="wfm">Account AI Agentic Workflow</th>
               <th class="sortable" data-sort="dm">Delivery Manager</th>
               <th class="sortable" data-sort="quarter">Quarter</th>
@@ -1336,27 +1313,27 @@
 
       <div class="info-modal-stage">
         <h3>🚫 Not Started — "AI is not on the agenda"</h3>
-        <p>At this stage, AI is essentially absent from the client's strategy. There are no initiatives, no owners, and no clear awareness of where AI could add value. If AI is mentioned, it's usually abstract or perceived as something for "big tech companies," not something actionable for them. Decisions are driven by existing processes and tools, and there is often uncertainty or skepticism around AI's relevance, cost, or risk.</p>
+        <p>At this stage, AI is essentially absent from the account's strategy. There are no initiatives, no owners, and no clear awareness of where AI could add value. If AI is mentioned, it's usually abstract or perceived as something for "big tech companies," not something actionable for them. Decisions are driven by existing processes and tools, and there is often uncertainty or skepticism around AI's relevance, cost, or risk.</p>
       </div>
 
       <div class="info-modal-stage">
         <h3>🔍 Exploring — "We are trying to understand AI"</h3>
-        <p>Here the client has curiosity, but not commitment. AI is being researched, discussed, or experimented with informally — maybe through demos, workshops, vendor conversations, or isolated experiments by motivated individuals. There is no production usage, no clear ROI expectations, and no governance. Learning is the goal, not outcomes. This stage is about sense-making, not delivery.</p>
+        <p>Here the account has curiosity, but not commitment. AI is being researched, discussed, or experimented with informally — maybe through demos, workshops, vendor conversations, or isolated experiments by motivated individuals. There is no production usage, no clear ROI expectations, and no governance. Learning is the goal, not outcomes. This stage is about sense-making, not delivery.</p>
       </div>
 
       <div class="info-modal-stage">
         <h3>🧪 Piloting — "We are testing if AI actually works for us"</h3>
-        <p>This is a key inflection point. The client is running concrete POCs tied to real problems (often in limited scopes like SDLC, support, or analytics). There is some budget, some sponsorship, and early success criteria — but AI is still treated as an experiment. Results are evaluated cautiously, risks are contained, and decisions about scaling are pending. AI exists, but it's not yet trusted or systemic.</p>
+        <p>This is a key inflection point. The account is running concrete POCs tied to real problems (often in limited scopes like SDLC, support, or analytics). There is some budget, some sponsorship, and early success criteria — but AI is still treated as an experiment. Results are evaluated cautiously, risks are contained, and decisions about scaling are pending. AI exists, but it's not yet trusted or systemic.</p>
       </div>
 
       <div class="info-modal-stage">
         <h3>📈 Scaling — "AI is becoming part of how we operate"</h3>
-        <p>Now AI has proven value. Successful pilots are expanded across teams, functions, or products. Investment increases, governance starts to matter, and repeatability becomes important. The client begins to standardize tools, define ownership, train people, and integrate AI into workflows. The focus shifts from "does this work?" to "how do we roll this out safely and consistently?"</p>
+        <p>Now AI has proven value. Successful pilots are expanded across teams, functions, or products. Investment increases, governance starts to matter, and repeatability becomes important. The account begins to standardize tools, define ownership, train people, and integrate AI into workflows. The focus shifts from "does this work?" to "how do we roll this out safely and consistently?"</p>
       </div>
 
       <div class="info-modal-stage">
         <h3>⚡ Optimizing — "AI is embedded and continuously improved"</h3>
-        <p>At this stage, AI is no longer a project — it's infrastructure. AI is embedded into core processes and products, measured with KPIs, and continuously refined. The client actively optimizes models, workflows, and cost/value tradeoffs. People are trained by default, governance is mature, and AI decisions are part of normal business planning. The question is no longer whether to use AI, but how to do it better.</p>
+        <p>At this stage, AI is no longer a project — it's infrastructure. AI is embedded into core processes and products, measured with KPIs, and continuously refined. The account actively optimizes models, workflows, and cost/value tradeoffs. People are trained by default, governance is mature, and AI decisions are part of normal business planning. The question is no longer whether to use AI, but how to do it better.</p>
       </div>
 
       <div class="info-modal-summary">
@@ -1421,7 +1398,7 @@
     { section: 'engagement', subsection: 'compliance', option_id: 'ccpa', option_label: 'CCPA', option_type: 'multi-select', display_order: 7 },
     { section: 'engagement', subsection: 'compliance', option_id: 'iso27001', option_label: 'ISO 27001', option_type: 'multi-select', display_order: 8 },
 
-    // Client AI Landscape — Maturity
+    // Account AI Landscape — Maturity
     { section: 'clientAILandscape', subsection: 'maturity', option_id: 'not-started', option_label: 'Not Started', option_type: 'single-select', display_order: 1 },
     { section: 'clientAILandscape', subsection: 'maturity', option_id: 'exploring', option_label: 'Exploring', option_type: 'single-select', display_order: 2 },
     { section: 'clientAILandscape', subsection: 'maturity', option_id: 'piloting', option_label: 'Piloting', option_type: 'single-select', display_order: 3 },
@@ -1429,7 +1406,7 @@
     { section: 'clientAILandscape', subsection: 'maturity', option_id: 'optimizing', option_label: 'Optimizing', option_type: 'single-select', display_order: 5 },
     { section: 'clientAILandscape', subsection: 'maturity', option_id: 'dont-know', option_label: "I Don't Know", option_type: 'single-select', display_order: 6 },
 
-    // Client AI Landscape — Usage
+    // Account AI Landscape — Usage
     { section: 'clientAILandscape', subsection: 'usage', option_id: 'dont-know', option_label: "I Don't Know", option_type: 'multi-select', display_order: 1 },
     { section: 'clientAILandscape', subsection: 'usage', option_id: 'not-using', option_label: 'Not Using AI', option_type: 'multi-select', display_order: 2 },
     { section: 'clientAILandscape', subsection: 'usage', option_id: 'off-the-shelf', option_label: 'Off-the-Shelf Tools', option_type: 'multi-select', display_order: 3 },
@@ -1438,21 +1415,21 @@
     { section: 'clientAILandscape', subsection: 'usage', option_id: 'business-processes', option_label: 'Process Automation', option_type: 'multi-select', display_order: 6 },
     { section: 'clientAILandscape', subsection: 'usage', option_id: 'customer-facing', option_label: 'Customer-Facing AI', option_type: 'multi-select', display_order: 7 },
 
-    // Client AI Landscape — Priority
+    // Account AI Landscape — Priority
     { section: 'clientAILandscape', subsection: 'priority', option_id: 'not-priority', option_label: 'Not a Priority', option_type: 'single-select', display_order: 1 },
     { section: 'clientAILandscape', subsection: 'priority', option_id: 'low', option_label: 'Low Priority', option_type: 'single-select', display_order: 2 },
     { section: 'clientAILandscape', subsection: 'priority', option_id: 'medium', option_label: 'Medium Priority', option_type: 'single-select', display_order: 3 },
     { section: 'clientAILandscape', subsection: 'priority', option_id: 'high', option_label: 'High Priority', option_type: 'single-select', display_order: 4 },
     { section: 'clientAILandscape', subsection: 'priority', option_id: 'dont-know', option_label: "I Don't Know", option_type: 'single-select', display_order: 5 },
 
-    // Client AI Landscape — Governance
+    // Account AI Landscape — Governance
     { section: 'clientAILandscape', subsection: 'governance', option_id: 'none', option_label: 'No Governance', option_type: 'single-select', display_order: 1 },
     { section: 'clientAILandscape', subsection: 'governance', option_id: 'informal', option_label: 'Informal', option_type: 'single-select', display_order: 2 },
     { section: 'clientAILandscape', subsection: 'governance', option_id: 'developing', option_label: 'Developing', option_type: 'single-select', display_order: 3 },
     { section: 'clientAILandscape', subsection: 'governance', option_id: 'established', option_label: 'Established', option_type: 'single-select', display_order: 4 },
     { section: 'clientAILandscape', subsection: 'governance', option_id: 'dont-know', option_label: "I Don't Know", option_type: 'single-select', display_order: 5 },
 
-    // Client AI Landscape — Challenges
+    // Account AI Landscape — Challenges
     { section: 'clientAILandscape', subsection: 'challenges', option_id: 'unclear-roi', option_label: 'Unclear ROI', option_type: 'ranked', display_order: 1 },
     { section: 'clientAILandscape', subsection: 'challenges', option_id: 'skills', option_label: 'Skills Gap', option_type: 'ranked', display_order: 2 },
     { section: 'clientAILandscape', subsection: 'challenges', option_id: 'data', option_label: 'Data Issues', option_type: 'ranked', display_order: 3 },
@@ -1461,7 +1438,7 @@
     { section: 'clientAILandscape', subsection: 'challenges', option_id: 'infrastructure', option_label: 'Infrastructure', option_type: 'ranked', display_order: 6 },
     { section: 'clientAILandscape', subsection: 'challenges', option_id: 'dont-know', option_label: "I Don't Know", option_type: 'ranked', display_order: 7 },
 
-    // Client AI Landscape — Approved Tools
+    // Account AI Landscape — Approved Tools
     { section: 'clientAILandscape', subsection: 'approvedTools', option_id: 'github-copilot', option_label: 'GitHub Copilot', option_type: 'multi-select', display_order: 1 },
     { section: 'clientAILandscape', subsection: 'approvedTools', option_id: 'chatgpt', option_label: 'ChatGPT / OpenAI', option_type: 'multi-select', display_order: 2 },
     { section: 'clientAILandscape', subsection: 'approvedTools', option_id: 'claude', option_label: 'Claude / Anthropic', option_type: 'multi-select', display_order: 3 },
@@ -1588,23 +1565,23 @@
   const MATURITY_DESCRIPTIONS = {
     'not-started': {
       title: '🚫 Not Started — "AI is not on the agenda"',
-      desc: 'At this stage, AI is essentially absent from the client\'s strategy. There are no initiatives, no owners, and no clear awareness of where AI could add value. If AI is mentioned, it\'s usually abstract or perceived as something for "big tech companies," not something actionable for them. Decisions are driven by existing processes and tools, and there is often uncertainty or skepticism around AI\'s relevance, cost, or risk.'
+      desc: 'At this stage, AI is essentially absent from the account\'s strategy. There are no initiatives, no owners, and no clear awareness of where AI could add value. If AI is mentioned, it\'s usually abstract or perceived as something for "big tech companies," not something actionable for them. Decisions are driven by existing processes and tools, and there is often uncertainty or skepticism around AI\'s relevance, cost, or risk.'
     },
     'exploring': {
       title: '🔍 Exploring — "We are trying to understand AI"',
-      desc: 'Here the client has curiosity, but not commitment. AI is being researched, discussed, or experimented with informally — maybe through demos, workshops, vendor conversations, or isolated experiments by motivated individuals. There is no production usage, no clear ROI expectations, and no governance. Learning is the goal, not outcomes. This stage is about sense-making, not delivery.'
+      desc: 'Here the account has curiosity, but not commitment. AI is being researched, discussed, or experimented with informally — maybe through demos, workshops, vendor conversations, or isolated experiments by motivated individuals. There is no production usage, no clear ROI expectations, and no governance. Learning is the goal, not outcomes. This stage is about sense-making, not delivery.'
     },
     'piloting': {
       title: '🧪 Piloting — "We are testing if AI actually works for us"',
-      desc: 'This is a key inflection point. The client is running concrete POCs tied to real problems (often in limited scopes like SDLC, support, or analytics). There is some budget, some sponsorship, and early success criteria — but AI is still treated as an experiment. Results are evaluated cautiously, risks are contained, and decisions about scaling are pending. AI exists, but it\'s not yet trusted or systemic.'
+      desc: 'This is a key inflection point. The account is running concrete POCs tied to real problems (often in limited scopes like SDLC, support, or analytics). There is some budget, some sponsorship, and early success criteria — but AI is still treated as an experiment. Results are evaluated cautiously, risks are contained, and decisions about scaling are pending. AI exists, but it\'s not yet trusted or systemic.'
     },
     'scaling': {
       title: '📈 Scaling — "AI is becoming part of how we operate"',
-      desc: 'Now AI has proven value. Successful pilots are expanded across teams, functions, or products. Investment increases, governance starts to matter, and repeatability becomes important. The client begins to standardize tools, define ownership, train people, and integrate AI into workflows. The focus shifts from "does this work?" to "how do we roll this out safely and consistently?"'
+      desc: 'Now AI has proven value. Successful pilots are expanded across teams, functions, or products. Investment increases, governance starts to matter, and repeatability becomes important. The account begins to standardize tools, define ownership, train people, and integrate AI into workflows. The focus shifts from "does this work?" to "how do we roll this out safely and consistently?"'
     },
     'optimizing': {
       title: '⚡ Optimizing — "AI is embedded and continuously improved"',
-      desc: 'At this stage, AI is no longer a project — it\'s infrastructure. AI is embedded into core processes and products, measured with KPIs, and continuously refined. The client actively optimizes models, workflows, and cost/value tradeoffs. People are trained by default, governance is mature, and AI decisions are part of normal business planning. The question is no longer whether to use AI, but how to do it better.'
+      desc: 'At this stage, AI is no longer a project — it\'s infrastructure. AI is embedded into core processes and products, measured with KPIs, and continuously refined. The account actively optimizes models, workflows, and cost/value tradeoffs. People are trained by default, governance is mature, and AI decisions are part of normal business planning. The question is no longer whether to use AI, but how to do it better.'
     }
   };
   const GOVERNANCE_LABELS = { 'none': 'No Governance', 'informal': 'Informal', 'developing': 'Developing', 'established': 'Established', 'dont-know': "Don't Know" };
@@ -2312,9 +2289,6 @@
     // Account AI Agentic Workflow — callout reflects filters, circles show all with dimming
     renderWorkflowMaturityWidget(surveys, allSurveys);
 
-    // Distribution chart always shows all dots (dimmed/highlighted via filter state)
-    renderDistributionChart(allSurveys);
-
     // Limiting Factors Widget — shows all factors (dimmed/highlighted via filter state)
     renderLimitingFactorsWidget(allSurveys);
 
@@ -2574,7 +2548,7 @@
         <div class="stage-card-icon">${MATURITY_ICONS[stage]}</div>
         <div class="stage-card-label">${MATURITY_LABELS[stage]}</div>
         <div class="stage-card-pct" style="color:${MATURITY_COLORS[stage]};">${pcts[stage]}%</div>
-        <div class="stage-card-count">${counts[stage]} client${counts[stage] !== 1 ? 's' : ''}</div>
+        <div class="stage-card-count">${counts[stage]} account${counts[stage] !== 1 ? 's' : ''}</div>
       </div>${connector}`;
     }).join('');
 
@@ -2772,124 +2746,6 @@
     } else {
       marker.style.display = 'none';
     }
-  }
-
-  function renderDistributionChart(surveys) {
-    destroyChart('chartDistribution');
-    const ctx = document.getElementById('chartDistribution').getContext('2d');
-
-    // Build scatter points: each survey becomes a dot at its stage's x position
-    // Stack dots vertically when multiple accounts share a stage (jitter by row)
-    const stageSlots = {}; // stage -> array of account names
-    MATURITY_ORDER.forEach(k => stageSlots[k] = []);
-
-    surveys.forEach(s => {
-      const val = s.data?.clientAILandscape?.maturity?.value;
-      if (val && MATURITY_ORDER.includes(val)) {
-        stageSlots[val].push(s.account_name);
-      }
-    });
-
-    // Create one dataset per stage for color coding (including dont-know)
-    const datasets = MATURITY_ORDER.map((stage, stageIdx) => {
-      const accounts = stageSlots[stage];
-      const points = accounts.map((name, rowIdx) => ({
-        x: stageIdx,
-        y: rowIdx,
-        accountName: name
-      }));
-
-      const stageFilteredOut = activeMaturityFilter && activeMaturityFilter !== stage;
-
-      // Per-point colors: dim dots not matching filters, highlight selected account
-      const bgColors = points.map(pt => {
-        const accountDimmed = activeAccountFilter && pt.accountName !== activeAccountFilter;
-        if (stageFilteredOut || accountDimmed) return MATURITY_COLORS[stage] + '30';
-        return MATURITY_COLORS[stage] + 'cc';
-      });
-      const borderColors = points.map(pt => {
-        const isSelected = activeAccountFilter && pt.accountName === activeAccountFilter;
-        if (isSelected) return '#1f2937';
-        return MATURITY_COLORS[stage];
-      });
-      const radii = points.map(pt => {
-        const isSelected = activeAccountFilter && pt.accountName === activeAccountFilter;
-        return isSelected ? 14 : 10;
-      });
-      const borderWidths = points.map(pt => {
-        const isSelected = activeAccountFilter && pt.accountName === activeAccountFilter;
-        return isSelected ? 3 : 2;
-      });
-
-      return {
-        data: points,
-        backgroundColor: bgColors,
-        borderColor: borderColors,
-        borderWidth: borderWidths,
-        pointRadius: radii,
-        pointHoverRadius: 14,
-        pointStyle: 'circle',
-        label: MATURITY_LABELS[stage],
-      };
-    });
-
-    // Find max y for axis range
-    const maxDots = Math.max(1, ...MATURITY_ORDER.map(k => stageSlots[k].length));
-
-    charts['chartDistribution'] = new Chart(ctx, {
-      type: 'scatter',
-      data: { datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              title: function() { return ''; },
-              label: function(context) {
-                const pt = context.raw;
-                const stageName = MATURITY_LABELS[MATURITY_ORDER[pt.x]];
-                return `${pt.accountName} — ${stageName}`;
-              }
-            }
-          }
-        },
-        scales: {
-          x: {
-            type: 'linear',
-            min: -0.5,
-            max: MATURITY_ORDER.length - 0.5,
-            ticks: {
-              stepSize: 1,
-              callback: function(value) {
-                return MATURITY_ORDER[value] ? MATURITY_LABELS[MATURITY_ORDER[value]] : '';
-              },
-              font: { size: 11, weight: '600' },
-              color: '#6b7280'
-            },
-            grid: { display: false }
-          },
-          y: {
-            min: -0.5,
-            max: maxDots - 0.5,
-            ticks: { display: false },
-            grid: { display: false },
-            border: { display: false }
-          }
-        },
-        onClick: (event, elements) => {
-          if (elements.length > 0) {
-            const pt = datasets[elements[0].datasetIndex].data[elements[0].index];
-            // Clicking a dot filters by that account
-            setAccountFilter(pt.accountName);
-          }
-        },
-        onHover: (event, elements) => {
-          event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
-        }
-      }
-    });
   }
 
   // ═══════════════════════════════════════════
