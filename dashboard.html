@@ -705,6 +705,71 @@
     }
 
     /* ═══════════════════════════════════════════
+       ACCOUNT MATURITY COMPARISON MATRIX
+       ═══════════════════════════════════════════ */
+    .comparison-table-wrapper {
+      overflow-x: auto;
+    }
+    .comparison-matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .comparison-matrix thead th {
+      background: #1e3a5f;
+      color: #fff;
+      padding: 0.6rem 0.5rem;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.78rem;
+      white-space: nowrap;
+      border: 1px solid #2d4a6f;
+    }
+    .comparison-account-col {
+      text-align: left !important;
+      min-width: 180px;
+    }
+    .comparison-matrix tbody td {
+      padding: 0.4rem 0.5rem;
+      border: 1px solid #e5e7eb;
+      vertical-align: middle;
+    }
+    .comparison-matrix tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+    .comparison-matrix tbody tr:hover {
+      background: #eef2ff;
+    }
+    .comparison-matrix .account-name-cell {
+      font-weight: 600;
+      color: #1f2937;
+      white-space: nowrap;
+    }
+    .comparison-matrix .stage-fill {
+      height: 22px;
+      border-radius: 3px;
+    }
+    .comparison-matrix .account-link-icon {
+      color: #6b7280;
+      font-size: 0.8rem;
+      margin-left: 0.35rem;
+      text-decoration: none;
+    }
+    .comparison-matrix .account-link-icon:hover {
+      color: #4f46e5;
+    }
+    .comparison-matrix .stage-marker {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.8);
+      display: inline-block;
+      vertical-align: middle;
+      margin: 4px auto;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    /* ═══════════════════════════════════════════
        UPLOAD MODAL
        ═══════════════════════════════════════════ */
     .modal-overlay {
@@ -1207,6 +1272,10 @@
           <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
         </div>
 
+        <div style="text-align:center;margin-bottom:0.5rem;">
+          <a href="#" class="more-info-link" onclick="event.preventDefault();openAccountComparisonModal();">See accounts comparison</a>
+        </div>
+
         <div class="wfm-section-title">Maturity Journey Distribution</div>
 
         <!-- Journey visualization -->
@@ -1366,6 +1435,32 @@
       <div class="info-modal-summary">
         <h3>Stage Reference</h3>
         <p><strong>Stage 0</strong> — No AI Usage · <strong>Stage 1</strong> — Individual AI · <strong>Stage 2</strong> — Team Practices · <strong>Stage 3</strong> — AI-Chained · <strong>Stage 4</strong> — Event-Triggered · <strong>Stage 5</strong> — Semi-Agentic</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Maturity Comparison Modal -->
+  <div class="info-modal-overlay" id="accountComparisonModal">
+    <div class="info-modal" style="max-width:1100px;">
+      <button class="info-modal-close" onclick="closeAccountComparisonModal()" title="Close">&times;</button>
+      <h2>Account Maturity Comparison</h2>
+      <div class="comparison-table-wrapper">
+        <table class="comparison-matrix">
+          <thead>
+            <tr>
+              <th class="comparison-account-col">Account</th>
+              <th>No AI</th>
+              <th>Individual</th>
+              <th>Team</th>
+              <th>AI-Chained</th>
+              <th>Event-Triggered</th>
+              <th>Semi-Agentic</th>
+            </tr>
+          </thead>
+          <tbody id="comparisonMatrixBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -1956,6 +2051,89 @@
       <h2 style="margin-top:0;font-size:1.25rem;">${info.title}</h2>
       <p style="color:#444;font-size:0.97rem;line-height:1.7;">${info.desc}</p>`;
     document.getElementById('stageDescriptionModal').classList.add('open');
+  }
+
+  // ═══════════════════════════════════════════
+  // ACCOUNT MATURITY COMPARISON MODAL
+  // ═══════════════════════════════════════════
+  function openAccountComparisonModal() {
+    const surveys = getFilteredSurveys();
+
+    // Build per-account data: name, id, raw avg, rounded stage
+    const accountRows = [];
+    surveys.forEach(s => {
+      const avg = getWfmAverage(s);
+      if (avg < 0) return; // skip accounts with no WFM data
+      accountRows.push({
+        name: s.account_name,
+        id: s.id,
+        avg: avg,
+        rounded: Math.round(avg)
+      });
+    });
+
+    // Sort alphabetically by account name
+    accountRows.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Color palette matching screenshot: light fills with stronger color at the reached stage
+    const FILL_COLORS = {
+      0: '#e5e7eb', // Gray
+      1: '#fecdd3', // Light pink/red
+      2: '#fde68a', // Light amber
+      3: '#fde68a', // Light amber
+      4: '#bbf7d0', // Light green
+      5: '#86efac'  // Medium green
+    };
+    const MARKER_COLORS = {
+      0: '#9ca3af', // Gray
+      1: '#f87171', // Red
+      2: '#fbbf24', // Amber
+      3: '#f59e0b', // Darker amber
+      4: '#4ade80', // Green
+      5: '#22c55e'  // Dark green
+    };
+
+    const tbody = document.getElementById('comparisonMatrixBody');
+
+    if (accountRows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#6b7280;">No accounts with workflow maturity data match the current filters.</td></tr>';
+    } else {
+      tbody.innerHTML = accountRows.map(account => {
+        const linkIcon = account.id
+          ? `<a href="account-detail.html?id=${account.id}" class="account-link-icon" title="View account details" onclick="event.stopPropagation();">↗</a>`
+          : '';
+
+        const cells = WFM_STAGES.map(stageIdx => {
+          if (stageIdx <= account.rounded) {
+            if (stageIdx === account.rounded) {
+              // The reached stage: full color fill with marker
+              return `<td style="text-align:center;">
+                <div class="stage-fill" style="background:${FILL_COLORS[stageIdx]};display:flex;align-items:center;justify-content:center;">
+                  <span class="stage-marker" style="background:${MARKER_COLORS[stageIdx]};"></span>
+                </div>
+              </td>`;
+            } else {
+              // Stages below the reached stage: light color fill
+              return `<td><div class="stage-fill" style="background:${FILL_COLORS[stageIdx]};"></div></td>`;
+            }
+          } else {
+            // Stages beyond the reached stage: empty
+            return '<td></td>';
+          }
+        }).join('');
+
+        return `<tr>
+          <td class="account-name-cell">${escapeHtml(account.name)}${linkIcon}</td>
+          ${cells}
+        </tr>`;
+      }).join('');
+    }
+
+    document.getElementById('accountComparisonModal').classList.add('open');
+  }
+
+  function closeAccountComparisonModal() {
+    document.getElementById('accountComparisonModal').classList.remove('open');
   }
 
   // ═══════════════════════════════════════════
