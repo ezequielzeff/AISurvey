@@ -1108,23 +1108,29 @@
 
   function destroyChart(id) {
     if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+    // Also check if Chart.js has a chart on this canvas (safety net)
+    const canvas = document.getElementById(id);
+    if (canvas) {
+      const existing = Chart.getChart(canvas);
+      if (existing) existing.destroy();
+    }
   }
 
   function createBarChart(canvasId, labels, data, options = {}) {
     destroyChart(canvasId);
     const ctx = document.getElementById(canvasId).getContext('2d');
+    // Determine if data is pre-built datasets (array of objects with .data) or a plain number array
+    const isDatasets = Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && data[0] !== null && 'data' in data[0];
+    const datasets = isDatasets ? data : [{
+      data,
+      backgroundColor: options.colors || CHART_COLORS.primaryLight,
+      borderColor: options.borderColors || CHART_COLORS.primary,
+      borderWidth: 1,
+      borderRadius: 4,
+    }];
     charts[canvasId] = new Chart(ctx, {
       type: 'bar',
-      data: {
-        labels,
-        datasets: Array.isArray(data) ? data : [{
-          data,
-          backgroundColor: options.colors || CHART_COLORS.primaryLight,
-          borderColor: options.borderColors || CHART_COLORS.primary,
-          borderWidth: 1,
-          borderRadius: 4,
-        }]
-      },
+      data: { labels, datasets },
       options: {
         indexAxis: options.horizontal ? 'y' : 'x',
         responsive: true,
