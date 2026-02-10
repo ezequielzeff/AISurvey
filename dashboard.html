@@ -522,6 +522,24 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
+    .surveys-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-right: 1.5rem;
+    }
+    .surveys-table th.sortable:hover { color: #374151; background: #f3f4f6; }
+    .surveys-table th.sortable::after {
+      content: ' ⇅';
+      font-size: 0.7rem;
+      opacity: 0.35;
+      position: absolute;
+      right: 0.4rem;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .surveys-table th.sort-asc::after { content: ' ▲'; opacity: 0.8; color: #4f46e5; }
+    .surveys-table th.sort-desc::after { content: ' ▼'; opacity: 0.8; color: #4f46e5; }
     .surveys-table td {
       padding: 0.75rem 1rem;
       border-bottom: 1px solid #f3f4f6;
@@ -1252,12 +1270,12 @@
         <table class="surveys-table">
           <thead>
             <tr>
-              <th>Account</th>
-              <th>Type</th>
-              <th>Client AI Maturity</th>
-              <th>Account AI Agentic Workflow</th>
-              <th>Delivery Manager</th>
-              <th>Quarter</th>
+              <th class="sortable sort-asc" data-sort="account">Account</th>
+              <th class="sortable" data-sort="type">Type</th>
+              <th class="sortable" data-sort="maturity">Client AI Maturity</th>
+              <th class="sortable" data-sort="wfm">Account AI Agentic Workflow</th>
+              <th class="sortable" data-sort="dm">Delivery Manager</th>
+              <th class="sortable" data-sort="quarter">Quarter</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -1663,6 +1681,8 @@
   let activeWfmStageFilter = null; // null = all, or a stage number (0-5)
   let currentMedianStage = null; // current median stage key for stage description modal
   let currentWfmStage = null; // current WFM average stage number for description modal
+  let tableSortColumn = 'account'; // default sort column
+  let tableSortDirection = 'asc';  // 'asc' or 'desc'
 
   function setMaturityFilter(stage) {
     activeMaturityFilter = (activeMaturityFilter === stage) ? null : stage;
@@ -2985,6 +3005,63 @@
   // ═══════════════════════════════════════════
   // SURVEYS TABLE
   // ═══════════════════════════════════════════
+  function getWfmAverage(s) {
+    const wfm = s.data?.workflowMaturity;
+    if (!wfm) return -1;
+    const stages = [];
+    ROLE_ORDER.forEach(role => {
+      const st = wfm[role]?.stage;
+      if (st !== null && st !== undefined && typeof st === 'number') stages.push(st);
+    });
+    return stages.length > 0 ? stages.reduce((a, b) => a + b, 0) / stages.length : -1;
+  }
+
+  function sortSurveys(surveys) {
+    const sorted = [...surveys];
+    const dir = tableSortDirection === 'asc' ? 1 : -1;
+
+    sorted.sort((a, b) => {
+      let va, vb;
+      switch (tableSortColumn) {
+        case 'account':
+          return dir * (a.account_name || '').localeCompare(b.account_name || '');
+        case 'type':
+          return dir * (a.account_type || '').localeCompare(b.account_type || '');
+        case 'maturity':
+          va = MATURITY_ORDER.indexOf(a.data?.clientAILandscape?.maturity?.value);
+          vb = MATURITY_ORDER.indexOf(b.data?.clientAILandscape?.maturity?.value);
+          if (va === -1) va = 999;
+          if (vb === -1) vb = 999;
+          return dir * (va - vb);
+        case 'wfm':
+          va = getWfmAverage(a);
+          vb = getWfmAverage(b);
+          if (va === -1) va = dir > 0 ? 999 : -999;
+          if (vb === -1) vb = dir > 0 ? 999 : -999;
+          return dir * (va - vb);
+        case 'dm':
+          return dir * (a.delivery_manager || '').localeCompare(b.delivery_manager || '');
+        case 'quarter':
+          va = (a.year || 0) * 10 + (a.quarter || 0);
+          vb = (b.year || 0) * 10 + (b.quarter || 0);
+          return dir * (va - vb);
+        default:
+          return 0;
+      }
+    });
+    return sorted;
+  }
+
+  function onSortColumn(column) {
+    if (tableSortColumn === column) {
+      tableSortDirection = tableSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      tableSortColumn = column;
+      tableSortDirection = 'asc';
+    }
+    renderSurveysTable(getFilteredSurveys());
+  }
+
   function renderSurveysTable(surveys) {
     const tbody = document.getElementById('surveysTableBody');
     if (surveys.length === 0) {
@@ -2992,7 +3069,18 @@
       return;
     }
 
-    tbody.innerHTML = surveys.map(s => {
+    // Sort surveys before rendering
+    const sorted = sortSurveys(surveys);
+
+    // Update header sort indicators
+    document.querySelectorAll('.surveys-table th.sortable').forEach(th => {
+      th.classList.remove('sort-asc', 'sort-desc');
+      if (th.dataset.sort === tableSortColumn) {
+        th.classList.add(tableSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+      }
+    });
+
+    tbody.innerHTML = sorted.map(s => {
       const maturity = s.data?.clientAILandscape?.maturity?.value || '-';
       const maturityLabel = MATURITY_LABELS[maturity] || maturity;
       const maturityClass = maturity !== '-' ? `maturity-${maturity}` : '';
@@ -3206,6 +3294,10 @@
     });
     document.getElementById('aiUsageCompPeriod').addEventListener('change', () => {
       updateSummaryCards(getFilteredSurveys());
+    });
+    // Table column sorting
+    document.querySelectorAll('.surveys-table th.sortable').forEach(th => {
+      th.addEventListener('click', () => onSortColumn(th.dataset.sort));
     });
     // Close account type menu when clicking outside
     document.addEventListener('click', e => {
