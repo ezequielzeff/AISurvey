@@ -1255,6 +1255,7 @@
               <th>Account</th>
               <th>Type</th>
               <th>Client AI Maturity</th>
+              <th>Account AI Agentic Workflow</th>
               <th>Delivery Manager</th>
               <th>Quarter</th>
               <th>Actions</th>
@@ -2987,7 +2988,7 @@
   function renderSurveysTable(surveys) {
     const tbody = document.getElementById('surveysTableBody');
     if (surveys.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
       return;
     }
 
@@ -3007,6 +3008,23 @@
 
       const dmValue = escapeHtml(s.delivery_manager || '');
 
+      // Compute WFM stage for this account (same logic as widget)
+      let wfmCell = '-';
+      const wfm = s.data?.workflowMaturity;
+      if (wfm) {
+        const roleStages = [];
+        ROLE_ORDER.forEach(role => {
+          const st = wfm[role]?.stage;
+          if (st !== null && st !== undefined && typeof st === 'number') roleStages.push(st);
+        });
+        if (roleStages.length > 0) {
+          const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
+          const rounded = Math.round(avg);
+          const label = WFM_LABELS[rounded] || `Stage ${rounded}`;
+          wfmCell = `<span class="maturity-badge">${label} (${avg.toFixed(1)})</span>`;
+        }
+      }
+
       return `<tr style="${rowStyle}cursor:pointer;" onclick="window.location.href='account-detail.html?id=${s.id}'" title="Click to view ${escapeHtml(s.account_name)} details">
         <td><strong style="${isSelected ? 'color:#4f46e5;' : ''}">${escapeHtml(s.account_name)}</strong></td>
         <td onclick="event.stopPropagation();">
@@ -3015,6 +3033,7 @@
           </select>
         </td>
         <td><span class="maturity-badge ${maturityClass}">${maturityLabel}</span></td>
+        <td>${wfmCell}</td>
         <td onclick="event.stopPropagation();">
           <input type="text" class="dm-input" value="${dmValue}" placeholder="—"
             onchange="updateDeliveryManager(${s.id}, this.value.trim())"
