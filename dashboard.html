@@ -1157,10 +1157,10 @@
         </div>
       </div>
 
-      <!-- Widget: Workflow Maturity Summary -->
+      <!-- Widget: Account AI Agentic Workflow -->
       <div class="widget-card" id="workflowMaturityWidget">
         <div class="widget-header">
-          <div class="widget-title">Workflow Maturity Summary</div>
+          <div class="widget-title">Account AI Agentic Workflow</div>
           <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
         </div>
 
@@ -2226,7 +2226,7 @@
     // Adoption Stage Widget — percentages reflect active filters
     renderAdoptionStageWidget(surveys);
 
-    // Workflow Maturity Summary — shows all surveys with dimming for active filter
+    // Account AI Agentic Workflow — shows all surveys with dimming for active filter
     renderWorkflowMaturityWidget(allSurveys);
 
     // Distribution chart always shows all dots (dimmed/highlighted via filter state)
@@ -2470,10 +2470,11 @@
       </div>`;
     }).join('');
 
-    // 7. Position progress bar marker
+    // 7. Position progress bar marker — shift to active filter stage if set
     const marker = document.getElementById('wfmProgressMarker');
+    const markerValue = activeWfmStageFilter !== null ? activeWfmStageFilter : portfolioAvg;
     if (total > 0) {
-      const markerPct = Math.max(3, Math.min(97, (portfolioAvg / 5) * 100));
+      const markerPct = Math.max(3, Math.min(97, (markerValue / 5) * 100));
       marker.style.left = markerPct + '%';
       marker.style.display = '';
     } else {
