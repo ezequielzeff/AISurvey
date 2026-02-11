@@ -3399,9 +3399,11 @@
       .filter(k => chCounts[k] > 0)
       .slice(0, 3);
 
-    const challengePills = topChallenges.map(k =>
-      `<span class="section-summary-challenge-pill">${AI_CHALLENGE_LABELS[k]}</span>`
-    ).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
+    const totalSurveys = surveys.length;
+    const challengePills = topChallenges.map(k => {
+      const pct = totalSurveys > 0 ? Math.round((chCounts[k] / totalSurveys) * 100) : 0;
+      return `<span class="section-summary-challenge-pill">${AI_CHALLENGE_LABELS[k]} ${pct}%</span>`;
+    }).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
 
     const stageMarkerPct = Math.max(4, Math.min(96, currentStagePosition * 100));
     const miniBarHtml = currentMedianStage
@@ -3447,9 +3449,11 @@
       .sort((a, b) => lfCounts[b] - lfCounts[a])
       .filter(k => lfCounts[k] > 0)
       .slice(0, 3);
-    const factorPills = topFactors.map(k =>
-      `<span class="section-summary-challenge-pill">${LIMITING_FACTOR_LABELS[k]}</span>`
-    ).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
+    const totalSurveysAcct = surveys.length;
+    const factorPills = topFactors.map(k => {
+      const pct = totalSurveysAcct > 0 ? Math.round((lfCounts[k] / totalSurveysAcct) * 100) : 0;
+      return `<span class="section-summary-challenge-pill">${LIMITING_FACTOR_LABELS[k]} ${pct}%</span>`;
+    }).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
 
     // Top 3 AI Tools
     const toolCounts = {};
@@ -3465,9 +3469,11 @@
       .sort((a, b) => toolCounts[b] - toolCounts[a])
       .filter(k => toolCounts[k] > 0)
       .slice(0, 3);
-    const toolPills = topTools.map(k =>
-      `<span class="section-summary-challenge-pill" style="background:#eef2ff;border-color:#c7d2fe;color:#4338ca;">${AI_TOOL_LABELS[k]}</span>`
-    ).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
+    const toolPills = topTools.map(k => {
+      const c = toolCounts[k];
+      const pct = totalSurveysAcct > 0 ? Math.round((c / totalSurveysAcct) * 100) : 0;
+      return `<span class="section-summary-challenge-pill" style="background:#eef2ff;border-color:#c7d2fe;color:#4338ca;">${AI_TOOL_LABELS[k]} ${pct}%</span>`;
+    }).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
 
     const wfmMarkerPct = Math.max(4, Math.min(96, currentWfmPosition * 100));
     const wfmMiniBarHtml = currentWfmStage !== null
