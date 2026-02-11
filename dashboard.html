@@ -3230,10 +3230,9 @@
   function renderLimitingFactorsWidget(surveys) {
     destroyChart('chartLimitingFactors');
 
-    // Count how many times each factor appears as primary (rank 1) or secondary (rank 2)
-    const primaryCounts = {};
-    const secondaryCounts = {};
-    LIMITING_FACTOR_ORDER.forEach(k => { primaryCounts[k] = 0; secondaryCounts[k] = 0; });
+    // Count how many times each factor is selected (rank 1 or rank 2)
+    const counts = {};
+    LIMITING_FACTOR_ORDER.forEach(k => counts[k] = 0);
 
     const totalSurveys = surveys.length;
 
@@ -3242,36 +3241,25 @@
       if (!lf) return;
       Object.entries(lf).forEach(([k, v]) => {
         if (k.startsWith('_')) return;
-        if (v?.rank === 1) primaryCounts[k]++;
-        else if (v?.rank === 2) secondaryCounts[k]++;
+        if (v?.rank === 1 || v?.rank === 2) counts[k]++;
       });
     });
 
-    // Sort factors by total mentions (primary + secondary) descending
-    const sorted = [...LIMITING_FACTOR_ORDER].sort((a, b) => {
-      const totalA = primaryCounts[a] + secondaryCounts[a];
-      const totalB = primaryCounts[b] + secondaryCounts[b];
-      return totalB - totalA;
-    });
+    // Sort factors by mentions descending
+    const sorted = [...LIMITING_FACTOR_ORDER].sort((a, b) => counts[b] - counts[a]);
 
     // Calculate percentages
-    const primaryPcts = {};
-    const secondaryPcts = {};
+    const pcts = {};
     sorted.forEach(k => {
-      primaryPcts[k] = totalSurveys > 0 ? Math.round((primaryCounts[k] / totalSurveys) * 100) : 0;
-      secondaryPcts[k] = totalSurveys > 0 ? Math.round((secondaryCounts[k] / totalSurveys) * 100) : 0;
+      pcts[k] = totalSurveys > 0 ? Math.round((counts[k] / totalSurveys) * 100) : 0;
     });
 
     const labels = sorted.map(k => LIMITING_FACTOR_LABELS[k] || k);
 
     // Per-bar colors: dim bars not matching the active filter
-    const primaryBgColors = sorted.map(k => {
+    const bgColors = sorted.map(k => {
       if (activeLimitingFactorFilter && activeLimitingFactorFilter !== k) return LF_COLORS.primary + '30';
       return LF_COLORS.primary;
-    });
-    const secondaryBgColors = sorted.map(k => {
-      if (activeLimitingFactorFilter && activeLimitingFactorFilter !== k) return LF_COLORS.secondary + '30';
-      return LF_COLORS.secondary;
     });
     const yTickColors = sorted.map(k => {
       if (activeLimitingFactorFilter && activeLimitingFactorFilter !== k) return '#d1d5db';
@@ -3284,24 +3272,14 @@
       type: 'bar',
       data: {
         labels: labels,
-        datasets: [
-          {
-            label: 'Primary',
-            data: sorted.map(k => primaryPcts[k]),
-            backgroundColor: primaryBgColors,
-            borderRadius: 4,
-            barPercentage: 0.7,
-            categoryPercentage: 0.8
-          },
-          {
-            label: 'Secondary',
-            data: sorted.map(k => secondaryPcts[k]),
-            backgroundColor: secondaryBgColors,
-            borderRadius: 4,
-            barPercentage: 0.7,
-            categoryPercentage: 0.8
-          }
-        ]
+        datasets: [{
+          label: 'Mentions',
+          data: sorted.map(k => pcts[k]),
+          backgroundColor: bgColors,
+          borderRadius: 4,
+          barPercentage: 0.7,
+          categoryPercentage: 0.8
+        }]
       },
       options: {
         indexAxis: 'y',
@@ -3313,16 +3291,13 @@
             callbacks: {
               label: function(context) {
                 const factorKey = sorted[context.dataIndex];
-                const rank = context.datasetIndex === 0 ? 'Primary' : 'Secondary';
-                const count = context.datasetIndex === 0 ? primaryCounts[factorKey] : secondaryCounts[factorKey];
-                return `${rank}: ${context.raw}% (${count} of ${totalSurveys})`;
+                return `${context.raw}% (${counts[factorKey]} of ${totalSurveys})`;
               }
             }
           }
         },
         scales: {
           x: {
-            stacked: true,
             max: 100,
             ticks: {
               callback: v => v + '%',
@@ -3333,7 +3308,6 @@
             border: { display: false }
           },
           y: {
-            stacked: true,
             ticks: {
               font: function(context) {
                 const k = sorted[context.index];
@@ -3363,11 +3337,7 @@
     legend.innerHTML = `
       <div class="legend-item">
         <div class="legend-dot" style="background:${LF_COLORS.primary};"></div>
-        <span>Primary factor</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:${LF_COLORS.secondary};"></div>
-        <span>Secondary factor</span>
+        <span>% of accounts reporting this factor</span>
       </div>`;
   }
 
@@ -3517,9 +3487,9 @@
   function renderAiChallengesWidget(surveys) {
     destroyChart('chartAiChallenges');
 
-    const primaryCounts = {};
-    const secondaryCounts = {};
-    AI_CHALLENGE_ORDER.forEach(k => { primaryCounts[k] = 0; secondaryCounts[k] = 0; });
+    // Count how many times each challenge is selected (rank 1 or rank 2)
+    const counts = {};
+    AI_CHALLENGE_ORDER.forEach(k => counts[k] = 0);
 
     const totalSurveys = surveys.length;
 
@@ -3528,34 +3498,23 @@
       if (!ch) return;
       Object.entries(ch).forEach(([k, v]) => {
         if (k.startsWith('_')) return;
-        if (v?.rank === 1) primaryCounts[k]++;
-        else if (v?.rank === 2) secondaryCounts[k]++;
+        if (v?.rank === 1 || v?.rank === 2) counts[k]++;
       });
     });
 
-    // Sort by total mentions descending
-    const sorted = [...AI_CHALLENGE_ORDER].sort((a, b) => {
-      const totalA = primaryCounts[a] + secondaryCounts[a];
-      const totalB = primaryCounts[b] + secondaryCounts[b];
-      return totalB - totalA;
-    });
+    // Sort by mentions descending
+    const sorted = [...AI_CHALLENGE_ORDER].sort((a, b) => counts[b] - counts[a]);
 
-    const primaryPcts = {};
-    const secondaryPcts = {};
+    const pcts = {};
     sorted.forEach(k => {
-      primaryPcts[k] = totalSurveys > 0 ? Math.round((primaryCounts[k] / totalSurveys) * 100) : 0;
-      secondaryPcts[k] = totalSurveys > 0 ? Math.round((secondaryCounts[k] / totalSurveys) * 100) : 0;
+      pcts[k] = totalSurveys > 0 ? Math.round((counts[k] / totalSurveys) * 100) : 0;
     });
 
     const labels = sorted.map(k => AI_CHALLENGE_LABELS[k] || k);
 
-    const primaryBgColors = sorted.map(k => {
+    const bgColors = sorted.map(k => {
       if (activeAiChallengeFilter && activeAiChallengeFilter !== k) return AI_CHALLENGE_COLORS.primary + '30';
       return AI_CHALLENGE_COLORS.primary;
-    });
-    const secondaryBgColors = sorted.map(k => {
-      if (activeAiChallengeFilter && activeAiChallengeFilter !== k) return AI_CHALLENGE_COLORS.secondary + '30';
-      return AI_CHALLENGE_COLORS.secondary;
     });
     const yTickColors = sorted.map(k => {
       if (activeAiChallengeFilter && activeAiChallengeFilter !== k) return '#d1d5db';
@@ -3568,24 +3527,14 @@
       type: 'bar',
       data: {
         labels: labels,
-        datasets: [
-          {
-            label: 'Primary',
-            data: sorted.map(k => primaryPcts[k]),
-            backgroundColor: primaryBgColors,
-            borderRadius: 4,
-            barPercentage: 0.7,
-            categoryPercentage: 0.8
-          },
-          {
-            label: 'Secondary',
-            data: sorted.map(k => secondaryPcts[k]),
-            backgroundColor: secondaryBgColors,
-            borderRadius: 4,
-            barPercentage: 0.7,
-            categoryPercentage: 0.8
-          }
-        ]
+        datasets: [{
+          label: 'Mentions',
+          data: sorted.map(k => pcts[k]),
+          backgroundColor: bgColors,
+          borderRadius: 4,
+          barPercentage: 0.7,
+          categoryPercentage: 0.8
+        }]
       },
       options: {
         indexAxis: 'y',
@@ -3597,16 +3546,13 @@
             callbacks: {
               label: function(context) {
                 const challengeKey = sorted[context.dataIndex];
-                const rank = context.datasetIndex === 0 ? 'Primary' : 'Secondary';
-                const count = context.datasetIndex === 0 ? primaryCounts[challengeKey] : secondaryCounts[challengeKey];
-                return `${rank}: ${context.raw}% (${count} of ${totalSurveys})`;
+                return `${context.raw}% (${counts[challengeKey]} of ${totalSurveys})`;
               }
             }
           }
         },
         scales: {
           x: {
-            stacked: true,
             max: 100,
             ticks: {
               callback: v => v + '%',
@@ -3617,7 +3563,6 @@
             border: { display: false }
           },
           y: {
-            stacked: true,
             ticks: {
               font: function(context) {
                 const k = sorted[context.index];
@@ -3647,11 +3592,7 @@
     legend.innerHTML = `
       <div class="legend-item">
         <div class="legend-dot" style="background:${AI_CHALLENGE_COLORS.primary};"></div>
-        <span>Primary challenge</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:${AI_CHALLENGE_COLORS.secondary};"></div>
-        <span>Secondary challenge</span>
+        <span>% of accounts reporting this challenge</span>
       </div>`;
   }
 
