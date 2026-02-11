@@ -134,6 +134,80 @@
     .btn-icon:hover { background: #f3f4f6; color: #1f2937; }
 
     /* ═══════════════════════════════════════════
+       ACTIONS DROPDOWN
+       ═══════════════════════════════════════════ */
+    .actions-wrapper {
+      position: relative;
+      margin-left: auto;
+    }
+    .actions-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.75rem;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .actions-toggle:hover { border-color: #d1d5db; color: #374151; }
+    .actions-toggle:focus,
+    .actions-toggle.open {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+      color: #374151;
+    }
+    .actions-toggle .gear-icon { font-size: 1rem; }
+    .actions-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      background: #fff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      z-index: 200;
+      min-width: 200px;
+      padding: 0.4rem 0;
+    }
+    .actions-menu.open { display: block; }
+    .actions-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.55rem 0.85rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #374151;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: background 0.1s;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .actions-menu-item:hover { background: #f3f4f6; }
+    .actions-menu-item .item-icon {
+      font-size: 1rem;
+      width: 1.25rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .actions-menu-item.danger { color: #ef4444; }
+    .actions-menu-item.danger:hover { background: #fef2f2; }
+    .actions-menu-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 0.3rem 0;
+    }
+
+    /* ═══════════════════════════════════════════
        MAIN CONTENT
        ═══════════════════════════════════════════ */
     .dashboard-content {
@@ -1205,6 +1279,8 @@
       .dashboard-header { padding: 1rem; }
       .header-top { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
       .header-controls { width: 100%; }
+      .actions-wrapper { margin-left: 0; }
+      .actions-menu { right: auto; left: 0; }
       .stage-pipeline { flex-wrap: wrap; gap: 0.5rem; }
       .stage-connector { display: none; }
       .stage-card { min-width: 80px; }
@@ -1333,14 +1409,32 @@
           </div>
         </div>
       </div>
-      <button class="btn btn-primary" id="uploadBtn">Upload Survey</button>
-      <button class="btn btn-secondary" id="exportDbBtn" title="Export database backup">Backup</button>
-      <button class="btn btn-secondary" id="exportSurveysBtn" title="Export all surveys as readable JSON">Export Surveys</button>
-      <label class="btn btn-secondary" title="Restore database from backup" style="margin:0;">
-        Restore
-        <input type="file" id="importDbInput" accept=".sqlite,.db" style="display:none;">
-      </label>
-      <button class="btn btn-secondary" id="clearDbBtn" title="Delete all surveys and reset the database" style="color:#ef4444;border-color:#fecaca;">Clear Database</button>
+      <!-- Actions dropdown -->
+      <div class="actions-wrapper">
+        <button class="actions-toggle" id="actionsToggle" type="button" title="Data & upload actions">
+          <span class="gear-icon">&#9881;</span> Actions <span style="font-size:0.7rem;color:#9ca3af;">&#9662;</span>
+        </button>
+        <div class="actions-menu" id="actionsMenu">
+          <button class="actions-menu-item" id="uploadBtn" type="button">
+            <span class="item-icon">&#128228;</span> Upload Survey
+          </button>
+          <button class="actions-menu-item" id="exportSurveysBtn" type="button">
+            <span class="item-icon">&#128196;</span> Export Surveys
+          </button>
+          <div class="actions-menu-divider"></div>
+          <button class="actions-menu-item" id="exportDbBtn" type="button">
+            <span class="item-icon">&#128190;</span> Backup Database
+          </button>
+          <label class="actions-menu-item" style="cursor:pointer;">
+            <span class="item-icon">&#128259;</span> Restore Database
+            <input type="file" id="importDbInput" accept=".sqlite,.db" style="display:none;">
+          </label>
+          <div class="actions-menu-divider"></div>
+          <button class="actions-menu-item danger" id="clearDbBtn" type="button">
+            <span class="item-icon">&#128465;</span> Clear Database
+          </button>
+        </div>
+      </div>
     </div>
     <div class="header-subtitle" id="headerSubtitle">Loading...</div>
   </header>
@@ -2053,6 +2147,23 @@
     }
   }
 
+  // Actions dropdown toggle
+  function toggleActionsMenu() {
+    document.getElementById('accountTypeMenu')?.classList.remove('open');
+    document.querySelector('#filterAccountType .multi-select-btn')?.classList.remove('open');
+    document.getElementById('engagementTypeMenu')?.classList.remove('open');
+    document.querySelector('#filterEngagementType .multi-select-btn')?.classList.remove('open');
+    document.getElementById('accountsMenu')?.classList.remove('open');
+    document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
+    document.getElementById('dmMenu')?.classList.remove('open');
+    document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
+
+    const menu = document.getElementById('actionsMenu');
+    const btn = document.getElementById('actionsToggle');
+    menu.classList.toggle('open');
+    btn.classList.toggle('open');
+  }
+
   // Accounts dropdown helpers
   function toggleAccountsMenu() {
     document.getElementById('accountTypeMenu')?.classList.remove('open');
@@ -2061,6 +2172,8 @@
     document.querySelector('#filterEngagementType .multi-select-btn')?.classList.remove('open');
     document.getElementById('dmMenu')?.classList.remove('open');
     document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
+    document.getElementById('actionsMenu')?.classList.remove('open');
+    document.getElementById('actionsToggle')?.classList.remove('open');
 
     const menu = document.getElementById('accountsMenu');
     const btn = document.querySelector('#filterAccounts .multi-select-btn');
@@ -2129,6 +2242,8 @@
     document.querySelector('#filterEngagementType .multi-select-btn')?.classList.remove('open');
     document.getElementById('accountsMenu')?.classList.remove('open');
     document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
+    document.getElementById('actionsMenu')?.classList.remove('open');
+    document.getElementById('actionsToggle')?.classList.remove('open');
 
     const menu = document.getElementById('dmMenu');
     const btn = document.querySelector('#filterDM .multi-select-btn');
@@ -2264,6 +2379,8 @@
     document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
     document.getElementById('dmMenu')?.classList.remove('open');
     document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
+    document.getElementById('actionsMenu')?.classList.remove('open');
+    document.getElementById('actionsToggle')?.classList.remove('open');
 
     const menu = document.getElementById('accountTypeMenu');
     const btn = document.querySelector('#filterAccountType .multi-select-btn');
@@ -2316,6 +2433,8 @@
     document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
     document.getElementById('dmMenu')?.classList.remove('open');
     document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
+    document.getElementById('actionsMenu')?.classList.remove('open');
+    document.getElementById('actionsToggle')?.classList.remove('open');
 
     const menu = document.getElementById('engagementTypeMenu');
     const btn = document.querySelector('#filterEngagementType .multi-select-btn');
@@ -4343,6 +4462,23 @@
         menu.classList.remove('open');
         document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
       }
+    });
+
+    // Close actions menu when clicking outside
+    document.addEventListener('click', e => {
+      const menu = document.getElementById('actionsMenu');
+      const container = document.querySelector('.actions-wrapper');
+      if (menu && container && !container.contains(e.target)) {
+        menu.classList.remove('open');
+        document.getElementById('actionsToggle')?.classList.remove('open');
+      }
+    });
+    // Auto-close actions menu after any action item is clicked
+    document.querySelectorAll('.actions-menu-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.getElementById('actionsMenu')?.classList.remove('open');
+        document.getElementById('actionsToggle')?.classList.remove('open');
+      });
     });
 
     // Database export/import/clear
