@@ -573,7 +573,7 @@
       flex-direction: column;
       gap: 0.15rem;
       position: absolute;
-      top: 0;
+      bottom: calc(100% + 1.2rem);
       left: 50%;
       transform: translateX(-50%);
       white-space: nowrap;
@@ -668,11 +668,10 @@
     /* Gradient Progress Bar */
     .progress-section {
       margin: 1rem 0 1.5rem;
-      padding: 0 0.5rem;
+      padding: 5.5rem 0.5rem 0;
     }
     .progress-bar-wrapper {
       position: relative;
-      padding-top: 5rem;
     }
     .progress-gradient-bar {
       height: 10px;
@@ -680,16 +679,17 @@
       background: linear-gradient(to right, #ef4444 0%, #f97316 16%, #eab308 33%, #eab308 50%, #4ade80 72%, #22c55e 100%);
       position: relative;
       margin: 0.75rem 0 0.4rem;
+      overflow: visible;
     }
     .progress-marker {
       position: absolute;
       bottom: 100%;
       transform: translateX(-50%);
       transition: left 0.5s ease;
-      font-size: 1rem;
+      font-size: 1.1rem;
       line-height: 1;
       color: #1f2937;
-      margin-bottom: -2px;
+      margin-bottom: 0px;
     }
     .progress-labels {
       display: flex;
@@ -1416,6 +1416,7 @@
       background: linear-gradient(to right, #ef4444 0%, #f97316 20%, #eab308 40%, #eab308 55%, #4ade80 75%, #22c55e 100%);
       position: relative;
       margin: 0.75rem 0 0.4rem;
+      overflow: visible;
     }
 
     /* ═══════════════════════════════════════════
@@ -1655,12 +1656,12 @@
         <!-- Gradient Progress Bar with Callout -->
         <div class="progress-section">
           <div class="progress-bar-wrapper">
-            <div class="stage-callout" id="stageCallout" onclick="openStageDescriptionModal()" style="cursor:pointer;left:50%;" title="Click for stage description">
-              <div class="stage-callout-label">Average Portfolio Stage</div>
-              <div class="stage-callout-value" id="stageCalloutValue">--</div>
-              <div class="stage-callout-desc">Median stage across all accounts</div>
-            </div>
             <div class="progress-gradient-bar">
+              <div class="stage-callout" id="stageCallout" onclick="openStageDescriptionModal()" style="cursor:pointer;left:50%;" title="Click for stage description">
+                <div class="stage-callout-label">Average Portfolio Stage</div>
+                <div class="stage-callout-value" id="stageCalloutValue">--</div>
+                <div class="stage-callout-desc">Median stage across all accounts</div>
+              </div>
               <div class="progress-marker" id="progressMarker" style="left:50%;">&#9650;</div>
             </div>
           </div>
@@ -1726,12 +1727,12 @@
         <!-- Gradient bar with Callout -->
         <div class="progress-section" id="wfmProgressSection" style="margin-left:0;">
           <div class="progress-bar-wrapper">
-            <div class="stage-callout" id="wfmCallout" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;left:50%;" title="Click for stage description">
-              <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
-              <div class="stage-callout-value" id="wfmAvgValue">--</div>
-              <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
-            </div>
             <div class="wfm-gradient-bar">
+              <div class="stage-callout" id="wfmCallout" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;left:50%;" title="Click for stage description">
+                <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
+                <div class="stage-callout-value" id="wfmAvgValue">--</div>
+                <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
+              </div>
               <div class="progress-marker" id="wfmProgressMarker" style="left:50%;">&#9650;</div>
             </div>
           </div>
