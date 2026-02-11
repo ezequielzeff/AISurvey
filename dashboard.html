@@ -680,6 +680,36 @@
       font-weight: 600;
       font-size: 0.75rem;
     }
+    .champion-details-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #6366f1;
+      padding: 0.5rem 0;
+      user-select: none;
+    }
+    .champion-details-toggle:hover {
+      color: #4338ca;
+    }
+    .champion-details-toggle .chevron {
+      font-size: 0.7rem;
+      transition: transform 0.2s ease;
+      display: inline-block;
+    }
+    .champion-details-toggle.expanded .chevron {
+      transform: rotate(180deg);
+    }
+    .champion-accounts-collapsible {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .champion-accounts-collapsible.expanded {
+      max-height: 600px;
+    }
 
     /* Stage Pipeline */
     .stage-pipeline {
@@ -4564,6 +4594,15 @@
     refreshDashboard();
   }
 
+  function toggleChampionDetails() {
+    const toggle = document.querySelector('.champion-details-toggle');
+    const content = document.querySelector('.champion-accounts-collapsible');
+    if (!toggle || !content) return;
+    const isExpanded = toggle.classList.toggle('expanded');
+    content.classList.toggle('expanded');
+    toggle.querySelector('.toggle-text').textContent = isExpanded ? 'Hide accounts' : 'Show accounts';
+  }
+
   function renderAiChampionWidget(surveys) {
     const container = document.getElementById('aiChampionContent');
     if (!container) return;
@@ -4626,20 +4665,26 @@
         <div class="champion-bar-label">${yesPct}% champion coverage across ${total} account${total !== 1 ? 's' : ''}</div>
       </div>
 
-      <div class="champion-accounts">
-        <div class="champion-accounts-col">
-          <div class="champion-accounts-title" style="color:#22c55e;">✅ With Champion (${withChampion.length})</div>
-          ${withChampion.length > 0 ? withChampion.map(a => {
-            const names = a.champions.length > 0 ? ` <span class="champion-name">(${a.champions.join(', ')})</span>` : '';
-            return `<div class="champion-account-item">${a.name}${names}</div>`;
-          }).join('') : '<div class="champion-account-item" style="color:#9ca3af;font-style:italic;">None</div>'}
-        </div>
-        <div class="champion-accounts-col">
-          <div class="champion-accounts-title" style="color:#ef4444;">❌ Without Champion (${withoutChampion.length})</div>
-          ${withoutChampion.length > 0 ? withoutChampion.map(a => {
-            const future = a.futureChampions.length > 0 ? ` <span class="champion-name" style="color:#f59e0b;">(future: ${a.futureChampions.join(', ')})</span>` : '';
-            return `<div class="champion-account-item">${a.name}${future}</div>`;
-          }).join('') : '<div class="champion-account-item" style="color:#9ca3af;font-style:italic;">None</div>'}
+      <div class="champion-details-toggle" onclick="toggleChampionDetails()">
+        <span class="toggle-text">Show accounts</span>
+        <span class="chevron">&#9662;</span>
+      </div>
+      <div class="champion-accounts-collapsible">
+        <div class="champion-accounts">
+          <div class="champion-accounts-col">
+            <div class="champion-accounts-title" style="color:#22c55e;">✅ With Champion (${withChampion.length})</div>
+            ${withChampion.length > 0 ? withChampion.map(a => {
+              const names = a.champions.length > 0 ? ` <span class="champion-name">(${a.champions.join(', ')})</span>` : '';
+              return `<div class="champion-account-item">${a.name}${names}</div>`;
+            }).join('') : '<div class="champion-account-item" style="color:#9ca3af;font-style:italic;">None</div>'}
+          </div>
+          <div class="champion-accounts-col">
+            <div class="champion-accounts-title" style="color:#ef4444;">❌ Without Champion (${withoutChampion.length})</div>
+            ${withoutChampion.length > 0 ? withoutChampion.map(a => {
+              const future = a.futureChampions.length > 0 ? ` <span class="champion-name" style="color:#f59e0b;">(future: ${a.futureChampions.join(', ')})</span>` : '';
+              return `<div class="champion-account-item">${a.name}${future}</div>`;
+            }).join('') : '<div class="champion-account-item" style="color:#9ca3af;font-style:italic;">None</div>'}
+          </div>
         </div>
       </div>
     `;
