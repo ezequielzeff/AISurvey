@@ -1469,11 +1469,18 @@
         </div> <!-- end widget-section-content -->
       </div> <!-- end Account AI Landscape section -->
 
-      <!-- Surveys Table -->
-      <div class="surveys-section">
-        <div class="surveys-section-header">
-          <div class="surveys-section-title">Uploaded Surveys</div>
+      <!-- Section: Surveys -->
+      <div class="widget-section">
+        <div class="widget-section-title" onclick="toggleSection(this)">
+          <span>Surveys</span>
+          <span class="section-chevron">&#9662;</span>
         </div>
+        <div class="widget-section-summary" id="sectionSummarySurveys">
+          <!-- Populated by JS -->
+        </div>
+        <div class="widget-section-content">
+
+      <div class="surveys-section">
         <table class="surveys-table">
           <thead>
             <tr>
@@ -1489,6 +1496,9 @@
           <tbody id="surveysTableBody"></tbody>
         </table>
       </div>
+
+        </div> <!-- end widget-section-content -->
+      </div> <!-- end Surveys section -->
     </div>
   </div>
 
@@ -2724,6 +2734,9 @@
 
     // Surveys table — filtered by active filters
     renderSurveysTable(surveys);
+
+    // Collapsed surveys section summary
+    updateSurveysSectionSummary(surveys);
   }
 
   function updateSummaryCards(surveys) {
@@ -3439,6 +3452,25 @@
       <div class="section-summary-item">
         <span class="section-summary-label">Top Tools:</span>
         <div class="section-summary-challenges">${toolPills}</div>
+      </div>`;
+  }
+
+  function updateSurveysSectionSummary(surveys) {
+    const el = document.getElementById('sectionSummarySurveys');
+    if (!el) return;
+
+    const count = surveys.length;
+    const accounts = new Set(surveys.map(s => s.data?.account?.name).filter(Boolean));
+
+    el.innerHTML = `
+      <div class="section-summary-item">
+        <span class="section-summary-label">Surveys:</span>
+        <span class="section-summary-value">${count}</span>
+      </div>
+      <div class="section-summary-divider"></div>
+      <div class="section-summary-item">
+        <span class="section-summary-label">Accounts:</span>
+        <span class="section-summary-value">${accounts.size}</span>
       </div>`;
   }
 
