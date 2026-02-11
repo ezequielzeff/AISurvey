@@ -539,15 +539,6 @@
     .widget-header {
       margin-bottom: 1.25rem;
     }
-    .widget-header-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    .widget-header-row .widget-header {
-      margin-bottom: 0;
-    }
     .widget-title {
       font-size: 1.15rem;
       font-weight: 700;
@@ -572,46 +563,20 @@
       border-left: 3px solid #4f46e5;
     }
 
-    /* Stage Callout */
-    .stage-callout {
+    /* Stage Badge (inline with title) */
+    .stage-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
       background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
       border: 1px solid #c7d2fe;
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      margin: 1.25rem 0;
-      display: inline-flex;
-      flex-direction: column;
-      gap: 0.15rem;
-    }
-    .stage-callout-label {
-      font-size: 0.75rem;
+      border-radius: 8px;
+      padding: 0.15rem 0.6rem;
+      font-size: 0.85rem;
       font-weight: 600;
-      color: #6366f1;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-    .stage-callout-value {
-      font-size: 1.5rem;
-      font-weight: 800;
       color: #312e81;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
+      white-space: nowrap;
     }
-    .stage-callout-desc {
-      font-size: 0.8rem;
-      color: #6b7280;
-    }
-    .stage-callout.stage-callout-inline {
-      padding: 0.4rem 0.75rem;
-      margin: 0;
-      border-radius: 10px;
-      gap: 0;
-      flex-shrink: 0;
-    }
-    .stage-callout-inline .stage-callout-label { font-size: 0.65rem; }
-    .stage-callout-inline .stage-callout-value { font-size: 1.1rem; font-weight: 700; }
-    .stage-callout-inline .stage-callout-desc { font-size: 0.7rem; }
 
     /* Stage Pipeline */
     .stage-pipeline {
@@ -1446,7 +1411,6 @@
       .wfm-journey { flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
       .wfm-journey .stage-connector { display: none; }
       .wfm-card { min-width: 80px; }
-      .widget-header-row { flex-direction: column; gap: 0.5rem; }
     }
     @media (max-width: 600px) {
       .summary-cards { grid-template-columns: repeat(2, 1fr); }
@@ -1653,17 +1617,10 @@
 
       <!-- Widget: Clients AI Adoption Stage -->
       <div class="widget-card" id="adoptionStageWidget">
-        <div class="widget-header-row">
-          <div class="widget-header">
-            <div class="widget-title">Clients AI Adoption Stage</div>
-            <div class="widget-subtitle">Portfolio-wide adoption maturity</div>
-            <div class="widget-question">At what stage are clients in their AI adoption journey? <a href="#" class="more-info-link" onclick="event.preventDefault();openMaturityInfoModal();">More info</a></div>
-          </div>
-          <div class="stage-callout stage-callout-inline" id="stageCallout" onclick="openStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">
-            <div class="stage-callout-label">Average Portfolio Stage</div>
-            <div class="stage-callout-value" id="stageCalloutValue">--</div>
-            <div class="stage-callout-desc">Median stage across all accounts</div>
-          </div>
+        <div class="widget-header">
+          <div class="widget-title">Clients AI Adoption Stage <span class="stage-badge" id="stageCalloutValue" onclick="openStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">--</span></div>
+          <div class="widget-subtitle">Portfolio-wide adoption maturity</div>
+          <div class="widget-question">At what stage are clients in their AI adoption journey? <a href="#" class="more-info-link" onclick="event.preventDefault();openMaturityInfoModal();">More info</a></div>
         </div>
 
         <!-- Stage Pipeline -->
@@ -1723,16 +1680,9 @@
 
       <!-- Widget: Account AI Agentic Workflow -->
       <div class="widget-card" id="workflowMaturityWidget">
-        <div class="widget-header-row">
-          <div class="widget-header">
-            <div class="widget-title">Account AI Agentic Workflow <a href="#" class="more-info-link" onclick="event.preventDefault();openAccountComparisonModal();" style="font-size:0.8rem;margin-left:0.5rem;">See accounts comparison</a></div>
-            <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
-          </div>
-          <div class="stage-callout stage-callout-inline" id="wfmCallout" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">
-            <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
-            <div class="stage-callout-value" id="wfmAvgValue">--</div>
-            <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
-          </div>
+        <div class="widget-header">
+          <div class="widget-title">Account AI Agentic Workflow <span class="stage-badge" id="wfmAvgValue" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">--</span> <a href="#" class="more-info-link" onclick="event.preventDefault();openAccountComparisonModal();" style="font-size:0.8rem;margin-left:0.5rem;">See accounts comparison</a></div>
+          <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
         </div>
 
         <div class="wfm-section-title">Maturity Journey Distribution</div>
@@ -3767,18 +3717,15 @@
       pcts[s] = filteredTotal > 0 ? Math.round((filteredCounts[s] / filteredTotal) * 100) : 0;
     });
 
-    // 3. Update callout — reflects FILTERED data, show stage name and score
+    // 3. Update badge — reflects FILTERED data, show stage name
     const avgEl = document.getElementById('wfmAvgValue');
-    const avgDescEl = document.getElementById('wfmAvgDesc');
     const roundedStage = Math.round(filteredAvg);
     currentWfmStage = filteredTotal > 0 ? roundedStage : null;
     currentWfmPosition = filteredTotal > 0 ? filteredAvg / 5 : 0.5;
     if (filteredTotal > 0) {
-      avgEl.textContent = `Stage ${roundedStage} — ${WFM_LABELS[roundedStage]}`;
-      avgDescEl.textContent = `Score: ${filteredAvg.toFixed(1)} / 5.0 · Average across ${filteredTotal} account${filteredTotal !== 1 ? 's' : ''}`;
+      avgEl.textContent = WFM_LABELS[roundedStage];
     } else {
       avgEl.textContent = '--';
-      avgDescEl.textContent = 'No accounts match current filters';
     }
 
     // 6. Render journey cards (always use filtered data for %, hybrid label for WFM filter)
