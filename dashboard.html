@@ -643,6 +643,13 @@
     }
     .surveys-table th.sort-asc::after { content: ' ▲'; opacity: 0.8; color: #4f46e5; }
     .surveys-table th.sort-desc::after { content: ' ▼'; opacity: 0.8; color: #4f46e5; }
+    .surveys-table th input[type="checkbox"],
+    .surveys-table td input[type="checkbox"] {
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+      accent-color: #4f46e5;
+    }
     .surveys-table td {
       padding: 0.75rem 1rem;
       border-bottom: 1px solid #f3f4f6;
@@ -1215,249 +1222,6 @@
       .wfm-card { padding: 0.6rem 0.5rem; }
     }
 
-    /* ═══════════════════════════════════════════
-       AI CHAT PANEL
-       ═══════════════════════════════════════════ */
-    .chat-toggle-btn {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      z-index: 200;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: #4f46e5;
-      color: #fff;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-    }
-    .chat-toggle-btn:hover {
-      background: #4338ca;
-      transform: scale(1.08);
-      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
-    }
-    .chat-toggle-btn.active {
-      background: #6366f1;
-    }
-
-    .chat-panel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 440px;
-      height: 100vh;
-      background: #fff;
-      border-left: 1px solid #e5e7eb;
-      box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
-      z-index: 150;
-      display: flex;
-      flex-direction: column;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    }
-    .chat-panel.open {
-      transform: translateX(0);
-    }
-
-    .chat-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.85rem 1rem;
-      border-bottom: 1px solid #e5e7eb;
-      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-      flex-shrink: 0;
-    }
-    .chat-header-left {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
-    .chat-title {
-      font-weight: 700;
-      font-size: 0.95rem;
-      color: #1e3a5f;
-    }
-    .chat-provider-select {
-      padding: 0.25rem 0.5rem;
-      border: 1px solid #c7d2fe;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      background: #fff;
-      color: #374151;
-      cursor: pointer;
-    }
-    .chat-header-right {
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-    .chat-header-right .btn-icon {
-      font-size: 1rem;
-      padding: 0.3rem;
-      border-radius: 6px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #6b7280;
-      transition: all 0.15s;
-    }
-    .chat-header-right .btn-icon:hover {
-      background: rgba(99, 102, 241, 0.1);
-      color: #4f46e5;
-    }
-
-    .chat-settings {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid #e5e7eb;
-      background: #f9fafb;
-      flex-shrink: 0;
-    }
-    .chat-settings-field {
-      margin-bottom: 0.5rem;
-    }
-    .chat-settings-field label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 0.2rem;
-    }
-    .chat-settings-field input {
-      width: 100%;
-      padding: 0.4rem 0.6rem;
-      border: 1.5px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-family: inherit;
-    }
-    .chat-settings-field input:focus {
-      outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-    .chat-settings .btn-sm {
-      padding: 0.3rem 0.75rem;
-      font-size: 0.78rem;
-      margin-top: 0.3rem;
-    }
-
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .chat-message {
-      display: flex;
-      flex-direction: column;
-      max-width: 88%;
-    }
-    .chat-message.user {
-      align-self: flex-end;
-    }
-    .chat-message.assistant {
-      align-self: flex-start;
-    }
-    .chat-message-content {
-      padding: 0.65rem 0.85rem;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .chat-message.user .chat-message-content {
-      background: #4f46e5;
-      color: #fff;
-      border-bottom-right-radius: 4px;
-    }
-    .chat-message.assistant .chat-message-content {
-      background: #f3f4f6;
-      color: #1f2937;
-      border-bottom-left-radius: 4px;
-    }
-
-    .chat-message-loading {
-      display: flex;
-      gap: 0.3rem;
-      padding: 0.65rem 0.85rem;
-      background: #f3f4f6;
-      border-radius: 12px;
-      border-bottom-left-radius: 4px;
-      align-self: flex-start;
-    }
-    .chat-message-loading span {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #9ca3af;
-      animation: chatBounce 1.4s infinite ease-in-out both;
-    }
-    .chat-message-loading span:nth-child(1) { animation-delay: -0.32s; }
-    .chat-message-loading span:nth-child(2) { animation-delay: -0.16s; }
-    @keyframes chatBounce {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1); }
-    }
-
-    .chat-input-area {
-      display: flex;
-      gap: 0.5rem;
-      padding: 0.75rem 1rem;
-      border-top: 1px solid #e5e7eb;
-      background: #fff;
-      flex-shrink: 0;
-    }
-    .chat-input-area textarea {
-      flex: 1;
-      padding: 0.5rem 0.7rem;
-      border: 1.5px solid #d1d5db;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-family: inherit;
-      resize: none;
-      line-height: 1.4;
-    }
-    .chat-input-area textarea:focus {
-      outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-    .chat-input-area .btn {
-      align-self: flex-end;
-      padding: 0.5rem 1rem;
-      font-size: 0.85rem;
-    }
-    .chat-input-area .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .chat-error {
-      color: #ef4444;
-      font-size: 0.8rem;
-      padding: 0.5rem 0.85rem;
-      background: #fef2f2;
-      border-radius: 8px;
-      border: 1px solid #fecaca;
-      align-self: flex-start;
-      max-width: 88%;
-    }
-
-    @media (max-width: 768px) {
-      .chat-panel { width: 100vw; }
-      .chat-toggle-btn { bottom: 1rem; right: 1rem; width: 48px; height: 48px; font-size: 1.3rem; }
-    }
   </style>
 </head>
 <body>
@@ -1533,6 +1297,22 @@
             <div class="multi-select-actions">
               <button type="button" onclick="selectAllEngagementTypes()">Select All</button>
               <button type="button" onclick="clearEngagementTypes()">Clear All</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="filter-group" style="position:relative;">
+        <span class="filter-label">Accounts:</span>
+        <div class="multi-select" id="filterAccounts">
+          <button class="multi-select-btn" onclick="toggleAccountsMenu()" type="button">
+            <span class="multi-select-text" id="accountsLabel">All Accounts</span>
+            <span class="multi-select-arrow">&#9662;</span>
+          </button>
+          <div class="multi-select-menu" id="accountsMenu" style="max-height:300px;overflow-y:auto;">
+            <!-- Dynamically populated by populateAccountsFilter() -->
+            <div class="multi-select-actions">
+              <button type="button" onclick="selectAllAccountsFromMenu()">Select All</button>
+              <button type="button" onclick="clearAllAccountsFromMenu()">Clear All</button>
             </div>
           </div>
         </div>
@@ -1748,6 +1528,9 @@
         <table class="surveys-table">
           <thead>
             <tr>
+              <th style="width:40px;text-align:center;padding:0.5rem;">
+                <input type="checkbox" id="selectAllTableAccounts" title="Select all / Clear all" onchange="onSelectAllAccountsToggle(this.checked)">
+              </th>
               <th class="sortable sort-asc" data-sort="account">Account</th>
               <th class="sortable" data-sort="type">Type</th>
               <th class="sortable" data-sort="maturity">Client AI Maturity</th>
@@ -1897,46 +1680,6 @@
           </tbody>
         </table>
       </div>
-    </div>
-  </div>
-
-  <!-- AI Chat Toggle Button -->
-  <button class="chat-toggle-btn" id="chatToggleBtn" title="AI Chat Assistant">💬</button>
-
-  <!-- AI Chat Side Panel -->
-  <div class="chat-panel" id="chatPanel">
-    <div class="chat-header">
-      <div class="chat-header-left">
-        <span class="chat-title">AI Assistant</span>
-        <select class="chat-provider-select" id="chatProvider">
-          <option value="openai">OpenAI</option>
-          <option value="anthropic">Anthropic</option>
-        </select>
-      </div>
-      <div class="chat-header-right">
-        <button class="btn-icon" id="chatSettingsBtn" title="API Settings">⚙️</button>
-        <button class="btn-icon" id="chatCloseBtn" title="Close">✕</button>
-      </div>
-    </div>
-    <div class="chat-settings" id="chatSettings" style="display:none;">
-      <div class="chat-settings-field">
-        <label>OpenAI API Key</label>
-        <input type="password" id="openaiKeyInput" placeholder="sk-..." />
-      </div>
-      <div class="chat-settings-field">
-        <label>Anthropic API Key</label>
-        <input type="password" id="anthropicKeyInput" placeholder="sk-ant-..." />
-      </div>
-      <button class="btn btn-primary btn-sm" id="saveKeysBtn">Save Keys</button>
-    </div>
-    <div class="chat-messages" id="chatMessages">
-      <div class="chat-message assistant">
-        <div class="chat-message-content">Hi! I can help you analyze your AI adoption survey data. Ask me anything about trends, challenges, or recommendations.</div>
-      </div>
-    </div>
-    <div class="chat-input-area">
-      <textarea id="chatInput" placeholder="Ask about your survey data..." rows="2"></textarea>
-      <button class="btn btn-primary" id="chatSendBtn">Send</button>
     </div>
   </div>
 
@@ -2243,7 +1986,7 @@
   // GLOBAL FILTER STATE
   // ═══════════════════════════════════════════
   let activeMaturityFilter = null; // null = all, or a stage id like 'exploring'
-  let activeAccountFilter = null;  // null = all, or an account name string
+  let selectedAccounts = new Set();  // empty = all, Set of account name strings
   let activeLimitingFactorFilter = null; // null = all, or a factor key like 'time'
   let activeAiToolFilter = null; // null = all, or a tool key like 'copilot' or '_custom'
   let activeAiChallengeFilter = null; // null = all, or a challenge key like 'skills'
@@ -2265,14 +2008,98 @@
     refreshDashboard();
   }
 
-  function setAccountFilter(accountName) {
-    activeAccountFilter = (activeAccountFilter === accountName) ? null : accountName;
+  function toggleAccountSelection(accountName) {
+    if (selectedAccounts.has(accountName)) {
+      selectedAccounts.delete(accountName);
+    } else {
+      selectedAccounts.add(accountName);
+    }
     refreshDashboard();
   }
 
   function clearAccountFilter() {
-    activeAccountFilter = null;
+    selectedAccounts.clear();
     refreshDashboard();
+  }
+
+  function selectAllVisibleAccounts() {
+    const surveys = getAllFilteredSurveys();
+    surveys.forEach(s => selectedAccounts.add(s.account_name));
+    refreshDashboard();
+  }
+
+  function onSelectAllAccountsToggle(checked) {
+    if (checked) {
+      selectAllVisibleAccounts();
+    } else {
+      clearAccountFilter();
+    }
+  }
+
+  // Accounts dropdown helpers
+  function toggleAccountsMenu() {
+    document.getElementById('accountTypeMenu')?.classList.remove('open');
+    document.querySelector('#filterAccountType .multi-select-btn')?.classList.remove('open');
+    document.getElementById('engagementTypeMenu')?.classList.remove('open');
+    document.querySelector('#filterEngagementType .multi-select-btn')?.classList.remove('open');
+
+    const menu = document.getElementById('accountsMenu');
+    const btn = document.querySelector('#filterAccounts .multi-select-btn');
+    menu.classList.toggle('open');
+    btn.classList.toggle('open');
+  }
+
+  function updateAccountsLabel() {
+    const label = document.getElementById('accountsLabel');
+    if (selectedAccounts.size === 0) {
+      label.textContent = 'All Accounts';
+    } else if (selectedAccounts.size === 1) {
+      label.textContent = [...selectedAccounts][0];
+    } else {
+      label.textContent = `${selectedAccounts.size} accounts`;
+    }
+  }
+
+  function onAccountSelectionChange() {
+    const checkboxes = document.querySelectorAll('#accountsMenu input[type="checkbox"]');
+    selectedAccounts.clear();
+    checkboxes.forEach(cb => { if (cb.checked) selectedAccounts.add(cb.value); });
+    refreshDashboard();
+  }
+
+  function selectAllAccountsFromMenu() {
+    document.querySelectorAll('#accountsMenu input[type="checkbox"]').forEach(cb => cb.checked = true);
+    onAccountSelectionChange();
+  }
+
+  function clearAllAccountsFromMenu() {
+    document.querySelectorAll('#accountsMenu input[type="checkbox"]').forEach(cb => cb.checked = false);
+    onAccountSelectionChange();
+  }
+
+  function populateAccountsFilter() {
+    const menu = document.getElementById('accountsMenu');
+    if (!menu) return;
+    menu.querySelectorAll('.multi-select-item').forEach(el => el.remove());
+
+    const allSurveys = getAllFilteredSurveys();
+    const names = [...new Set(allSurveys.map(s => s.account_name))].sort();
+
+    const actionsDiv = menu.querySelector('.multi-select-actions');
+    names.forEach(name => {
+      const label = document.createElement('label');
+      label.className = 'multi-select-item';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = name;
+      cb.checked = selectedAccounts.has(name);
+      cb.addEventListener('change', () => onAccountSelectionChange());
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(' ' + name));
+      menu.insertBefore(label, actionsDiv);
+    });
+
+    updateAccountsLabel();
   }
 
   function setLimitingFactorFilter(factor) {
@@ -2317,7 +2144,7 @@
 
   function clearAllFilters() {
     activeMaturityFilter = null;
-    activeAccountFilter = null;
+    selectedAccounts.clear();
     activeLimitingFactorFilter = null;
     activeAiToolFilter = null;
     activeAiChallengeFilter = null;
@@ -2337,9 +2164,11 @@
   // ACCOUNT TYPE MULTI-SELECT
   // ═══════════════════════════════════════════
   function toggleAccountTypeMenu() {
-    // Close engagement type menu if open
+    // Close other menus if open
     document.getElementById('engagementTypeMenu')?.classList.remove('open');
     document.querySelector('#filterEngagementType .multi-select-btn')?.classList.remove('open');
+    document.getElementById('accountsMenu')?.classList.remove('open');
+    document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
 
     const menu = document.getElementById('accountTypeMenu');
     const btn = document.querySelector('#filterAccountType .multi-select-btn');
@@ -2366,7 +2195,7 @@
   function onAccountTypeChange() {
     updateAccountTypeLabel();
     activeMaturityFilter = null;
-    activeAccountFilter = null;
+    selectedAccounts.clear();
     refreshDashboard();
   }
 
@@ -2384,9 +2213,11 @@
   // ENGAGEMENT TYPE MULTI-SELECT
   // ═══════════════════════════════════════════
   function toggleEngagementTypeMenu() {
-    // Close account type menu if open
+    // Close other menus if open
     document.getElementById('accountTypeMenu')?.classList.remove('open');
     document.querySelector('#filterAccountType .multi-select-btn')?.classList.remove('open');
+    document.getElementById('accountsMenu')?.classList.remove('open');
+    document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
 
     const menu = document.getElementById('engagementTypeMenu');
     const btn = document.querySelector('#filterEngagementType .multi-select-btn');
@@ -2413,7 +2244,7 @@
   function onEngagementTypeChange() {
     updateEngagementTypeLabel();
     activeMaturityFilter = null;
-    activeAccountFilter = null;
+    selectedAccounts.clear();
     refreshDashboard();
   }
 
@@ -2800,6 +2631,7 @@
     }
 
     populateComparisonPeriodOptions();
+    populateAccountsFilter();
   }
 
   function getSelectedAccountTypes() {
@@ -2861,9 +2693,9 @@
       );
     }
 
-    // Apply account filter
-    if (activeAccountFilter) {
-      surveys = surveys.filter(s => s.account_name === activeAccountFilter);
+    // Apply account filter (multi-select)
+    if (selectedAccounts.size > 0) {
+      surveys = surveys.filter(s => selectedAccounts.has(s.account_name));
     }
 
     // Apply limiting factor filter
@@ -2986,8 +2818,9 @@
     if (activeMaturityFilter) {
       filterTags += ` <span class="filter-active-tag">Stage: ${MATURITY_LABELS[activeMaturityFilter]} <span class="filter-clear-x" onclick="clearMaturityFilter()" title="Clear filter">&times;</span></span>`;
     }
-    if (activeAccountFilter) {
-      filterTags += ` <span class="filter-active-tag">Account: ${escapeHtml(activeAccountFilter)} <span class="filter-clear-x" onclick="clearAccountFilter()" title="Clear filter">&times;</span></span>`;
+    if (selectedAccounts.size > 0) {
+      const accountLabel = selectedAccounts.size === 1 ? escapeHtml([...selectedAccounts][0]) : `${selectedAccounts.size} accounts`;
+      filterTags += ` <span class="filter-active-tag">Account: ${accountLabel} <span class="filter-clear-x" onclick="clearAccountFilter()" title="Clear filter">&times;</span></span>`;
     }
     if (activeLimitingFactorFilter) {
       filterTags += ` <span class="filter-active-tag">Factor: ${LIMITING_FACTOR_LABELS[activeLimitingFactorFilter]} <span class="filter-clear-x" onclick="clearLimitingFactorFilter()" title="Clear filter">&times;</span></span>`;
@@ -3040,6 +2873,9 @@
 
     // Surveys table — filtered by active filters
     renderSurveysTable(surveys);
+
+    // Sync accounts dropdown with current data
+    populateAccountsFilter();
 
     // Collapsed surveys section summary
     updateSurveysSectionSummary(surveys);
@@ -3355,15 +3191,16 @@
 
     // Show/hide filter footer
     const footer = document.getElementById('widgetFooter');
-    const hasAnyFilter = activeMaturityFilter || activeAccountFilter || activeLimitingFactorFilter || activeAiToolFilter || activeAiChallengeFilter || activeWfmStageFilter !== null;
+    const hasAnyFilter = activeMaturityFilter || selectedAccounts.size > 0 || activeLimitingFactorFilter || activeAiToolFilter || activeAiChallengeFilter || activeWfmStageFilter !== null;
     if (hasAnyFilter) {
       footer.style.display = 'flex';
       let tags = '';
       if (activeMaturityFilter) {
         tags += `<span class="filter-active-tag">Stage: ${MATURITY_LABELS[activeMaturityFilter]} <span class="filter-clear-x" onclick="clearMaturityFilter()" title="Clear filter">&times;</span></span>`;
       }
-      if (activeAccountFilter) {
-        tags += `<span class="filter-active-tag">Account: ${escapeHtml(activeAccountFilter)} <span class="filter-clear-x" onclick="clearAccountFilter()" title="Clear filter">&times;</span></span>`;
+      if (selectedAccounts.size > 0) {
+        const accountLabel = selectedAccounts.size === 1 ? escapeHtml([...selectedAccounts][0]) : `${selectedAccounts.size} accounts`;
+        tags += `<span class="filter-active-tag">Account: ${accountLabel} <span class="filter-clear-x" onclick="clearAccountFilter()" title="Clear filter">&times;</span></span>`;
       }
       if (activeLimitingFactorFilter) {
         tags += `<span class="filter-active-tag">Factor: ${LIMITING_FACTOR_LABELS[activeLimitingFactorFilter]} <span class="filter-clear-x" onclick="clearLimitingFactorFilter()" title="Clear filter">&times;</span></span>`;
@@ -4080,7 +3917,7 @@
   function renderSurveysTable(surveys) {
     const tbody = document.getElementById('surveysTableBody');
     if (surveys.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
       return;
     }
 
@@ -4100,7 +3937,7 @@
       const maturityLabel = MATURITY_LABELS[maturity] || maturity;
       const maturityClass = maturity !== '-' ? `maturity-${maturity}` : '';
 
-      const isSelected = activeAccountFilter === s.account_name;
+      const isSelected = selectedAccounts.has(s.account_name);
       const rowStyle = isSelected ? 'background:#eef2ff;' : '';
       const escapedName = escapeHtml(s.account_name).replace(/'/g, "\\'");
 
@@ -4129,6 +3966,9 @@
       }
 
       return `<tr style="${rowStyle}cursor:pointer;" onclick="window.location.href='account-detail.html?id=${s.id}'" title="Click to view ${escapeHtml(s.account_name)} details">
+        <td style="text-align:center;width:40px;" onclick="event.stopPropagation();">
+          <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleAccountSelection('${escapedName}')" title="Select ${escapeHtml(s.account_name)}">
+        </td>
         <td><strong style="${isSelected ? 'color:#4f46e5;' : ''}">${escapeHtml(s.account_name)}</strong></td>
         <td onclick="event.stopPropagation();">
           <select class="account-type-select" onchange="updateAccountType(${s.id}, this.value)" title="Change account type">
@@ -4149,6 +3989,16 @@
         </td>
       </tr>`;
     }).join('');
+
+    // Sync "select all" checkbox in table header
+    const selectAllCb = document.getElementById('selectAllTableAccounts');
+    if (selectAllCb) {
+      const visibleNames = new Set(sorted.map(s => s.account_name));
+      const allSelected = visibleNames.size > 0 && [...visibleNames].every(n => selectedAccounts.has(n));
+      const someSelected = [...visibleNames].some(n => selectedAccounts.has(n));
+      selectAllCb.checked = allSelected;
+      selectAllCb.indeterminate = someSelected && !allSelected;
+    }
   }
 
   function escapeHtml(str) {
@@ -4268,406 +4118,11 @@
     db.run('DELETE FROM surveys');
     await saveToIndexedDB();
     activeMaturityFilter = null;
-    activeAccountFilter = null;
+    selectedAccounts.clear();
     populateFilters();
     refreshDashboard();
   }
 
-  // ═══════════════════════════════════════════
-  // AI CHAT PANEL
-  // ═══════════════════════════════════════════
-  let chatHistory = []; // {role, content} pairs
-  let chatSending = false;
-
-  function getChatApiKey(provider) {
-    return localStorage.getItem(`chat_api_key_${provider}`) || '';
-  }
-  function setChatApiKey(provider, key) {
-    localStorage.setItem(`chat_api_key_${provider}`, key);
-  }
-
-  function toggleChatPanel() {
-    const panel = document.getElementById('chatPanel');
-    const btn = document.getElementById('chatToggleBtn');
-    panel.classList.toggle('open');
-    btn.classList.toggle('active');
-  }
-
-  function toggleChatSettings() {
-    const settings = document.getElementById('chatSettings');
-    settings.style.display = settings.style.display === 'none' ? 'block' : 'none';
-  }
-
-  function saveChatApiKeys() {
-    const openaiKey = document.getElementById('openaiKeyInput').value.trim();
-    const anthropicKey = document.getElementById('anthropicKeyInput').value.trim();
-    if (openaiKey) setChatApiKey('openai', openaiKey);
-    if (anthropicKey) setChatApiKey('anthropic', anthropicKey);
-    localStorage.setItem('chat_provider', document.getElementById('chatProvider').value);
-    document.getElementById('chatSettings').style.display = 'none';
-    appendChatMessage('assistant', 'API keys saved successfully.');
-  }
-
-  function loadChatSettings() {
-    const openaiKey = getChatApiKey('openai');
-    const anthropicKey = getChatApiKey('anthropic');
-    if (openaiKey) document.getElementById('openaiKeyInput').value = openaiKey;
-    if (anthropicKey) document.getElementById('anthropicKeyInput').value = anthropicKey;
-    const savedProvider = localStorage.getItem('chat_provider');
-    if (savedProvider) document.getElementById('chatProvider').value = savedProvider;
-  }
-
-  function appendChatMessage(role, content) {
-    const container = document.getElementById('chatMessages');
-    const div = document.createElement('div');
-    div.className = `chat-message ${role}`;
-    const inner = document.createElement('div');
-    inner.className = 'chat-message-content';
-    inner.textContent = content;
-    div.appendChild(inner);
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-  }
-
-  function appendChatError(message) {
-    const container = document.getElementById('chatMessages');
-    const div = document.createElement('div');
-    div.className = 'chat-error';
-    div.textContent = message;
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-  }
-
-  function showChatLoading() {
-    const container = document.getElementById('chatMessages');
-    const div = document.createElement('div');
-    div.className = 'chat-message-loading';
-    div.id = 'chatLoadingIndicator';
-    div.innerHTML = '<span></span><span></span><span></span>';
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-  }
-
-  function hideChatLoading() {
-    const el = document.getElementById('chatLoadingIndicator');
-    if (el) el.remove();
-  }
-
-  function buildAnonymizedContext(surveys) {
-    if (!surveys || surveys.length === 0) return 'No survey data available.';
-
-    const total = surveys.length;
-
-    // --- Anonymization map ---
-    const accountMap = {};
-    const dmMap = {};
-    let accountIdx = 1;
-    let dmIdx = 1;
-    surveys.forEach(s => {
-      if (s.account_name && !accountMap[s.account_name]) {
-        accountMap[s.account_name] = `Account #${accountIdx++}`;
-      }
-      if (s.delivery_manager && !dmMap[s.delivery_manager]) {
-        dmMap[s.delivery_manager] = `Manager #${dmIdx++}`;
-      }
-    });
-
-    const lines = [];
-    lines.push(`=== AI ADOPTION SURVEY DATA (${total} surveys, ${Object.keys(accountMap).length} accounts) ===\n`);
-
-    // --- Adoption Stage Distribution ---
-    const stageCounts = {};
-    MATURITY_ORDER.forEach(k => stageCounts[k] = 0);
-    surveys.forEach(s => {
-      const val = s.data?.clientAILandscape?.maturity?.value;
-      if (val && stageCounts[val] !== undefined) stageCounts[val]++;
-    });
-    lines.push('--- AI Adoption Stage Distribution ---');
-    MATURITY_ORDER.forEach(k => {
-      const pct = total > 0 ? Math.round((stageCounts[k] / total) * 100) : 0;
-      lines.push(`  ${MATURITY_LABELS[k]}: ${stageCounts[k]} (${pct}%)`);
-    });
-    lines.push('');
-
-    // --- Account Type Distribution ---
-    const typeCounts = {};
-    ACCOUNT_TYPES.forEach(t => typeCounts[t.id] = 0);
-    surveys.forEach(s => {
-      if (s.account_type && typeCounts[s.account_type] !== undefined) typeCounts[s.account_type]++;
-    });
-    lines.push('--- Account Type Distribution ---');
-    ACCOUNT_TYPES.forEach(t => {
-      const pct = total > 0 ? Math.round((typeCounts[t.id] / total) * 100) : 0;
-      lines.push(`  ${t.label}: ${typeCounts[t.id]} (${pct}%)`);
-    });
-    lines.push('');
-
-    // --- Engagement Type Distribution ---
-    const engCounts = {};
-    ENGAGEMENT_TYPES.forEach(t => engCounts[t.id] = 0);
-    surveys.forEach(s => {
-      const own = s.data?.engagement?.ownership;
-      if (!own) return;
-      ENGAGEMENT_TYPES.forEach(t => {
-        if (own[t.id]?.selected) engCounts[t.id]++;
-      });
-    });
-    lines.push('--- Engagement Type Distribution ---');
-    ENGAGEMENT_TYPES.forEach(t => {
-      const pct = total > 0 ? Math.round((engCounts[t.id] / total) * 100) : 0;
-      lines.push(`  ${t.label}: ${engCounts[t.id]} (${pct}%)`);
-    });
-    lines.push('');
-
-    // --- AI Challenges ---
-    const chCounts = {};
-    AI_CHALLENGE_ORDER.forEach(k => chCounts[k] = 0);
-    surveys.forEach(s => {
-      const ch = s.data?.clientAILandscape?.challenges;
-      if (!ch) return;
-      Object.entries(ch).forEach(([k, v]) => {
-        if (k.startsWith('_')) return;
-        if (v?.rank === 1 || v?.rank === 2) chCounts[k] = (chCounts[k] || 0) + 1;
-      });
-    });
-    const sortedCh = [...AI_CHALLENGE_ORDER].sort((a, b) => chCounts[b] - chCounts[a]);
-    lines.push('--- AI Challenges (sorted by frequency) ---');
-    sortedCh.forEach(k => {
-      const pct = total > 0 ? Math.round((chCounts[k] / total) * 100) : 0;
-      lines.push(`  ${AI_CHALLENGE_LABELS[k]}: ${chCounts[k]} (${pct}%)`);
-    });
-    lines.push('');
-
-    // --- Limiting Factors ---
-    const lfCounts = {};
-    LIMITING_FACTOR_ORDER.forEach(k => lfCounts[k] = 0);
-    surveys.forEach(s => {
-      const lf = s.data?.limitingFactors;
-      if (!lf) return;
-      Object.entries(lf).forEach(([k, v]) => {
-        if (k.startsWith('_')) return;
-        if (v?.rank === 1 || v?.rank === 2) lfCounts[k] = (lfCounts[k] || 0) + 1;
-      });
-    });
-    const sortedLf = [...LIMITING_FACTOR_ORDER].sort((a, b) => lfCounts[b] - lfCounts[a]);
-    lines.push('--- Limiting Factors (sorted by frequency) ---');
-    sortedLf.forEach(k => {
-      const pct = total > 0 ? Math.round((lfCounts[k] / total) * 100) : 0;
-      lines.push(`  ${LIMITING_FACTOR_LABELS[k]}: ${lfCounts[k]} (${pct}%)`);
-    });
-    lines.push('');
-
-    // --- AI Tools Usage ---
-    const toolCounts = {};
-    AI_TOOL_ORDER.forEach(k => toolCounts[k] = 0);
-    let customToolCount = 0;
-    surveys.forEach(s => {
-      const ai = s.data?.toolsAndInfrastructure?.ai;
-      if (!ai) return;
-      AI_TOOL_ORDER.forEach(k => {
-        if (ai[k]?.selected) toolCounts[k]++;
-      });
-      if (ai.custom && ai.custom.length > 0) customToolCount++;
-    });
-    const sortedTools = [...AI_TOOL_ORDER].sort((a, b) => toolCounts[b] - toolCounts[a]);
-    lines.push('--- AI Tools Usage (sorted by frequency) ---');
-    sortedTools.forEach(k => {
-      const pct = total > 0 ? Math.round((toolCounts[k] / total) * 100) : 0;
-      lines.push(`  ${AI_TOOL_LABELS[k]}: ${toolCounts[k]} (${pct}%)`);
-    });
-    if (customToolCount > 0) {
-      lines.push(`  Custom Tools: ${customToolCount} accounts reported custom tools`);
-    }
-    lines.push('');
-
-    // --- Workflow Maturity Distribution ---
-    const wfmCounts = {};
-    WFM_STAGES.forEach(s => wfmCounts[s] = 0);
-    let wfmTotal = 0;
-    surveys.forEach(s => {
-      const wfm = s.data?.workflowMaturity;
-      if (!wfm) return;
-      ROLE_ORDER.forEach(r => {
-        const stage = wfm[r]?.stage;
-        if (stage !== undefined && stage !== null) {
-          wfmCounts[stage] = (wfmCounts[stage] || 0) + 1;
-          wfmTotal++;
-        }
-      });
-    });
-    lines.push('--- Workflow Maturity Stage Distribution (across all roles) ---');
-    WFM_STAGES.forEach(s => {
-      const pct = wfmTotal > 0 ? Math.round((wfmCounts[s] / wfmTotal) * 100) : 0;
-      lines.push(`  ${WFM_LABELS[s]}: ${wfmCounts[s]} (${pct}%)`);
-    });
-    lines.push('');
-
-    // --- Per-Role Averages ---
-    lines.push('--- Average Workflow Maturity per Role ---');
-    ROLE_ORDER.forEach(role => {
-      let sum = 0, count = 0;
-      surveys.forEach(s => {
-        const stage = s.data?.workflowMaturity?.[role]?.stage;
-        if (stage !== undefined && stage !== null) { sum += stage; count++; }
-      });
-      const avg = count > 0 ? (sum / count).toFixed(1) : 'N/A';
-      lines.push(`  ${ROLE_LABELS[role]}: ${avg} avg`);
-    });
-    lines.push('');
-
-    // --- Per-Account Summary (anonymized) ---
-    lines.push('--- Per-Account Details (anonymized) ---');
-    surveys.forEach(s => {
-      const anonName = accountMap[s.account_name] || 'Unknown';
-      const maturity = s.data?.clientAILandscape?.maturity?.value;
-      const maturityLabel = maturity ? MATURITY_LABELS[maturity] : 'Unknown';
-      const typeLabel = ACCOUNT_TYPE_LABELS[s.account_type] || s.account_type || 'Unknown';
-
-      // WFM per role
-      const wfmParts = [];
-      ROLE_ORDER.forEach(r => {
-        const stage = s.data?.workflowMaturity?.[r]?.stage;
-        if (stage !== undefined && stage !== null) {
-          wfmParts.push(`${ROLE_LABELS[r]}=${WFM_LABELS[stage]}`);
-        }
-      });
-
-      // Tools
-      const tools = [];
-      const ai = s.data?.toolsAndInfrastructure?.ai;
-      if (ai) {
-        AI_TOOL_ORDER.forEach(k => {
-          if (ai[k]?.selected) tools.push(AI_TOOL_LABELS[k]);
-        });
-      }
-
-      // Challenges
-      const challenges = [];
-      const ch = s.data?.clientAILandscape?.challenges;
-      if (ch) {
-        Object.entries(ch).forEach(([k, v]) => {
-          if (!k.startsWith('_') && (v?.rank === 1 || v?.rank === 2)) {
-            challenges.push(AI_CHALLENGE_LABELS[k] || k);
-          }
-        });
-      }
-
-      // Limiting factors
-      const factors = [];
-      const lf = s.data?.limitingFactors;
-      if (lf) {
-        Object.entries(lf).forEach(([k, v]) => {
-          if (!k.startsWith('_') && (v?.rank === 1 || v?.rank === 2)) {
-            factors.push(LIMITING_FACTOR_LABELS[k] || k);
-          }
-        });
-      }
-
-      lines.push(`\n  ${anonName} (${s.year} Q${s.quarter}, ${typeLabel}):`);
-      lines.push(`    Adoption Stage: ${maturityLabel}`);
-      if (wfmParts.length > 0) lines.push(`    Workflow Maturity: ${wfmParts.join(', ')}`);
-      if (tools.length > 0) lines.push(`    AI Tools: ${tools.join(', ')}`);
-      if (challenges.length > 0) lines.push(`    Challenges: ${challenges.join(', ')}`);
-      if (factors.length > 0) lines.push(`    Limiting Factors: ${factors.join(', ')}`);
-    });
-
-    return lines.join('\n');
-  }
-
-  async function sendChatMessage() {
-    if (chatSending) return;
-    const input = document.getElementById('chatInput');
-    const userMessage = input.value.trim();
-    if (!userMessage) return;
-
-    const provider = document.getElementById('chatProvider').value;
-    const apiKey = getChatApiKey(provider);
-    if (!apiKey) {
-      toggleChatSettings();
-      appendChatError(`Please enter your ${provider === 'openai' ? 'OpenAI' : 'Anthropic'} API key in settings.`);
-      return;
-    }
-
-    // Show user message
-    appendChatMessage('user', userMessage);
-    input.value = '';
-    chatSending = true;
-    document.getElementById('chatSendBtn').disabled = true;
-    showChatLoading();
-
-    // Build context from full dataset
-    const surveys = getAllFilteredSurveys();
-    const context = buildAnonymizedContext(surveys);
-    const systemPrompt = `You are an AI adoption analytics assistant helping analyze survey data from a technology services company. The data has been anonymized (account names replaced with "Account #N"). Here is the full dataset:\n\n${context}\n\nProvide clear, actionable insights. Use specific numbers from the data. When appropriate, identify trends, outliers, and recommendations.`;
-
-    // Add to history
-    chatHistory.push({ role: 'user', content: userMessage });
-
-    try {
-      let assistantResponse = '';
-
-      if (provider === 'openai') {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              ...chatHistory
-            ],
-            max_tokens: 4096
-          })
-        });
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({}));
-          throw new Error(err.error?.message || `OpenAI API error: ${response.status}`);
-        }
-        const data = await response.json();
-        assistantResponse = data.choices?.[0]?.message?.content || 'No response received.';
-
-      } else if (provider === 'anthropic') {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-            'anthropic-dangerous-direct-browser-access': 'true'
-          },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 4096,
-            system: systemPrompt,
-            messages: chatHistory
-          })
-        });
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({}));
-          throw new Error(err.error?.message || `Anthropic API error: ${response.status}`);
-        }
-        const data = await response.json();
-        assistantResponse = data.content?.[0]?.text || 'No response received.';
-      }
-
-      chatHistory.push({ role: 'assistant', content: assistantResponse });
-      hideChatLoading();
-      appendChatMessage('assistant', assistantResponse);
-
-    } catch (err) {
-      hideChatLoading();
-      appendChatError(`Error: ${err.message}`);
-      // Remove the failed user message from history so it can be retried
-      chatHistory.pop();
-    }
-
-    chatSending = false;
-    document.getElementById('chatSendBtn').disabled = false;
-    input.focus();
-  }
 
   // ═══════════════════════════════════════════
   // EVENT LISTENERS
@@ -4697,8 +4152,6 @@
         closeMaturityInfoModal();
         closeStageDescriptionModal();
         closeWfmInfoModal();
-        const chatPanel = document.getElementById('chatPanel');
-        if (chatPanel.classList.contains('open')) toggleChatPanel();
       }
     });
 
@@ -4722,12 +4175,12 @@
     // Filters
     document.getElementById('filterYear').addEventListener('change', () => {
       activeMaturityFilter = null;
-      activeAccountFilter = null;
+      selectedAccounts.clear();
       refreshDashboard();
     });
     document.getElementById('filterQuarter').addEventListener('change', () => {
       activeMaturityFilter = null;
-      activeAccountFilter = null;
+      selectedAccounts.clear();
       refreshDashboard();
     });
     document.getElementById('aiUsageCompPeriod').addEventListener('change', () => {
@@ -4756,6 +4209,16 @@
       }
     });
 
+    // Close accounts menu when clicking outside
+    document.addEventListener('click', e => {
+      const menu = document.getElementById('accountsMenu');
+      const container = document.getElementById('filterAccounts');
+      if (menu && container && !container.contains(e.target)) {
+        menu.classList.remove('open');
+        document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
+      }
+    });
+
     // Database export/import/clear
     document.getElementById('exportDbBtn').addEventListener('click', exportDatabase);
     document.getElementById('exportSurveysBtn').addEventListener('click', exportAllSurveys);
@@ -4764,19 +4227,6 @@
       e.target.value = '';
     });
     document.getElementById('clearDbBtn').addEventListener('click', clearDatabase);
-
-    // Chat panel
-    document.getElementById('chatToggleBtn').addEventListener('click', toggleChatPanel);
-    document.getElementById('chatCloseBtn').addEventListener('click', toggleChatPanel);
-    document.getElementById('chatSettingsBtn').addEventListener('click', toggleChatSettings);
-    document.getElementById('chatSendBtn').addEventListener('click', () => sendChatMessage());
-    document.getElementById('saveKeysBtn').addEventListener('click', saveChatApiKeys);
-    document.getElementById('chatInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
-    });
-    document.getElementById('chatProvider').addEventListener('change', () => {
-      localStorage.setItem('chat_provider', document.getElementById('chatProvider').value);
-    });
   }
 
   // ═══════════════════════════════════════════
@@ -4793,7 +4243,6 @@
       document.getElementById('mainContent').style.display = 'block';
 
       refreshDashboard();
-      loadChatSettings();
     } catch (e) {
       document.getElementById('loadingState').innerHTML = `
         <div style="color:#ef4444;text-align:center;padding:2rem;">
