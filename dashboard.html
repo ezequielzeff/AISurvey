@@ -568,11 +568,17 @@
       background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
       border: 1px solid #c7d2fe;
       border-radius: 12px;
-      padding: 1rem 1.25rem;
-      margin: 1.25rem 0;
+      padding: 0.75rem 1rem;
       display: inline-flex;
       flex-direction: column;
       gap: 0.15rem;
+      position: absolute;
+      bottom: calc(100% + 0.4rem);
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      z-index: 10;
+      transition: left 0.5s ease;
     }
     .stage-callout-label {
       font-size: 0.75rem;
@@ -663,6 +669,8 @@
     .progress-section {
       margin: 1rem 0 1.5rem;
       padding: 0 0.5rem;
+      padding-top: 5.5rem;
+      position: relative;
     }
     .progress-gradient-bar {
       height: 10px;
@@ -672,16 +680,14 @@
       margin: 0.75rem 0 0.4rem;
     }
     .progress-marker {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #1f2937;
-      border: 3px solid #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       position: absolute;
-      top: 50%;
-      transform: translate(-50%, -50%);
+      bottom: 100%;
+      transform: translateX(-50%);
       transition: left 0.5s ease;
+      font-size: 1rem;
+      line-height: 1;
+      color: #1f2937;
+      margin-bottom: -2px;
     }
     .progress-labels {
       display: flex;
@@ -1639,22 +1645,20 @@
           <div class="widget-question">At what stage are clients in their AI adoption journey? <a href="#" class="more-info-link" onclick="event.preventDefault();openMaturityInfoModal();">More info</a></div>
         </div>
 
-        <!-- Average Stage Callout -->
-        <div class="stage-callout" id="stageCallout" onclick="openStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">
-          <div class="stage-callout-label">Average Portfolio Stage</div>
-          <div class="stage-callout-value" id="stageCalloutValue">--</div>
-          <div class="stage-callout-desc">Median stage across all accounts</div>
-        </div>
-
         <!-- Stage Pipeline -->
         <div class="stage-pipeline" id="stagePipeline">
           <!-- Populated by JS -->
         </div>
 
-        <!-- Gradient Progress Bar -->
+        <!-- Gradient Progress Bar with Callout -->
         <div class="progress-section">
+          <div class="stage-callout" id="stageCallout" onclick="openStageDescriptionModal()" style="cursor:pointer;left:50%;" title="Click for stage description">
+            <div class="stage-callout-label">Average Portfolio Stage</div>
+            <div class="stage-callout-value" id="stageCalloutValue">--</div>
+            <div class="stage-callout-desc">Median stage across all accounts</div>
+          </div>
           <div class="progress-gradient-bar">
-            <div class="progress-marker" id="progressMarker" style="left:50%;"></div>
+            <div class="progress-marker" id="progressMarker" style="left:50%;">&#9650;</div>
           </div>
           <div class="progress-labels">
             <span>Less Mature</span>
@@ -1708,13 +1712,6 @@
           <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
         </div>
 
-        <!-- Average Maturity Callout -->
-        <div class="stage-callout" id="wfmCallout" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">
-          <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
-          <div class="stage-callout-value" id="wfmAvgValue">--</div>
-          <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
-        </div>
-
         <div class="wfm-section-title">Maturity Journey Distribution</div>
 
         <!-- Journey visualization -->
@@ -1722,10 +1719,15 @@
           <!-- Populated by JS -->
         </div>
 
-        <!-- Gradient bar -->
+        <!-- Gradient bar with Callout -->
         <div class="progress-section" id="wfmProgressSection" style="margin-left:0;">
+          <div class="stage-callout" id="wfmCallout" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;left:50%;" title="Click for stage description">
+            <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
+            <div class="stage-callout-value" id="wfmAvgValue">--</div>
+            <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
+          </div>
           <div class="wfm-gradient-bar">
-            <div class="progress-marker" id="wfmProgressMarker" style="left:50%;"></div>
+            <div class="progress-marker" id="wfmProgressMarker" style="left:50%;">&#9650;</div>
           </div>
           <div class="progress-labels">
             <span>← Starting Point</span>
@@ -3616,29 +3618,35 @@
       </div>${connector}`;
     }).join('');
 
-    // Update progress bar marker
+    // Update progress bar marker + callout position
     const marker = document.getElementById('progressMarker');
+    const callout = document.getElementById('stageCallout');
     const progressBar = document.querySelector('.progress-gradient-bar');
     const pipelineEl = document.getElementById('stagePipeline');
     const stageCards = pipelineEl.querySelectorAll('.stage-card');
     const barRect = progressBar ? progressBar.getBoundingClientRect() : null;
 
-    // Hide marker when no surveys have maturity data (e.g., clicking a stage with 0%)
+    function setAdoptionMarkerPos(pct) {
+      marker.style.left = pct + '%';
+      callout.style.left = pct + '%';
+    }
+
+    // Hide marker+callout when no surveys have maturity data
     if (totalAll === 0) {
       marker.style.display = 'none';
+      callout.style.display = 'none';
     } else if (barRect && stageCards.length > 0) {
       marker.style.display = '';
-      // When a maturity filter is active, snap marker to the center of the selected stage card
+      callout.style.display = '';
       if (activeMaturityFilter) {
         const filterIdx = MATURITY_ORDER.indexOf(activeMaturityFilter);
         if (filterIdx >= 0 && filterIdx < stageCards.length) {
           const cardRect = stageCards[filterIdx].getBoundingClientRect();
           const cardCenter = cardRect.left + cardRect.width / 2;
           const markerPct = Math.max(2, Math.min(98, ((cardCenter - barRect.left) / barRect.width) * 100));
-          marker.style.left = markerPct + '%';
+          setAdoptionMarkerPos(markerPct);
         }
       } else {
-        // No filter: position based on median across real stages (excluding Don't Know)
         const dontKnowIdx = MATURITY_ORDER.indexOf('dont-know');
         const firstRealIdx = dontKnowIdx === 0 ? 1 : 0;
         const lastRealIdx = dontKnowIdx === MATURITY_ORDER.length - 1 ? MATURITY_ORDER.length - 2 : MATURITY_ORDER.length - 1;
@@ -3648,14 +3656,15 @@
           const startPct = ((firstRealCard.getBoundingClientRect().left + firstRealCard.offsetWidth / 2) - barRect.left) / barRect.width * 100;
           const endPct = ((lastRealCard.getBoundingClientRect().left + lastRealCard.offsetWidth / 2) - barRect.left) / barRect.width * 100;
           const markerPct = Math.max(2, Math.min(98, startPct + avgPosition * (endPct - startPct)));
-          marker.style.left = markerPct + '%';
+          setAdoptionMarkerPos(markerPct);
         } else {
           const markerPct = Math.max(5, Math.min(95, avgPosition * 100));
-          marker.style.left = markerPct + '%';
+          setAdoptionMarkerPos(markerPct);
         }
       }
     } else {
       marker.style.display = 'none';
+      callout.style.display = 'none';
     }
 
     // Render legend (all stages including dont-know)
@@ -3794,25 +3803,31 @@
       </div>${connector}`;
     }).join('');
 
-    // 7. Position progress bar marker — snap to card center when filter active
-    const marker = document.getElementById('wfmProgressMarker');
+    // 7. Position progress bar marker + callout — snap to card center when filter active
+    const wfmMarker = document.getElementById('wfmProgressMarker');
+    const wfmCallout = document.getElementById('wfmCallout');
     const wfmBar = document.querySelector('.wfm-gradient-bar');
     const wfmCards = journey.querySelectorAll('.wfm-card');
     const wfmBarRect = wfmBar ? wfmBar.getBoundingClientRect() : null;
 
+    function setWfmMarkerPos(pct) {
+      wfmMarker.style.left = pct + '%';
+      wfmCallout.style.left = pct + '%';
+    }
+
     if (filteredTotal === 0) {
-      marker.style.display = 'none';
+      wfmMarker.style.display = 'none';
+      wfmCallout.style.display = 'none';
     } else if (wfmBarRect && wfmCards.length > 0) {
-      marker.style.display = '';
+      wfmMarker.style.display = '';
+      wfmCallout.style.display = '';
       if (activeWfmStageFilter !== null && activeWfmStageFilter < wfmCards.length) {
-        // Snap to the center of the selected stage card
         const cardEl = wfmCards[activeWfmStageFilter];
         const cardRect = cardEl.getBoundingClientRect();
         const cardCenter = cardRect.left + cardRect.width / 2;
         const markerPct = Math.max(2, Math.min(98, ((cardCenter - wfmBarRect.left) / wfmBarRect.width) * 100));
-        marker.style.left = markerPct + '%';
+        setWfmMarkerPos(markerPct);
       } else {
-        // No WFM filter: position based on filtered average using card positions
         const firstCard = wfmCards[0];
         const lastCard = wfmCards[wfmCards.length - 1];
         const startX = firstCard.getBoundingClientRect().left + firstCard.offsetWidth / 2;
@@ -3820,10 +3835,11 @@
         const avgPosition = filteredAvg / 5;
         const markerX = startX + avgPosition * (endX - startX);
         const markerPct = Math.max(2, Math.min(98, ((markerX - wfmBarRect.left) / wfmBarRect.width) * 100));
-        marker.style.left = markerPct + '%';
+        setWfmMarkerPos(markerPct);
       }
     } else {
-      marker.style.display = 'none';
+      wfmMarker.style.display = 'none';
+      wfmCallout.style.display = 'none';
     }
   }
 
