@@ -568,17 +568,11 @@
       background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
       border: 1px solid #c7d2fe;
       border-radius: 12px;
-      padding: 0.75rem 1rem;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
       display: inline-flex;
       flex-direction: column;
       gap: 0.15rem;
-      position: absolute;
-      bottom: calc(100% + 1.2rem);
-      left: 50%;
-      transform: translateX(-50%);
-      white-space: nowrap;
-      z-index: 10;
-      transition: left 0.5s ease;
     }
     .stage-callout-label {
       font-size: 0.75rem;
@@ -668,10 +662,7 @@
     /* Gradient Progress Bar */
     .progress-section {
       margin: 1rem 0 1.5rem;
-      padding: 5.5rem 0.5rem 0;
-    }
-    .progress-bar-wrapper {
-      position: relative;
+      padding: 0 0.5rem;
     }
     .progress-gradient-bar {
       height: 10px;
@@ -1653,17 +1644,17 @@
           <!-- Populated by JS -->
         </div>
 
-        <!-- Gradient Progress Bar with Callout -->
+        <!-- Average Stage Callout -->
+        <div class="stage-callout" id="stageCallout" onclick="openStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">
+          <div class="stage-callout-label">Average Portfolio Stage</div>
+          <div class="stage-callout-value" id="stageCalloutValue">--</div>
+          <div class="stage-callout-desc">Median stage across all accounts</div>
+        </div>
+
+        <!-- Gradient Progress Bar -->
         <div class="progress-section">
-          <div class="progress-bar-wrapper">
-            <div class="progress-gradient-bar">
-              <div class="stage-callout" id="stageCallout" onclick="openStageDescriptionModal()" style="cursor:pointer;left:50%;" title="Click for stage description">
-                <div class="stage-callout-label">Average Portfolio Stage</div>
-                <div class="stage-callout-value" id="stageCalloutValue">--</div>
-                <div class="stage-callout-desc">Median stage across all accounts</div>
-              </div>
-              <div class="progress-marker" id="progressMarker" style="left:50%;">&#9650;</div>
-            </div>
+          <div class="progress-gradient-bar">
+            <div class="progress-marker" id="progressMarker" style="left:50%;">&#9650;</div>
           </div>
           <div class="progress-labels">
             <span>Less Mature</span>
@@ -1724,17 +1715,17 @@
           <!-- Populated by JS -->
         </div>
 
-        <!-- Gradient bar with Callout -->
+        <!-- Average Maturity Callout -->
+        <div class="stage-callout" id="wfmCallout" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">
+          <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
+          <div class="stage-callout-value" id="wfmAvgValue">--</div>
+          <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
+        </div>
+
+        <!-- Gradient bar -->
         <div class="progress-section" id="wfmProgressSection" style="margin-left:0;">
-          <div class="progress-bar-wrapper">
-            <div class="wfm-gradient-bar">
-              <div class="stage-callout" id="wfmCallout" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;left:50%;" title="Click for stage description">
-                <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
-                <div class="stage-callout-value" id="wfmAvgValue">--</div>
-                <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
-              </div>
-              <div class="progress-marker" id="wfmProgressMarker" style="left:50%;">&#9650;</div>
-            </div>
+          <div class="wfm-gradient-bar">
+            <div class="progress-marker" id="wfmProgressMarker" style="left:50%;">&#9650;</div>
           </div>
           <div class="progress-labels">
             <span>← Starting Point</span>
@@ -3625,9 +3616,8 @@
       </div>${connector}`;
     }).join('');
 
-    // Update progress bar marker + callout position
+    // Update progress bar marker position
     const marker = document.getElementById('progressMarker');
-    const callout = document.getElementById('stageCallout');
     const progressBar = document.querySelector('.progress-gradient-bar');
     const pipelineEl = document.getElementById('stagePipeline');
     const stageCards = pipelineEl.querySelectorAll('.stage-card');
@@ -3635,16 +3625,13 @@
 
     function setAdoptionMarkerPos(pct) {
       marker.style.left = pct + '%';
-      callout.style.left = pct + '%';
     }
 
-    // Hide marker+callout when no surveys have maturity data
+    // Hide marker when no surveys have maturity data
     if (totalAll === 0) {
       marker.style.display = 'none';
-      callout.style.display = 'none';
     } else if (barRect && stageCards.length > 0) {
       marker.style.display = '';
-      callout.style.display = '';
       if (activeMaturityFilter) {
         const filterIdx = MATURITY_ORDER.indexOf(activeMaturityFilter);
         if (filterIdx >= 0 && filterIdx < stageCards.length) {
@@ -3671,7 +3658,6 @@
       }
     } else {
       marker.style.display = 'none';
-      callout.style.display = 'none';
     }
 
     // Render legend (all stages including dont-know)
@@ -3810,24 +3796,20 @@
       </div>${connector}`;
     }).join('');
 
-    // 7. Position progress bar marker + callout — snap to card center when filter active
+    // 7. Position progress bar marker — snap to card center when filter active
     const wfmMarker = document.getElementById('wfmProgressMarker');
-    const wfmCallout = document.getElementById('wfmCallout');
     const wfmBar = document.querySelector('.wfm-gradient-bar');
     const wfmCards = journey.querySelectorAll('.wfm-card');
     const wfmBarRect = wfmBar ? wfmBar.getBoundingClientRect() : null;
 
     function setWfmMarkerPos(pct) {
       wfmMarker.style.left = pct + '%';
-      wfmCallout.style.left = pct + '%';
     }
 
     if (filteredTotal === 0) {
       wfmMarker.style.display = 'none';
-      wfmCallout.style.display = 'none';
     } else if (wfmBarRect && wfmCards.length > 0) {
       wfmMarker.style.display = '';
-      wfmCallout.style.display = '';
       if (activeWfmStageFilter !== null && activeWfmStageFilter < wfmCards.length) {
         const cardEl = wfmCards[activeWfmStageFilter];
         const cardRect = cardEl.getBoundingClientRect();
@@ -3846,7 +3828,6 @@
       }
     } else {
       wfmMarker.style.display = 'none';
-      wfmCallout.style.display = 'none';
     }
   }
 
