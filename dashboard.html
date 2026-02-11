@@ -573,7 +573,7 @@
       flex-direction: column;
       gap: 0.15rem;
       position: absolute;
-      bottom: calc(100% + 0.4rem);
+      top: 0;
       left: 50%;
       transform: translateX(-50%);
       white-space: nowrap;
@@ -669,8 +669,10 @@
     .progress-section {
       margin: 1rem 0 1.5rem;
       padding: 0 0.5rem;
-      padding-top: 5.5rem;
+    }
+    .progress-bar-wrapper {
       position: relative;
+      padding-top: 5rem;
     }
     .progress-gradient-bar {
       height: 10px;
@@ -1652,13 +1654,15 @@
 
         <!-- Gradient Progress Bar with Callout -->
         <div class="progress-section">
-          <div class="stage-callout" id="stageCallout" onclick="openStageDescriptionModal()" style="cursor:pointer;left:50%;" title="Click for stage description">
-            <div class="stage-callout-label">Average Portfolio Stage</div>
-            <div class="stage-callout-value" id="stageCalloutValue">--</div>
-            <div class="stage-callout-desc">Median stage across all accounts</div>
-          </div>
-          <div class="progress-gradient-bar">
-            <div class="progress-marker" id="progressMarker" style="left:50%;">&#9650;</div>
+          <div class="progress-bar-wrapper">
+            <div class="stage-callout" id="stageCallout" onclick="openStageDescriptionModal()" style="cursor:pointer;left:50%;" title="Click for stage description">
+              <div class="stage-callout-label">Average Portfolio Stage</div>
+              <div class="stage-callout-value" id="stageCalloutValue">--</div>
+              <div class="stage-callout-desc">Median stage across all accounts</div>
+            </div>
+            <div class="progress-gradient-bar">
+              <div class="progress-marker" id="progressMarker" style="left:50%;">&#9650;</div>
+            </div>
           </div>
           <div class="progress-labels">
             <span>Less Mature</span>
@@ -1721,13 +1725,15 @@
 
         <!-- Gradient bar with Callout -->
         <div class="progress-section" id="wfmProgressSection" style="margin-left:0;">
-          <div class="stage-callout" id="wfmCallout" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;left:50%;" title="Click for stage description">
-            <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
-            <div class="stage-callout-value" id="wfmAvgValue">--</div>
-            <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
-          </div>
-          <div class="wfm-gradient-bar">
-            <div class="progress-marker" id="wfmProgressMarker" style="left:50%;">&#9650;</div>
+          <div class="progress-bar-wrapper">
+            <div class="stage-callout" id="wfmCallout" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;left:50%;" title="Click for stage description">
+              <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
+              <div class="stage-callout-value" id="wfmAvgValue">--</div>
+              <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
+            </div>
+            <div class="wfm-gradient-bar">
+              <div class="progress-marker" id="wfmProgressMarker" style="left:50%;">&#9650;</div>
+            </div>
           </div>
           <div class="progress-labels">
             <span>← Starting Point</span>
