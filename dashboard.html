@@ -1389,6 +1389,17 @@
         </div> <!-- end widget-section-content -->
       </div> <!-- end Client AI Landscape section -->
 
+      <!-- Section: Account AI Landscape -->
+      <div class="widget-section">
+        <div class="widget-section-title" onclick="toggleSection(this)">
+          <span>Account AI Landscape</span>
+          <span class="section-chevron">&#9662;</span>
+        </div>
+        <div class="widget-section-summary" id="sectionSummaryAccount">
+          <!-- Populated by JS -->
+        </div>
+        <div class="widget-section-content">
+
       <!-- Widget: Account AI Agentic Workflow -->
       <div class="widget-card" id="workflowMaturityWidget">
         <div class="widget-header">
@@ -1447,6 +1458,9 @@
         </div>
         <div class="widget-legend" id="aiToolsLegend"></div>
       </div>
+
+        </div> <!-- end widget-section-content -->
+      </div> <!-- end Account AI Landscape section -->
 
       <!-- Surveys Table -->
       <div class="surveys-section">
@@ -2698,6 +2712,9 @@
     // AI Tools Usage Widget — shows all tools (dimmed/highlighted via filter state)
     renderAiToolsWidget(allSurveys);
 
+    // Collapsed account section summary (must run after renderWorkflowMaturityWidget sets currentWfmStage)
+    updateAccountSectionSummary(allSurveys);
+
     // Surveys table — filtered by active filters
     renderSurveysTable(surveys);
   }
@@ -3352,6 +3369,69 @@
       <div class="section-summary-item">
         <span class="section-summary-label">Top Challenges:</span>
         <div class="section-summary-challenges">${challengePills}</div>
+      </div>`;
+  }
+
+  function updateAccountSectionSummary(surveys) {
+    const el = document.getElementById('sectionSummaryAccount');
+    if (!el) return;
+
+    // Portfolio Average Maturity (reuse currentWfmStage set by renderWorkflowMaturityWidget)
+    const maturityHtml = currentWfmStage !== null
+      ? `Stage ${currentWfmStage} — ${WFM_LABELS[currentWfmStage]}`
+      : '--';
+
+    // Top 3 Limiting Factors
+    const lfCounts = {};
+    LIMITING_FACTOR_ORDER.forEach(k => lfCounts[k] = 0);
+    surveys.forEach(s => {
+      const lf = s.data?.limitingFactors;
+      if (!lf) return;
+      Object.entries(lf).forEach(([k, v]) => {
+        if (k.startsWith('_')) return;
+        if (v?.rank === 1 || v?.rank === 2) lfCounts[k]++;
+      });
+    });
+    const topFactors = [...LIMITING_FACTOR_ORDER]
+      .sort((a, b) => lfCounts[b] - lfCounts[a])
+      .filter(k => lfCounts[k] > 0)
+      .slice(0, 3);
+    const factorPills = topFactors.map(k =>
+      `<span class="section-summary-challenge-pill">${LIMITING_FACTOR_LABELS[k]}</span>`
+    ).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
+
+    // Top 3 AI Tools
+    const toolCounts = {};
+    AI_TOOL_ORDER.forEach(k => toolCounts[k] = 0);
+    surveys.forEach(s => {
+      const aiTools = s.data?.toolsAndInfrastructure?.ai;
+      if (!aiTools) return;
+      AI_TOOL_ORDER.forEach(k => {
+        if (aiTools[k]?.selected === true) toolCounts[k]++;
+      });
+    });
+    const topTools = [...AI_TOOL_ORDER]
+      .sort((a, b) => toolCounts[b] - toolCounts[a])
+      .filter(k => toolCounts[k] > 0)
+      .slice(0, 3);
+    const toolPills = topTools.map(k =>
+      `<span class="section-summary-challenge-pill" style="background:#eef2ff;border-color:#c7d2fe;color:#4338ca;">${AI_TOOL_LABELS[k]}</span>`
+    ).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
+
+    el.innerHTML = `
+      <div class="section-summary-item">
+        <span class="section-summary-label">Avg Maturity:</span>
+        <span class="section-summary-value">${maturityHtml}</span>
+      </div>
+      <div class="section-summary-divider"></div>
+      <div class="section-summary-item">
+        <span class="section-summary-label">Top Factors:</span>
+        <div class="section-summary-challenges">${factorPills}</div>
+      </div>
+      <div class="section-summary-divider"></div>
+      <div class="section-summary-item">
+        <span class="section-summary-label">Top Tools:</span>
+        <div class="section-summary-challenges">${toolPills}</div>
       </div>`;
   }
 
