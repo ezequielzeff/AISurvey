@@ -578,6 +578,109 @@
       white-space: nowrap;
     }
 
+    /* AI Champion Coverage Widget */
+    .champion-summary {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .champion-card {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      border: 2px solid #e5e7eb;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .champion-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .champion-card.active {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      transform: translateY(-2px);
+    }
+    .champion-card-icon {
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+    .champion-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+    .champion-card-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .champion-card-value {
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+    .champion-card-count {
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+    .champion-bar-container {
+      margin: 0.75rem 0;
+    }
+    .champion-bar {
+      height: 10px;
+      border-radius: 5px;
+      background: #e5e7eb;
+      overflow: hidden;
+      display: flex;
+    }
+    .champion-bar-yes {
+      background: #22c55e;
+      transition: width 0.5s ease;
+    }
+    .champion-bar-no {
+      background: #e5e7eb;
+      transition: width 0.5s ease;
+    }
+    .champion-bar-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.3rem;
+    }
+    .champion-accounts {
+      display: flex;
+      gap: 2rem;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+    }
+    .champion-accounts-col {
+      flex: 1;
+      min-width: 0;
+    }
+    .champion-accounts-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.5rem;
+    }
+    .champion-account-item {
+      padding: 0.3rem 0;
+      color: #4b5563;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .champion-account-item:last-child {
+      border-bottom: none;
+    }
+    .champion-name {
+      color: #6366f1;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
     /* Stage Pipeline */
     .stage-pipeline {
       display: flex;
@@ -1749,6 +1852,20 @@
         <div class="sdlc-key-insight" id="sdlcKeyInsight"></div>
       </div>
 
+      <!-- Subsection: Capability & Enablement Readiness -->
+      <div class="wfm-section-title" style="margin-top:1.5rem;">Capability &amp; Enablement Readiness</div>
+
+      <!-- Widget: AI Champion Coverage -->
+      <div class="widget-card" id="aiChampionWidget">
+        <div class="widget-header">
+          <div class="widget-title">AI Champion Coverage</div>
+          <div class="widget-subtitle">Accounts with a designated AI adoption champion</div>
+        </div>
+        <div id="aiChampionContent">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
         </div> <!-- end widget-section-content -->
       </div> <!-- end Account AI Landscape section -->
 
@@ -2495,6 +2612,7 @@
     activeAiToolFilter = null;
     activeAiChallengeFilter = null;
     activeWfmStageFilter = null;
+    activeChampionFilter = null;
     refreshDashboard();
   }
 
@@ -3185,6 +3303,15 @@
       });
     }
 
+    // Apply AI champion filter
+    if (activeChampionFilter) {
+      surveys = surveys.filter(s => {
+        const val = s.data?.teamRoles?.aiChampion?.value;
+        if (activeChampionFilter === 'yes') return val === 'yes';
+        return val !== 'yes'; // 'no' or missing
+      });
+    }
+
     return surveys;
   }
 
@@ -3315,6 +3442,7 @@
     // AI Tools Usage Widget — shows all tools (dimmed/highlighted via filter state)
     renderAiToolsWidget(allSurveys);
     renderSdlcCoverageWidget(surveys);
+    renderAiChampionWidget(surveys);
 
     // Collapsed account section summary (must run after renderWorkflowMaturityWidget sets currentWfmStage)
     updateAccountSectionSummary(allSurveys);
@@ -4035,6 +4163,17 @@
       `<span class="section-summary-challenge-pill" style="background:#ecfdf5;border-color:#a7f3d0;color:#047857;">${p.label} ${p.pct}%</span>`
     ).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
 
+    // AI Champion coverage
+    let champYes = 0;
+    surveys.forEach(s => {
+      if (s.data?.teamRoles?.aiChampion?.value === 'yes') champYes++;
+    });
+    const champTotal = surveys.length;
+    const champPct = champTotal > 0 ? Math.round((champYes / champTotal) * 100) : 0;
+    const champHtml = champTotal > 0
+      ? `<span class="section-summary-value" style="font-size:0.85rem;">${champYes}/${champTotal} (${champPct}%)</span>`
+      : '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
+
     el.innerHTML = `
       <div class="section-summary-item" style="flex-direction:column;align-items:flex-start;">
         <div style="display:flex;align-items:center;gap:0.4rem;">
@@ -4057,6 +4196,11 @@
       <div class="section-summary-item">
         <span class="section-summary-label">SDLC Doing:</span>
         <div class="section-summary-challenges">${sdlcPills}</div>
+      </div>
+      <div class="section-summary-divider"></div>
+      <div class="section-summary-item">
+        <span class="section-summary-label">Champions:</span>
+        ${champHtml}
       </div>`;
   }
 
@@ -4408,6 +4552,99 @@
     } else {
       insightEl.style.display = 'none';
     }
+  }
+
+  // ═══════════════════════════════════════════
+  // AI CHAMPION COVERAGE WIDGET
+  // ═══════════════════════════════════════════
+  let activeChampionFilter = null; // 'yes', 'no', or null
+
+  function setChampionFilter(val) {
+    activeChampionFilter = activeChampionFilter === val ? null : val;
+    refreshDashboard();
+  }
+
+  function renderAiChampionWidget(surveys) {
+    const container = document.getElementById('aiChampionContent');
+    if (!container) return;
+
+    const withChampion = [];
+    const withoutChampion = [];
+
+    surveys.forEach(s => {
+      const champion = s.data?.teamRoles?.aiChampion;
+      const val = champion?.value;
+      const acctName = s.data?.accountName || s.account || 'Unknown';
+      const champions = champion?.champions || [];
+      const futureChampions = champion?.futureChampions || [];
+
+      if (val === 'yes') {
+        withChampion.push({ name: acctName, champions, futureChampions });
+      } else {
+        withoutChampion.push({ name: acctName, champions, futureChampions });
+      }
+    });
+
+    const total = surveys.length;
+    const yesPct = total > 0 ? Math.round((withChampion.length / total) * 100) : 0;
+    const noPct = total > 0 ? 100 - yesPct : 0;
+
+    const yesActive = activeChampionFilter === 'yes';
+    const noActive = activeChampionFilter === 'no';
+    const anyFilter = activeChampionFilter !== null;
+
+    const yesDim = anyFilter && !yesActive ? 'opacity:0.4;' : '';
+    const noDim = anyFilter && !noActive ? 'opacity:0.4;' : '';
+    const yesBorder = yesActive ? 'border-color:#22c55e;box-shadow:0 0 0 3px #22c55e40;' : '';
+    const noBorder = noActive ? 'border-color:#ef4444;box-shadow:0 0 0 3px #ef444440;' : '';
+
+    let html = `
+      <div class="champion-summary">
+        <div class="champion-card ${yesActive ? 'active' : ''}" onclick="setChampionFilter('yes')" style="${yesDim}${yesBorder}" title="Click to filter">
+          <div class="champion-card-icon">✅</div>
+          <div class="champion-card-info">
+            <div class="champion-card-label">Has AI Champion</div>
+            <div class="champion-card-value" style="color:#22c55e;">${yesPct}%</div>
+            <div class="champion-card-count">${withChampion.length} account${withChampion.length !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+        <div class="champion-card ${noActive ? 'active' : ''}" onclick="setChampionFilter('no')" style="${noDim}${noBorder}" title="Click to filter">
+          <div class="champion-card-icon">❌</div>
+          <div class="champion-card-info">
+            <div class="champion-card-label">No AI Champion</div>
+            <div class="champion-card-value" style="color:#ef4444;">${noPct}%</div>
+            <div class="champion-card-count">${withoutChampion.length} account${withoutChampion.length !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="champion-bar-container">
+        <div class="champion-bar">
+          <div class="champion-bar-yes" style="width:${yesPct}%;"></div>
+          <div class="champion-bar-no" style="width:${noPct}%;"></div>
+        </div>
+        <div class="champion-bar-label">${yesPct}% champion coverage across ${total} account${total !== 1 ? 's' : ''}</div>
+      </div>
+
+      <div class="champion-accounts">
+        <div class="champion-accounts-col">
+          <div class="champion-accounts-title" style="color:#22c55e;">✅ With Champion (${withChampion.length})</div>
+          ${withChampion.length > 0 ? withChampion.map(a => {
+            const names = a.champions.length > 0 ? ` <span class="champion-name">(${a.champions.join(', ')})</span>` : '';
+            return `<div class="champion-account-item">${a.name}${names}</div>`;
+          }).join('') : '<div class="champion-account-item" style="color:#9ca3af;font-style:italic;">None</div>'}
+        </div>
+        <div class="champion-accounts-col">
+          <div class="champion-accounts-title" style="color:#ef4444;">❌ Without Champion (${withoutChampion.length})</div>
+          ${withoutChampion.length > 0 ? withoutChampion.map(a => {
+            const future = a.futureChampions.length > 0 ? ` <span class="champion-name" style="color:#f59e0b;">(future: ${a.futureChampions.join(', ')})</span>` : '';
+            return `<div class="champion-account-item">${a.name}${future}</div>`;
+          }).join('') : '<div class="champion-account-item" style="color:#9ca3af;font-style:italic;">None</div>'}
+        </div>
+      </div>
+    `;
+
+    container.innerHTML = html;
   }
 
   // ═══════════════════════════════════════════
