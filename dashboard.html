@@ -3609,19 +3609,13 @@
           const markerPct = Math.max(2, Math.min(98, ((cardCenter - barRect.left) / barRect.width) * 100));
           setAdoptionMarkerPos(markerPct);
         }
-      } else {
-        const dontKnowIdx = MATURITY_ORDER.indexOf('dont-know');
-        const firstRealIdx = dontKnowIdx === 0 ? 1 : 0;
-        const lastRealIdx = dontKnowIdx === MATURITY_ORDER.length - 1 ? MATURITY_ORDER.length - 2 : MATURITY_ORDER.length - 1;
-        if (stageCards.length > lastRealIdx) {
-          const firstRealCard = stageCards[firstRealIdx];
-          const lastRealCard = stageCards[lastRealIdx];
-          const startPct = ((firstRealCard.getBoundingClientRect().left + firstRealCard.offsetWidth / 2) - barRect.left) / barRect.width * 100;
-          const endPct = ((lastRealCard.getBoundingClientRect().left + lastRealCard.offsetWidth / 2) - barRect.left) / barRect.width * 100;
-          const markerPct = Math.max(2, Math.min(98, startPct + avgPosition * (endPct - startPct)));
-          setAdoptionMarkerPos(markerPct);
-        } else {
-          const markerPct = Math.max(5, Math.min(95, avgPosition * 100));
+      } else if (avgStage) {
+        // Snap arrow to the center of the average stage card
+        const avgIdx = MATURITY_ORDER.indexOf(avgStage);
+        if (avgIdx >= 0 && avgIdx < stageCards.length) {
+          const cardRect = stageCards[avgIdx].getBoundingClientRect();
+          const cardCenter = cardRect.left + cardRect.width / 2;
+          const markerPct = Math.max(2, Math.min(98, ((cardCenter - barRect.left) / barRect.width) * 100));
           setAdoptionMarkerPos(markerPct);
         }
       }
@@ -3782,14 +3776,12 @@
         const cardCenter = cardRect.left + cardRect.width / 2;
         const markerPct = Math.max(2, Math.min(98, ((cardCenter - wfmBarRect.left) / wfmBarRect.width) * 100));
         setWfmMarkerPos(markerPct);
-      } else {
-        const firstCard = wfmCards[0];
-        const lastCard = wfmCards[wfmCards.length - 1];
-        const startX = firstCard.getBoundingClientRect().left + firstCard.offsetWidth / 2;
-        const endX = lastCard.getBoundingClientRect().left + lastCard.offsetWidth / 2;
-        const avgPosition = filteredAvg / 5;
-        const markerX = startX + avgPosition * (endX - startX);
-        const markerPct = Math.max(2, Math.min(98, ((markerX - wfmBarRect.left) / wfmBarRect.width) * 100));
+      } else if (roundedStage >= 0 && roundedStage < wfmCards.length) {
+        // Snap arrow to the center of the average stage card
+        const cardEl = wfmCards[roundedStage];
+        const cardRect = cardEl.getBoundingClientRect();
+        const cardCenter = cardRect.left + cardRect.width / 2;
+        const markerPct = Math.max(2, Math.min(98, ((cardCenter - wfmBarRect.left) / wfmBarRect.width) * 100));
         setWfmMarkerPos(markerPct);
       }
     } else {
