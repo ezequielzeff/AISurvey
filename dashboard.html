@@ -1295,6 +1295,7 @@
       </div>
       <button class="btn btn-primary" id="uploadBtn">Upload Survey</button>
       <button class="btn btn-secondary" id="exportDbBtn" title="Export database backup">Backup</button>
+      <button class="btn btn-secondary" id="exportSurveysBtn" title="Export all surveys as readable JSON">Export Surveys</button>
       <label class="btn btn-secondary" title="Restore database from backup" style="margin:0;">
         Restore
         <input type="file" id="importDbInput" accept=".sqlite,.db" style="display:none;">
@@ -3886,6 +3887,31 @@
     URL.revokeObjectURL(url);
   }
 
+  function exportAllSurveys() {
+    const result = db.exec('SELECT account_name, exported_at, year, quarter, raw_json FROM surveys ORDER BY account_name, year, quarter');
+    if (result.length === 0 || result[0].values.length === 0) {
+      alert('No surveys to export.');
+      return;
+    }
+    const surveys = result[0].values.map(row => ({
+      account_name: row[0],
+      exported_at: row[1],
+      year: row[2],
+      quarter: row[3],
+      data: JSON.parse(row[4])
+    }));
+    const json = JSON.stringify(surveys, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ai-surveys-export-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   async function updateAccountType(id, newType) {
     db.run('UPDATE surveys SET account_type = ? WHERE id = ?', [newType, id]);
     await saveToIndexedDB();
@@ -4050,6 +4076,7 @@
 
     // Database export/import/clear
     document.getElementById('exportDbBtn').addEventListener('click', exportDatabase);
+    document.getElementById('exportSurveysBtn').addEventListener('click', exportAllSurveys);
     document.getElementById('importDbInput').addEventListener('change', e => {
       if (e.target.files.length > 0) importDatabase(e.target.files[0]);
       e.target.value = '';
