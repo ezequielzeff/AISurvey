@@ -219,6 +219,28 @@
       border-bottom: 2px solid #e5e7eb;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+    .widget-section-title:hover {
+      color: #4f46e5;
+    }
+    .section-chevron {
+      font-size: 0.9rem;
+      transition: transform 0.2s ease;
+    }
+    .widget-section.collapsed .section-chevron {
+      transform: rotate(-90deg);
+    }
+    .widget-section.collapsed .widget-section-content {
+      display: none;
+    }
+    .widget-section.collapsed .widget-section-title {
+      margin-bottom: 0;
+      border-bottom-color: transparent;
     }
     .widget-card {
       background: #fff;
@@ -1240,7 +1262,11 @@
 
       <!-- Section: Client AI Landscape -->
       <div class="widget-section">
-        <div class="widget-section-title">Client AI Landscape</div>
+        <div class="widget-section-title" onclick="toggleSection(this)">
+          <span>Client AI Landscape</span>
+          <span class="section-chevron">&#9662;</span>
+        </div>
+        <div class="widget-section-content">
 
       <!-- Widget: Clients AI Adoption Stage -->
       <div class="widget-card" id="adoptionStageWidget">
@@ -1298,6 +1324,7 @@
         <div class="widget-legend" id="aiChallengesLegend"></div>
       </div>
 
+        </div> <!-- end widget-section-content -->
       </div> <!-- end Client AI Landscape section -->
 
       <!-- Widget: Account AI Agentic Workflow -->
@@ -1897,6 +1924,14 @@
     activeAiChallengeFilter = null;
     activeWfmStageFilter = null;
     refreshDashboard();
+  }
+
+  // ═══════════════════════════════════════════
+  // COLLAPSIBLE SECTIONS
+  // ═══════════════════════════════════════════
+  function toggleSection(titleEl) {
+    const section = titleEl.closest('.widget-section');
+    section.classList.toggle('collapsed');
   }
 
   // ═══════════════════════════════════════════
