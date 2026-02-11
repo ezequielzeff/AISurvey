@@ -207,6 +207,19 @@
     /* ═══════════════════════════════════════════
        WIDGET CARD
        ═══════════════════════════════════════════ */
+    .widget-section {
+      margin-bottom: 2rem;
+    }
+    .widget-section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e3a5f;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e5e7eb;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
     .widget-card {
       background: #fff;
       border: 1px solid #e5e7eb;
@@ -379,6 +392,11 @@
       position: relative;
       width: 100%;
       height: 420px;
+    }
+    .ai-challenges-chart-container {
+      position: relative;
+      width: 100%;
+      height: 260px;
     }
 
     /* Widget Legend */
@@ -1220,6 +1238,10 @@
         </div>
       </div>
 
+      <!-- Section: Client AI Landscape -->
+      <div class="widget-section">
+        <div class="widget-section-title">Client AI Landscape</div>
+
       <!-- Widget: Clients AI Adoption Stage -->
       <div class="widget-card" id="adoptionStageWidget">
         <div class="widget-header">
@@ -1262,6 +1284,21 @@
           <button class="filter-clear-btn" onclick="clearAllFilters()">Clear All Filters</button>
         </div>
       </div>
+
+      <!-- Widget: AI Challenges -->
+      <div class="widget-card" id="aiChallengesWidget">
+        <div class="widget-header">
+          <div class="widget-title">AI Challenges</div>
+          <div class="widget-subtitle">Top challenges clients face in AI adoption</div>
+          <div class="widget-question">What are the biggest AI challenges reported by clients?</div>
+        </div>
+        <div class="ai-challenges-chart-container">
+          <canvas id="chartAiChallenges"></canvas>
+        </div>
+        <div class="widget-legend" id="aiChallengesLegend"></div>
+      </div>
+
+      </div> <!-- end Client AI Landscape section -->
 
       <!-- Widget: Account AI Agentic Workflow -->
       <div class="widget-card" id="workflowMaturityWidget">
@@ -1708,6 +1745,15 @@
   const LIMITING_FACTOR_ORDER = ['time', 'knowledge', 'unclear-value', 'client', 'access', 'other'];
   const LF_COLORS = { primary: '#4f46e5', secondary: '#93c5fd' };
 
+  // AI Challenges (from clientAILandscape.challenges)
+  const AI_CHALLENGE_LABELS = {
+    'unclear-roi': 'Unclear ROI', 'skills': 'Skills Gap', 'data': 'Data Issues',
+    'security': 'Security/Compliance', 'budget': 'Budget/Buy-in',
+    'infrastructure': 'Infrastructure', 'dont-know': "Don't Know"
+  };
+  const AI_CHALLENGE_ORDER = ['unclear-roi', 'skills', 'data', 'security', 'budget', 'infrastructure', 'dont-know'];
+  const AI_CHALLENGE_COLORS = { primary: '#0ea5e9', secondary: '#bae6fd' };
+
   // AI Tools (from survey Step 4: toolsAndInfrastructure.ai)
   const AI_TOOL_LABELS = {
     copilot: 'GitHub Copilot', chatgpt: 'ChatGPT / OpenAI', claude: 'Claude (Anthropic)',
@@ -1776,6 +1822,7 @@
   let activeAccountFilter = null;  // null = all, or an account name string
   let activeLimitingFactorFilter = null; // null = all, or a factor key like 'time'
   let activeAiToolFilter = null; // null = all, or a tool key like 'copilot' or '_custom'
+  let activeAiChallengeFilter = null; // null = all, or a challenge key like 'skills'
   let activeWfmStageFilter = null; // null = all, or a stage number (0-5)
   let currentMedianStage = null; // current median stage key for stage description modal
   let currentWfmStage = null; // current WFM average stage number for description modal
@@ -1832,11 +1879,22 @@
     refreshDashboard();
   }
 
+  function setAiChallengeFilter(key) {
+    activeAiChallengeFilter = (activeAiChallengeFilter === key) ? null : key;
+    refreshDashboard();
+  }
+
+  function clearAiChallengeFilter() {
+    activeAiChallengeFilter = null;
+    refreshDashboard();
+  }
+
   function clearAllFilters() {
     activeMaturityFilter = null;
     activeAccountFilter = null;
     activeLimitingFactorFilter = null;
     activeAiToolFilter = null;
+    activeAiChallengeFilter = null;
     activeWfmStageFilter = null;
     refreshDashboard();
   }
@@ -2410,6 +2468,14 @@
       });
     }
 
+    // Apply AI challenge filter
+    if (activeAiChallengeFilter) {
+      surveys = surveys.filter(s => {
+        const ch = s.data?.clientAILandscape?.challenges?.[activeAiChallengeFilter];
+        return ch && (ch.rank === 1 || ch.rank === 2);
+      });
+    }
+
     return surveys;
   }
 
@@ -2499,6 +2565,9 @@
       const toolLabel = activeAiToolFilter === '_custom' ? 'Other / Custom' : (AI_TOOL_LABELS[activeAiToolFilter] || activeAiToolFilter);
       filterTags += ` <span class="filter-active-tag">Tool: ${toolLabel} <span class="filter-clear-x" onclick="clearAiToolFilter()" title="Clear filter">&times;</span></span>`;
     }
+    if (activeAiChallengeFilter) {
+      filterTags += ` <span class="filter-active-tag">Challenge: ${AI_CHALLENGE_LABELS[activeAiChallengeFilter] || activeAiChallengeFilter} <span class="filter-clear-x" onclick="clearAiChallengeFilter()" title="Clear filter">&times;</span></span>`;
+    }
     if (filterTags) {
       subtitleEl.innerHTML = `${subtitleText}${filterTags}`;
     } else {
@@ -2522,6 +2591,9 @@
 
     // Limiting Factors Widget — shows all factors (dimmed/highlighted via filter state)
     renderLimitingFactorsWidget(allSurveys);
+
+    // AI Challenges Widget — shows all challenges (dimmed/highlighted via filter state)
+    renderAiChallengesWidget(allSurveys);
 
     // AI Tools Usage Widget — shows all tools (dimmed/highlighted via filter state)
     renderAiToolsWidget(allSurveys);
@@ -2839,7 +2911,7 @@
 
     // Show/hide filter footer
     const footer = document.getElementById('widgetFooter');
-    const hasAnyFilter = activeMaturityFilter || activeAccountFilter || activeLimitingFactorFilter || activeAiToolFilter || activeWfmStageFilter !== null;
+    const hasAnyFilter = activeMaturityFilter || activeAccountFilter || activeLimitingFactorFilter || activeAiToolFilter || activeAiChallengeFilter || activeWfmStageFilter !== null;
     if (hasAnyFilter) {
       footer.style.display = 'flex';
       let tags = '';
@@ -2858,6 +2930,9 @@
       if (activeAiToolFilter) {
         const toolLabel = activeAiToolFilter === '_custom' ? 'Other / Custom' : (AI_TOOL_LABELS[activeAiToolFilter] || activeAiToolFilter);
         tags += `<span class="filter-active-tag">Tool: ${toolLabel} <span class="filter-clear-x" onclick="clearAiToolFilter()" title="Clear filter">&times;</span></span>`;
+      }
+      if (activeAiChallengeFilter) {
+        tags += `<span class="filter-active-tag">Challenge: ${AI_CHALLENGE_LABELS[activeAiChallengeFilter] || activeAiChallengeFilter} <span class="filter-clear-x" onclick="clearAiChallengeFilter()" title="Clear filter">&times;</span></span>`;
       }
       document.getElementById('activeFilterTags').innerHTML = tags;
     } else {
@@ -3131,6 +3206,150 @@
       <div class="legend-item">
         <div class="legend-dot" style="background:${LF_COLORS.secondary};"></div>
         <span>Secondary factor</span>
+      </div>`;
+  }
+
+  // ═══════════════════════════════════════════
+  // AI CHALLENGES WIDGET
+  // ═══════════════════════════════════════════
+  function renderAiChallengesWidget(surveys) {
+    destroyChart('chartAiChallenges');
+
+    const primaryCounts = {};
+    const secondaryCounts = {};
+    AI_CHALLENGE_ORDER.forEach(k => { primaryCounts[k] = 0; secondaryCounts[k] = 0; });
+
+    const totalSurveys = surveys.length;
+
+    surveys.forEach(s => {
+      const ch = s.data?.clientAILandscape?.challenges;
+      if (!ch) return;
+      Object.entries(ch).forEach(([k, v]) => {
+        if (k.startsWith('_')) return;
+        if (v?.rank === 1) primaryCounts[k]++;
+        else if (v?.rank === 2) secondaryCounts[k]++;
+      });
+    });
+
+    // Sort by total mentions descending
+    const sorted = [...AI_CHALLENGE_ORDER].sort((a, b) => {
+      const totalA = primaryCounts[a] + secondaryCounts[a];
+      const totalB = primaryCounts[b] + secondaryCounts[b];
+      return totalB - totalA;
+    });
+
+    const primaryPcts = {};
+    const secondaryPcts = {};
+    sorted.forEach(k => {
+      primaryPcts[k] = totalSurveys > 0 ? Math.round((primaryCounts[k] / totalSurveys) * 100) : 0;
+      secondaryPcts[k] = totalSurveys > 0 ? Math.round((secondaryCounts[k] / totalSurveys) * 100) : 0;
+    });
+
+    const labels = sorted.map(k => AI_CHALLENGE_LABELS[k] || k);
+
+    const primaryBgColors = sorted.map(k => {
+      if (activeAiChallengeFilter && activeAiChallengeFilter !== k) return AI_CHALLENGE_COLORS.primary + '30';
+      return AI_CHALLENGE_COLORS.primary;
+    });
+    const secondaryBgColors = sorted.map(k => {
+      if (activeAiChallengeFilter && activeAiChallengeFilter !== k) return AI_CHALLENGE_COLORS.secondary + '30';
+      return AI_CHALLENGE_COLORS.secondary;
+    });
+    const yTickColors = sorted.map(k => {
+      if (activeAiChallengeFilter && activeAiChallengeFilter !== k) return '#d1d5db';
+      if (activeAiChallengeFilter === k) return '#1f2937';
+      return '#374151';
+    });
+
+    const ctx = document.getElementById('chartAiChallenges').getContext('2d');
+    charts['chartAiChallenges'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Primary',
+            data: sorted.map(k => primaryPcts[k]),
+            backgroundColor: primaryBgColors,
+            borderRadius: 4,
+            barPercentage: 0.7,
+            categoryPercentage: 0.8
+          },
+          {
+            label: 'Secondary',
+            data: sorted.map(k => secondaryPcts[k]),
+            backgroundColor: secondaryBgColors,
+            borderRadius: 4,
+            barPercentage: 0.7,
+            categoryPercentage: 0.8
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const challengeKey = sorted[context.dataIndex];
+                const rank = context.datasetIndex === 0 ? 'Primary' : 'Secondary';
+                const count = context.datasetIndex === 0 ? primaryCounts[challengeKey] : secondaryCounts[challengeKey];
+                return `${rank}: ${context.raw}% (${count} of ${totalSurveys})`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            max: 100,
+            ticks: {
+              callback: v => v + '%',
+              font: { size: 11 },
+              color: '#9ca3af'
+            },
+            grid: { color: '#f3f4f6' },
+            border: { display: false }
+          },
+          y: {
+            stacked: true,
+            ticks: {
+              font: function(context) {
+                const k = sorted[context.index];
+                const isActive = activeAiChallengeFilter === k;
+                return { size: 12, weight: isActive ? '700' : '500' };
+              },
+              color: yTickColors
+            },
+            grid: { display: false },
+            border: { display: false }
+          }
+        },
+        onClick: (event, elements) => {
+          if (elements.length > 0) {
+            const challengeKey = sorted[elements[0].index];
+            setAiChallengeFilter(challengeKey);
+          }
+        },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+        }
+      }
+    });
+
+    // Render legend
+    const legend = document.getElementById('aiChallengesLegend');
+    legend.innerHTML = `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${AI_CHALLENGE_COLORS.primary};"></div>
+        <span>Primary challenge</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${AI_CHALLENGE_COLORS.secondary};"></div>
+        <span>Secondary challenge</span>
       </div>`;
   }
 
