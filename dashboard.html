@@ -375,6 +375,11 @@
       width: 100%;
       height: 260px;
     }
+    .ai-tools-chart-container {
+      position: relative;
+      width: 100%;
+      height: 420px;
+    }
 
     /* Widget Legend */
     .widget-legend {
@@ -1304,6 +1309,19 @@
         <div class="widget-legend" id="lfLegend"></div>
       </div>
 
+      <!-- Widget: AI Tools Usage -->
+      <div class="widget-card" id="aiToolsWidget">
+        <div class="widget-header">
+          <div class="widget-title">AI Tools Usage</div>
+          <div class="widget-subtitle">Which AI tools are teams using across the portfolio</div>
+          <div class="widget-question">What AI tools are being used by delivery teams?</div>
+        </div>
+        <div class="ai-tools-chart-container">
+          <canvas id="chartAiTools"></canvas>
+        </div>
+        <div class="widget-legend" id="aiToolsLegend"></div>
+      </div>
+
       <!-- Surveys Table -->
       <div class="surveys-section">
         <div class="surveys-section-header">
@@ -1690,6 +1708,17 @@
   const LIMITING_FACTOR_ORDER = ['time', 'knowledge', 'unclear-value', 'client', 'access', 'other'];
   const LF_COLORS = { primary: '#4f46e5', secondary: '#93c5fd' };
 
+  // AI Tools (from survey Step 4: toolsAndInfrastructure.ai)
+  const AI_TOOL_LABELS = {
+    copilot: 'GitHub Copilot', chatgpt: 'ChatGPT / OpenAI', claude: 'Claude (Anthropic)',
+    claudecode: 'Claude Code', cursor: 'Cursor', windsurf: 'Windsurf',
+    gemini: 'Gemini (Google)', amazonq: 'Amazon Q / Kiro', mscopilot: 'Microsoft Copilot',
+    intellij: 'IntelliJ AI', rovo: 'Atlassian Rovo', v0: 'v0 (Vercel)',
+    bolt: 'Bolt.new', lovable: 'Lovable', perplexity: 'Perplexity'
+  };
+  const AI_TOOL_ORDER = Object.keys(AI_TOOL_LABELS);
+  const AI_TOOL_COLOR = '#6366f1';
+
   const ROLE_LABELS = {
     pm: 'PM / Scrum', ba: 'BA / PM', arch: 'Architects', swe: 'Software Eng.',
     qa: 'Manual QA', qaa: 'QA Automation', data: 'Data Eng.', devops: 'DevOps', ux: 'UI/UX'
@@ -1746,6 +1775,7 @@
   let activeMaturityFilter = null; // null = all, or a stage id like 'exploring'
   let activeAccountFilter = null;  // null = all, or an account name string
   let activeLimitingFactorFilter = null; // null = all, or a factor key like 'time'
+  let activeAiToolFilter = null; // null = all, or a tool key like 'copilot' or '_custom'
   let activeWfmStageFilter = null; // null = all, or a stage number (0-5)
   let currentMedianStage = null; // current median stage key for stage description modal
   let currentWfmStage = null; // current WFM average stage number for description modal
@@ -1792,10 +1822,21 @@
     refreshDashboard();
   }
 
+  function setAiToolFilter(toolKey) {
+    activeAiToolFilter = (activeAiToolFilter === toolKey) ? null : toolKey;
+    refreshDashboard();
+  }
+
+  function clearAiToolFilter() {
+    activeAiToolFilter = null;
+    refreshDashboard();
+  }
+
   function clearAllFilters() {
     activeMaturityFilter = null;
     activeAccountFilter = null;
     activeLimitingFactorFilter = null;
+    activeAiToolFilter = null;
     activeWfmStageFilter = null;
     refreshDashboard();
   }
@@ -2357,6 +2398,18 @@
       });
     }
 
+    // Apply AI tool filter
+    if (activeAiToolFilter) {
+      surveys = surveys.filter(s => {
+        const aiTools = s.data?.toolsAndInfrastructure?.ai;
+        if (!aiTools) return false;
+        if (activeAiToolFilter === '_custom') {
+          return Array.isArray(aiTools.custom) && aiTools.custom.length > 0;
+        }
+        return aiTools[activeAiToolFilter]?.selected === true;
+      });
+    }
+
     return surveys;
   }
 
@@ -2442,6 +2495,10 @@
     if (activeWfmStageFilter !== null) {
       filterTags += ` <span class="filter-active-tag">WFM: Stage ${activeWfmStageFilter} - ${WFM_LABELS[activeWfmStageFilter]} <span class="filter-clear-x" onclick="clearWfmStageFilter()" title="Clear filter">&times;</span></span>`;
     }
+    if (activeAiToolFilter) {
+      const toolLabel = activeAiToolFilter === '_custom' ? 'Other / Custom' : (AI_TOOL_LABELS[activeAiToolFilter] || activeAiToolFilter);
+      filterTags += ` <span class="filter-active-tag">Tool: ${toolLabel} <span class="filter-clear-x" onclick="clearAiToolFilter()" title="Clear filter">&times;</span></span>`;
+    }
     if (filterTags) {
       subtitleEl.innerHTML = `${subtitleText}${filterTags}`;
     } else {
@@ -2465,6 +2522,9 @@
 
     // Limiting Factors Widget — shows all factors (dimmed/highlighted via filter state)
     renderLimitingFactorsWidget(allSurveys);
+
+    // AI Tools Usage Widget — shows all tools (dimmed/highlighted via filter state)
+    renderAiToolsWidget(allSurveys);
 
     // Surveys table — filtered by active filters
     renderSurveysTable(surveys);
@@ -2779,7 +2839,7 @@
 
     // Show/hide filter footer
     const footer = document.getElementById('widgetFooter');
-    const hasAnyFilter = activeMaturityFilter || activeAccountFilter || activeLimitingFactorFilter || activeWfmStageFilter !== null;
+    const hasAnyFilter = activeMaturityFilter || activeAccountFilter || activeLimitingFactorFilter || activeAiToolFilter || activeWfmStageFilter !== null;
     if (hasAnyFilter) {
       footer.style.display = 'flex';
       let tags = '';
@@ -2794,6 +2854,10 @@
       }
       if (activeWfmStageFilter !== null) {
         tags += `<span class="filter-active-tag">WFM: Stage ${activeWfmStageFilter} - ${WFM_LABELS[activeWfmStageFilter]} <span class="filter-clear-x" onclick="clearWfmStageFilter()" title="Clear filter">&times;</span></span>`;
+      }
+      if (activeAiToolFilter) {
+        const toolLabel = activeAiToolFilter === '_custom' ? 'Other / Custom' : (AI_TOOL_LABELS[activeAiToolFilter] || activeAiToolFilter);
+        tags += `<span class="filter-active-tag">Tool: ${toolLabel} <span class="filter-clear-x" onclick="clearAiToolFilter()" title="Clear filter">&times;</span></span>`;
       }
       document.getElementById('activeFilterTags').innerHTML = tags;
     } else {
@@ -3067,6 +3131,142 @@
       <div class="legend-item">
         <div class="legend-dot" style="background:${LF_COLORS.secondary};"></div>
         <span>Secondary factor</span>
+      </div>`;
+  }
+
+  // ═══════════════════════════════════════════
+  // AI TOOLS USAGE WIDGET
+  // ═══════════════════════════════════════════
+  function renderAiToolsWidget(surveys) {
+    destroyChart('chartAiTools');
+
+    const totalSurveys = surveys.length;
+    const EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
+
+    // Count how many surveys have each named tool selected
+    const toolCounts = {};
+    AI_TOOL_ORDER.forEach(k => toolCounts[k] = 0);
+    let customCount = 0;
+
+    surveys.forEach(s => {
+      const aiTools = s.data?.toolsAndInfrastructure?.ai;
+      if (!aiTools) return;
+      AI_TOOL_ORDER.forEach(toolKey => {
+        if (aiTools[toolKey]?.selected === true) toolCounts[toolKey]++;
+      });
+      if (Array.isArray(aiTools.custom) && aiTools.custom.length > 0) customCount++;
+    });
+
+    // Build sorted list of tools with count > 0, plus custom if any
+    const toolKeys = AI_TOOL_ORDER.filter(k => toolCounts[k] > 0);
+    if (customCount > 0) toolKeys.push('_custom');
+
+    // Sort by count descending
+    toolKeys.sort((a, b) => {
+      const ca = a === '_custom' ? customCount : toolCounts[a];
+      const cb = b === '_custom' ? customCount : toolCounts[b];
+      return cb - ca;
+    });
+
+    // Calculate percentages
+    const pcts = {};
+    const counts = {};
+    toolKeys.forEach(k => {
+      const c = k === '_custom' ? customCount : toolCounts[k];
+      counts[k] = c;
+      pcts[k] = totalSurveys > 0 ? Math.round((c / totalSurveys) * 100) : 0;
+    });
+
+    const labels = toolKeys.map(k => k === '_custom' ? 'Other / Custom' : (AI_TOOL_LABELS[k] || k));
+
+    // Per-bar colors: dim bars not matching the active filter
+    const bgColors = toolKeys.map(k => {
+      if (activeAiToolFilter && activeAiToolFilter !== k) return AI_TOOL_COLOR + '30';
+      return AI_TOOL_COLOR;
+    });
+    const yTickColors = toolKeys.map(k => {
+      if (activeAiToolFilter && activeAiToolFilter !== k) return '#d1d5db';
+      if (activeAiToolFilter === k) return '#1f2937';
+      return '#374151';
+    });
+
+    // Adjust chart height dynamically based on number of tools
+    const chartContainer = document.querySelector('.ai-tools-chart-container');
+    const barCount = toolKeys.length || 1;
+    chartContainer.style.height = Math.max(180, barCount * 32 + 40) + 'px';
+
+    const ctx = document.getElementById('chartAiTools').getContext('2d');
+    charts['chartAiTools'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Usage',
+          data: toolKeys.map(k => pcts[k]),
+          backgroundColor: bgColors,
+          borderRadius: 4,
+          barPercentage: 0.7,
+          categoryPercentage: 0.8
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const toolKey = toolKeys[context.dataIndex];
+                const count = counts[toolKey];
+                return `${context.raw}% (${count} of ${totalSurveys} accounts)`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            max: 100,
+            ticks: {
+              callback: v => v + '%',
+              font: { size: 11 },
+              color: '#9ca3af'
+            },
+            grid: { color: '#f3f4f6' },
+            border: { display: false }
+          },
+          y: {
+            ticks: {
+              font: function(context) {
+                const k = toolKeys[context.index];
+                const isActive = activeAiToolFilter === k;
+                return { size: 12, weight: isActive ? '700' : '500' };
+              },
+              color: yTickColors
+            },
+            grid: { display: false },
+            border: { display: false }
+          }
+        },
+        onClick: (event, elements) => {
+          if (elements.length > 0) {
+            const toolKey = toolKeys[elements[0].index];
+            setAiToolFilter(toolKey);
+          }
+        },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+        }
+      }
+    });
+
+    // Render legend
+    const legend = document.getElementById('aiToolsLegend');
+    legend.innerHTML = `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${AI_TOOL_COLOR};"></div>
+        <span>% of accounts using this tool</span>
       </div>`;
   }
 
