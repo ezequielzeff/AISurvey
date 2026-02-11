@@ -208,6 +208,100 @@
     }
 
     /* ═══════════════════════════════════════════
+       SDLC AI COVERAGE MAP
+       ═══════════════════════════════════════════ */
+    .sdlc-phase-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+    }
+    .sdlc-phase-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.3rem;
+    }
+    .sdlc-phase-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    .sdlc-phase-stats {
+      font-size: 0.78rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .sdlc-phase-stats .doing { color: #16a34a; }
+    .sdlc-phase-stats .need { color: #d97706; }
+    .sdlc-phase-stats .separator { color: #9ca3af; margin: 0 0.2rem; }
+    .sdlc-bar-track {
+      display: flex;
+      width: 100%;
+      height: 28px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #e5e7eb;
+    }
+    .sdlc-bar-segment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #fff;
+      transition: width 0.4s ease;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .sdlc-bar-doing { background: #22c55e; }
+    .sdlc-bar-need { background: #f59e0b; }
+    .sdlc-bar-notusing {
+      background: #e5e7eb;
+      color: #6b7280;
+    }
+    .sdlc-phase-block {
+      margin-bottom: 1rem;
+    }
+    .sdlc-phase-block:last-child {
+      margin-bottom: 0;
+    }
+    .sdlc-legend {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1.25rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #f3f4f6;
+    }
+    .sdlc-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .sdlc-legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .sdlc-key-insight {
+      margin-top: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      background: #eff6ff;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      color: #1e40af;
+      line-height: 1.4;
+    }
+    .sdlc-key-insight strong {
+      color: #1e3a8a;
+    }
+
+    /* ═══════════════════════════════════════════
        MAIN CONTENT
        ═══════════════════════════════════════════ */
     .dashboard-content {
@@ -1618,6 +1712,23 @@
           <canvas id="chartAiTools"></canvas>
         </div>
         <div class="widget-legend" id="aiToolsLegend"></div>
+      </div>
+
+      <!-- Widget: SDLC AI Coverage Map -->
+      <div class="widget-card" id="sdlcCoverageWidget">
+        <div class="widget-header">
+          <div class="widget-title">SDLC AI Coverage Map</div>
+          <div class="widget-subtitle">AI adoption across software delivery lifecycle phases</div>
+        </div>
+        <div id="sdlcCoverageContent">
+          <!-- Populated by JS -->
+        </div>
+        <div class="sdlc-legend">
+          <span class="sdlc-legend-item"><span class="sdlc-legend-dot" style="background:#22c55e;"></span> Doing</span>
+          <span class="sdlc-legend-item"><span class="sdlc-legend-dot" style="background:#f59e0b;"></span> Need but not Doing</span>
+          <span class="sdlc-legend-item"><span class="sdlc-legend-dot" style="background:#e5e7eb;"></span> Not Using</span>
+        </div>
+        <div class="sdlc-key-insight" id="sdlcKeyInsight"></div>
       </div>
 
         </div> <!-- end widget-section-content -->
@@ -3095,6 +3206,7 @@
 
     // AI Tools Usage Widget — shows all tools (dimmed/highlighted via filter state)
     renderAiToolsWidget(allSurveys);
+    renderSdlcCoverageWidget(allSurveys);
 
     // Collapsed account section summary (must run after renderWorkflowMaturityWidget sets currentWfmStage)
     updateAccountSectionSummary(allSurveys);
@@ -3805,6 +3917,23 @@
       ? `<div class="section-summary-mini-bar"><div class="section-summary-mini-marker" style="left:${wfmMarkerPct}%"></div></div>`
       : '';
 
+    // SDLC top "Doing" phases
+    const sdlcSummary = SDLC_PHASES.map(phase => {
+      let doing = 0, total = 0;
+      surveys.forEach(s => {
+        const section = s.data?.useCases?.[phase.key];
+        if (!section) return;
+        Object.values(section).forEach(item => {
+          total++;
+          if (item?.status === 'doing') doing++;
+        });
+      });
+      return { label: phase.label, pct: total > 0 ? Math.round((doing / total) * 100) : 0 };
+    }).sort((a, b) => b.pct - a.pct).slice(0, 3);
+    const sdlcPills = sdlcSummary.filter(p => p.pct > 0).map(p =>
+      `<span class="section-summary-challenge-pill" style="background:#ecfdf5;border-color:#a7f3d0;color:#047857;">${p.label} ${p.pct}%</span>`
+    ).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
+
     el.innerHTML = `
       <div class="section-summary-item" style="flex-direction:column;align-items:flex-start;">
         <div style="display:flex;align-items:center;gap:0.4rem;">
@@ -3822,6 +3951,11 @@
       <div class="section-summary-item">
         <span class="section-summary-label">Top Tools:</span>
         <div class="section-summary-challenges">${toolPills}</div>
+      </div>
+      <div class="section-summary-divider"></div>
+      <div class="section-summary-item">
+        <span class="section-summary-label">SDLC Doing:</span>
+        <div class="section-summary-challenges">${sdlcPills}</div>
       </div>`;
   }
 
@@ -4085,6 +4219,94 @@
         <div class="legend-dot" style="background:${AI_TOOL_COLOR};"></div>
         <span>% of accounts using this tool</span>
       </div>`;
+  }
+
+  // ═══════════════════════════════════════════
+  // SDLC AI COVERAGE MAP
+  // ═══════════════════════════════════════════
+  const SDLC_PHASES = [
+    { key: 'requirements', label: 'Requirements' },
+    { key: 'code-dev', label: 'Development' },
+    { key: 'documentation', label: 'Documentation' },
+    { key: 'pm', label: 'PM' },
+    { key: 'design-ux', label: 'Design & UX' },
+    { key: 'data-analytics', label: 'Data & Analytics' }
+  ];
+
+  function renderSdlcCoverageWidget(surveys) {
+    const container = document.getElementById('sdlcCoverageContent');
+    const insightEl = document.getElementById('sdlcKeyInsight');
+    if (!container) return;
+
+    if (surveys.length === 0) {
+      container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;">No survey data available</div>';
+      insightEl.style.display = 'none';
+      return;
+    }
+
+    // Aggregate data per phase
+    const phaseData = SDLC_PHASES.map(phase => {
+      let doing = 0, need = 0, total = 0;
+
+      surveys.forEach(s => {
+        const section = s.data?.useCases?.[phase.key];
+        if (!section) return;
+        Object.values(section).forEach(item => {
+          const status = item?.status;
+          total++;
+          if (status === 'doing') doing++;
+          else if (status === 'need') need++;
+        });
+      });
+
+      const notUsing = total - doing - need;
+      const doingPct = total > 0 ? Math.round((doing / total) * 100) : 0;
+      const needPct = total > 0 ? Math.round((need / total) * 100) : 0;
+      const notUsingPct = total > 0 ? 100 - doingPct - needPct : 0;
+
+      return { ...phase, doing, need, notUsing, total, doingPct, needPct, notUsingPct };
+    });
+
+    // Render bars
+    let html = '';
+    phaseData.forEach(p => {
+      const doingLabel = p.doingPct >= 10 ? `${p.doingPct}%` : '';
+      const needLabel = p.needPct >= 10 ? `${p.needPct}%` : '';
+      const notUsingLabel = p.notUsingPct >= 10 ? `${p.notUsingPct}%` : '';
+
+      html += `
+        <div class="sdlc-phase-block">
+          <div class="sdlc-phase-header">
+            <span class="sdlc-phase-label">${escapeHtml(p.label)}</span>
+            <span class="sdlc-phase-stats">
+              <span class="doing">${p.doingPct}% Doing</span>
+              <span class="separator">|</span>
+              <span class="need">${p.needPct}% Need</span>
+            </span>
+          </div>
+          <div class="sdlc-bar-track">
+            ${p.doingPct > 0 ? `<div class="sdlc-bar-segment sdlc-bar-doing" style="width:${p.doingPct}%">${doingLabel}</div>` : ''}
+            ${p.needPct > 0 ? `<div class="sdlc-bar-segment sdlc-bar-need" style="width:${p.needPct}%">${needLabel}</div>` : ''}
+            ${p.notUsingPct > 0 ? `<div class="sdlc-bar-segment sdlc-bar-notusing" style="width:${p.notUsingPct}%">${notUsingLabel}</div>` : ''}
+          </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+
+    // Key insight: find phases with highest "need" percentage
+    const sortedByNeed = [...phaseData].sort((a, b) => b.needPct - a.needPct);
+    const topNeed = sortedByNeed.filter(p => p.needPct > 0).slice(0, 2);
+    if (topNeed.length > 0 && topNeed[0].needPct >= 10) {
+      const phaseNames = topNeed.map(p => p.label).join(' & ');
+      insightEl.innerHTML = `<strong>Key Insight:</strong> High "Need" in ${escapeHtml(phaseNames)} signals strategic blind spots — teams see value but lack enablement`;
+      insightEl.style.display = '';
+    } else if (phaseData.some(p => p.doingPct >= 50)) {
+      const topDoing = [...phaseData].sort((a, b) => b.doingPct - a.doingPct)[0];
+      insightEl.innerHTML = `<strong>Key Insight:</strong> ${escapeHtml(topDoing.label)} leads AI adoption at ${topDoing.doingPct}% — consider extending its practices to other phases`;
+      insightEl.style.display = '';
+    } else {
+      insightEl.style.display = 'none';
+    }
   }
 
   // ═══════════════════════════════════════════
