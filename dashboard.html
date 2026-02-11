@@ -209,14 +209,20 @@
        ═══════════════════════════════════════════ */
     .widget-section {
       margin-bottom: 2rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.25rem;
     }
     .widget-section-title {
-      font-size: 1.1rem;
-      font-weight: 700;
+      font-size: 1.15rem;
+      font-weight: 800;
       color: #1e3a5f;
       margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid #e5e7eb;
+      padding: 0.6rem 0.75rem;
+      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       display: flex;
@@ -227,10 +233,12 @@
     }
     .widget-section-title:hover {
       color: #4f46e5;
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
     }
     .section-chevron {
-      font-size: 0.9rem;
+      font-size: 1.2rem;
       transition: transform 0.2s ease;
+      color: #6366f1;
     }
     .widget-section.collapsed .section-chevron {
       transform: rotate(-90deg);
@@ -240,7 +248,6 @@
     }
     .widget-section.collapsed .widget-section-title {
       margin-bottom: 0;
-      border-bottom-color: transparent;
     }
     .widget-section-summary {
       display: none;
