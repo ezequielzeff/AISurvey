@@ -263,9 +263,55 @@
     }
     .sdlc-phase-block {
       margin-bottom: 1rem;
+      cursor: pointer;
+      padding: 0.5rem 0.6rem;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .sdlc-phase-block:hover {
+      background: #f9fafb;
     }
     .sdlc-phase-block:last-child {
       margin-bottom: 0;
+    }
+    /* SDLC Phase Modal */
+    .sdlc-modal-item {
+      margin-bottom: 0.85rem;
+    }
+    .sdlc-modal-item:last-child {
+      margin-bottom: 0;
+    }
+    .sdlc-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.25rem;
+    }
+    .sdlc-modal-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    .sdlc-modal-pcts {
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .sdlc-modal-pcts .doing { color: #16a34a; }
+    .sdlc-modal-pcts .need { color: #d97706; }
+    .sdlc-modal-pcts .not-using { color: #9ca3af; }
+    .sdlc-modal-pcts .separator { color: #d1d5db; margin: 0 0.15rem; }
+    .sdlc-modal-bar {
+      display: flex;
+      width: 100%;
+      height: 22px;
+      border-radius: 5px;
+      overflow: hidden;
+      background: #e5e7eb;
+    }
+    .sdlc-modal-bar .sdlc-bar-segment {
+      height: 100%;
+      font-size: 0.7rem;
     }
     .sdlc-legend {
       display: flex;
@@ -1904,6 +1950,15 @@
     </div>
   </div>
 
+  <!-- Modal: SDLC Phase Use Case Breakdown -->
+  <div class="info-modal-overlay" id="sdlcPhaseModal">
+    <div class="info-modal" style="max-width:700px;">
+      <button class="info-modal-close" onclick="closeSdlcPhaseModal()" title="Close">&times;</button>
+      <h2 id="sdlcPhaseModalTitle"></h2>
+      <div id="sdlcPhaseModalContent"></div>
+    </div>
+  </div>
+
 <script>
   // ═══════════════════════════════════════════
   // SCHEMA DEFINITIONS (mirrors index.html)
@@ -2823,6 +2878,87 @@
 
   function closeAccountComparisonModal() {
     document.getElementById('accountComparisonModal').classList.remove('open');
+  }
+
+  function openSdlcPhaseModal(phaseKey) {
+    const phase = SDLC_PHASES.find(p => p.key === phaseKey);
+    if (!phase) return;
+
+    document.getElementById('sdlcPhaseModalTitle').textContent = `${phase.label} — Use Case Breakdown`;
+
+    // Get use case labels from SCHEMA_SEED
+    const useCaseOptions = SCHEMA_SEED
+      .filter(s => s.section === 'useCases' && s.subsection === phaseKey)
+      .sort((a, b) => a.display_order - b.display_order);
+
+    // Get currently filtered surveys
+    const surveys = getFilteredSurveys();
+
+    // Calculate per-use-case stats
+    const items = useCaseOptions.map(opt => {
+      let doing = 0, need = 0, total = 0;
+      surveys.forEach(s => {
+        const item = s.data?.useCases?.[phaseKey]?.[opt.option_id];
+        if (item === undefined) return;
+        total++;
+        if (item?.status === 'doing') doing++;
+        else if (item?.status === 'need') need++;
+      });
+      const notUsing = total - doing - need;
+      const doingPct = total > 0 ? Math.round((doing / total) * 100) : 0;
+      const needPct = total > 0 ? Math.round((need / total) * 100) : 0;
+      const notUsingPct = total > 0 ? 100 - doingPct - needPct : 0;
+      return { label: opt.option_label, doingPct, needPct, notUsingPct };
+    });
+
+    // Sort by "Doing" descending
+    items.sort((a, b) => b.doingPct - a.doingPct);
+
+    // Build HTML
+    let html = '';
+    items.forEach(item => {
+      const doingLabel = item.doingPct >= 12 ? `${item.doingPct}%` : '';
+      const needLabel = item.needPct >= 12 ? `${item.needPct}%` : '';
+      const notUsingLabel = item.notUsingPct >= 12 ? `${item.notUsingPct}%` : '';
+
+      html += `
+        <div class="sdlc-modal-item">
+          <div class="sdlc-modal-header">
+            <span class="sdlc-modal-label">${escapeHtml(item.label)}</span>
+            <span class="sdlc-modal-pcts">
+              <span class="doing">${item.doingPct}%</span>
+              <span class="separator">|</span>
+              <span class="need">${item.needPct}%</span>
+              <span class="separator">|</span>
+              <span class="not-using">${item.notUsingPct}%</span>
+            </span>
+          </div>
+          <div class="sdlc-modal-bar">
+            ${item.doingPct > 0 ? `<div class="sdlc-bar-segment sdlc-bar-doing" style="width:${item.doingPct}%">${doingLabel}</div>` : ''}
+            ${item.needPct > 0 ? `<div class="sdlc-bar-segment sdlc-bar-need" style="width:${item.needPct}%">${needLabel}</div>` : ''}
+            ${item.notUsingPct > 0 ? `<div class="sdlc-bar-segment sdlc-bar-notusing" style="width:${item.notUsingPct}%">${notUsingLabel}</div>` : ''}
+          </div>
+        </div>`;
+    });
+
+    // Add legend
+    html += `
+      <div class="sdlc-legend" style="margin-top:1.25rem;">
+        <span class="sdlc-legend-item"><span class="sdlc-legend-dot" style="background:#22c55e;"></span> Doing</span>
+        <span class="sdlc-legend-item"><span class="sdlc-legend-dot" style="background:#f59e0b;"></span> Need but not Doing</span>
+        <span class="sdlc-legend-item"><span class="sdlc-legend-dot" style="background:#e5e7eb;"></span> Not Using</span>
+      </div>`;
+
+    if (surveys.length > 0) {
+      html += `<div style="margin-top:0.75rem;font-size:0.75rem;color:#9ca3af;">Based on ${surveys.length} survey${surveys.length !== 1 ? 's' : ''}</div>`;
+    }
+
+    document.getElementById('sdlcPhaseModalContent').innerHTML = html;
+    document.getElementById('sdlcPhaseModal').classList.add('open');
+  }
+
+  function closeSdlcPhaseModal() {
+    document.getElementById('sdlcPhaseModal').classList.remove('open');
   }
 
   // ═══════════════════════════════════════════
@@ -4275,7 +4411,7 @@
       const notUsingLabel = p.notUsingPct >= 10 ? `${p.notUsingPct}%` : '';
 
       html += `
-        <div class="sdlc-phase-block">
+        <div class="sdlc-phase-block" onclick="openSdlcPhaseModal('${p.key}')" title="Click for use case breakdown">
           <div class="sdlc-phase-header">
             <span class="sdlc-phase-label">${escapeHtml(p.label)}</span>
             <span class="sdlc-phase-stats">
@@ -4600,6 +4736,9 @@
     document.getElementById('wfmInfoModal').addEventListener('click', e => {
       if (e.target === document.getElementById('wfmInfoModal')) closeWfmInfoModal();
     });
+    document.getElementById('sdlcPhaseModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('sdlcPhaseModal')) closeSdlcPhaseModal();
+    });
 
     // Escape key
     document.addEventListener('keydown', e => {
@@ -4608,6 +4747,7 @@
         closeMaturityInfoModal();
         closeStageDescriptionModal();
         closeWfmInfoModal();
+        closeSdlcPhaseModal();
       }
     });
 
