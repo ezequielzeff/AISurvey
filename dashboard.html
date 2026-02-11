@@ -4464,6 +4464,8 @@
       }
     });
 
+    // Actions dropdown toggle
+    document.getElementById('actionsToggle').addEventListener('click', toggleActionsMenu);
     // Close actions menu when clicking outside
     document.addEventListener('click', e => {
       const menu = document.getElementById('actionsMenu');
