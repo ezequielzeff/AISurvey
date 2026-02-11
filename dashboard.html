@@ -541,8 +541,7 @@
     }
     .widget-header-row {
       display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
+      align-items: stretch;
       gap: 1rem;
       margin-bottom: 1rem;
     }
@@ -611,7 +610,7 @@
       border-radius: 10px;
       gap: 0.1rem;
       flex-shrink: 0;
-      align-self: flex-start;
+      justify-content: center;
     }
     .stage-callout-inline .stage-callout-label { font-size: 0.65rem; }
     .stage-callout-inline .stage-callout-value { font-size: 1.1rem; font-weight: 700; }
@@ -1658,15 +1657,15 @@
       <!-- Widget: Clients AI Adoption Stage -->
       <div class="widget-card" id="adoptionStageWidget">
         <div class="widget-header-row">
-          <div class="widget-header">
-            <div class="widget-title">Clients AI Adoption Stage</div>
-            <div class="widget-subtitle">Portfolio-wide adoption maturity</div>
-            <div class="widget-question">At what stage are clients in their AI adoption journey? <a href="#" class="more-info-link" onclick="event.preventDefault();openMaturityInfoModal();">More info</a></div>
-          </div>
           <div class="stage-callout stage-callout-inline" id="stageCallout" onclick="openStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">
             <div class="stage-callout-label">Average Portfolio Stage</div>
             <div class="stage-callout-value" id="stageCalloutValue">--</div>
             <div class="stage-callout-desc">Median stage across all accounts</div>
+          </div>
+          <div class="widget-header">
+            <div class="widget-title">Clients AI Adoption Stage</div>
+            <div class="widget-subtitle">Portfolio-wide adoption maturity</div>
+            <div class="widget-question">At what stage are clients in their AI adoption journey? <a href="#" class="more-info-link" onclick="event.preventDefault();openMaturityInfoModal();">More info</a></div>
           </div>
         </div>
 
@@ -1728,14 +1727,14 @@
       <!-- Widget: Account AI Agentic Workflow -->
       <div class="widget-card" id="workflowMaturityWidget">
         <div class="widget-header-row">
-          <div class="widget-header">
-            <div class="widget-title">Account AI Agentic Workflow <a href="#" class="more-info-link" onclick="event.preventDefault();openAccountComparisonModal();" style="font-size:0.8rem;margin-left:0.5rem;">See accounts comparison</a></div>
-            <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
-          </div>
           <div class="stage-callout stage-callout-inline" id="wfmCallout" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">
             <div class="stage-callout-label">Portfolio Average Maturity <span class="wfm-info-icon" onclick="event.stopPropagation();openWfmInfoModal();" title="How is this calculated?">ℹ️</span></div>
             <div class="stage-callout-value" id="wfmAvgValue">--</div>
             <div class="stage-callout-desc" id="wfmAvgDesc">Average stage across all accounts</div>
+          </div>
+          <div class="widget-header">
+            <div class="widget-title">Account AI Agentic Workflow <a href="#" class="more-info-link" onclick="event.preventDefault();openAccountComparisonModal();" style="font-size:0.8rem;margin-left:0.5rem;">See accounts comparison</a></div>
+            <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
           </div>
         </div>
 
