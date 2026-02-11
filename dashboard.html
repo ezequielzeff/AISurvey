@@ -1317,6 +1317,22 @@
           </div>
         </div>
       </div>
+      <div class="filter-group" style="position:relative;">
+        <span class="filter-label">DM:</span>
+        <div class="multi-select" id="filterDM">
+          <button class="multi-select-btn" onclick="toggleDMMenu()" type="button">
+            <span class="multi-select-text" id="dmLabel">All DMs</span>
+            <span class="multi-select-arrow">&#9662;</span>
+          </button>
+          <div class="multi-select-menu" id="dmMenu" style="max-height:300px;overflow-y:auto;">
+            <!-- Dynamically populated by populateDMFilter() -->
+            <div class="multi-select-actions">
+              <button type="button" onclick="selectAllDMsFromMenu()">Select All</button>
+              <button type="button" onclick="clearAllDMsFromMenu()">Clear All</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <button class="btn btn-primary" id="uploadBtn">Upload Survey</button>
       <button class="btn btn-secondary" id="exportDbBtn" title="Export database backup">Backup</button>
       <button class="btn btn-secondary" id="exportSurveysBtn" title="Export all surveys as readable JSON">Export Surveys</button>
@@ -1987,6 +2003,7 @@
   // ═══════════════════════════════════════════
   let activeMaturityFilter = null; // null = all, or a stage id like 'exploring'
   let selectedAccounts = new Set();  // empty = all, Set of account name strings
+  let selectedDeliveryManagers = new Set(); // empty = all, Set of DM name strings
   let activeLimitingFactorFilter = null; // null = all, or a factor key like 'time'
   let activeAiToolFilter = null; // null = all, or a tool key like 'copilot' or '_custom'
   let activeAiChallengeFilter = null; // null = all, or a challenge key like 'skills'
@@ -2042,6 +2059,8 @@
     document.querySelector('#filterAccountType .multi-select-btn')?.classList.remove('open');
     document.getElementById('engagementTypeMenu')?.classList.remove('open');
     document.querySelector('#filterEngagementType .multi-select-btn')?.classList.remove('open');
+    document.getElementById('dmMenu')?.classList.remove('open');
+    document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
 
     const menu = document.getElementById('accountsMenu');
     const btn = document.querySelector('#filterAccounts .multi-select-btn');
@@ -2102,6 +2121,79 @@
     updateAccountsLabel();
   }
 
+  // Delivery Manager dropdown helpers
+  function toggleDMMenu() {
+    document.getElementById('accountTypeMenu')?.classList.remove('open');
+    document.querySelector('#filterAccountType .multi-select-btn')?.classList.remove('open');
+    document.getElementById('engagementTypeMenu')?.classList.remove('open');
+    document.querySelector('#filterEngagementType .multi-select-btn')?.classList.remove('open');
+    document.getElementById('accountsMenu')?.classList.remove('open');
+    document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
+
+    const menu = document.getElementById('dmMenu');
+    const btn = document.querySelector('#filterDM .multi-select-btn');
+    menu.classList.toggle('open');
+    btn.classList.toggle('open');
+  }
+
+  function updateDMLabel() {
+    const label = document.getElementById('dmLabel');
+    if (selectedDeliveryManagers.size === 0) {
+      label.textContent = 'All DMs';
+    } else if (selectedDeliveryManagers.size === 1) {
+      label.textContent = [...selectedDeliveryManagers][0];
+    } else {
+      label.textContent = `${selectedDeliveryManagers.size} DMs`;
+    }
+  }
+
+  function onDMSelectionChange() {
+    const checkboxes = document.querySelectorAll('#dmMenu input[type="checkbox"]');
+    selectedDeliveryManagers.clear();
+    checkboxes.forEach(cb => { if (cb.checked) selectedDeliveryManagers.add(cb.value); });
+    refreshDashboard();
+  }
+
+  function selectAllDMsFromMenu() {
+    document.querySelectorAll('#dmMenu input[type="checkbox"]').forEach(cb => cb.checked = true);
+    onDMSelectionChange();
+  }
+
+  function clearAllDMsFromMenu() {
+    document.querySelectorAll('#dmMenu input[type="checkbox"]').forEach(cb => cb.checked = false);
+    onDMSelectionChange();
+  }
+
+  function clearDMFilter() {
+    selectedDeliveryManagers.clear();
+    refreshDashboard();
+  }
+
+  function populateDMFilter() {
+    const menu = document.getElementById('dmMenu');
+    if (!menu) return;
+    menu.querySelectorAll('.multi-select-item').forEach(el => el.remove());
+
+    const allSurveys = getAllFilteredSurveys();
+    const dms = [...new Set(allSurveys.map(s => s.delivery_manager).filter(dm => dm && dm.trim()))].sort();
+
+    const actionsDiv = menu.querySelector('.multi-select-actions');
+    dms.forEach(dm => {
+      const label = document.createElement('label');
+      label.className = 'multi-select-item';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = dm;
+      cb.checked = selectedDeliveryManagers.has(dm);
+      cb.addEventListener('change', () => onDMSelectionChange());
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(' ' + dm));
+      menu.insertBefore(label, actionsDiv);
+    });
+
+    updateDMLabel();
+  }
+
   function setLimitingFactorFilter(factor) {
     activeLimitingFactorFilter = (activeLimitingFactorFilter === factor) ? null : factor;
     refreshDashboard();
@@ -2145,6 +2237,7 @@
   function clearAllFilters() {
     activeMaturityFilter = null;
     selectedAccounts.clear();
+    selectedDeliveryManagers.clear();
     activeLimitingFactorFilter = null;
     activeAiToolFilter = null;
     activeAiChallengeFilter = null;
@@ -2169,6 +2262,8 @@
     document.querySelector('#filterEngagementType .multi-select-btn')?.classList.remove('open');
     document.getElementById('accountsMenu')?.classList.remove('open');
     document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
+    document.getElementById('dmMenu')?.classList.remove('open');
+    document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
 
     const menu = document.getElementById('accountTypeMenu');
     const btn = document.querySelector('#filterAccountType .multi-select-btn');
@@ -2196,6 +2291,7 @@
     updateAccountTypeLabel();
     activeMaturityFilter = null;
     selectedAccounts.clear();
+    selectedDeliveryManagers.clear();
     refreshDashboard();
   }
 
@@ -2218,6 +2314,8 @@
     document.querySelector('#filterAccountType .multi-select-btn')?.classList.remove('open');
     document.getElementById('accountsMenu')?.classList.remove('open');
     document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
+    document.getElementById('dmMenu')?.classList.remove('open');
+    document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
 
     const menu = document.getElementById('engagementTypeMenu');
     const btn = document.querySelector('#filterEngagementType .multi-select-btn');
@@ -2245,6 +2343,7 @@
     updateEngagementTypeLabel();
     activeMaturityFilter = null;
     selectedAccounts.clear();
+    selectedDeliveryManagers.clear();
     refreshDashboard();
   }
 
@@ -2632,6 +2731,7 @@
 
     populateComparisonPeriodOptions();
     populateAccountsFilter();
+    populateDMFilter();
   }
 
   function getSelectedAccountTypes() {
@@ -2696,6 +2796,11 @@
     // Apply account filter (multi-select)
     if (selectedAccounts.size > 0) {
       surveys = surveys.filter(s => selectedAccounts.has(s.account_name));
+    }
+
+    // Apply delivery manager filter (multi-select)
+    if (selectedDeliveryManagers.size > 0) {
+      surveys = surveys.filter(s => selectedDeliveryManagers.has(s.delivery_manager));
     }
 
     // Apply limiting factor filter
@@ -2822,6 +2927,10 @@
       const accountLabel = selectedAccounts.size === 1 ? escapeHtml([...selectedAccounts][0]) : `${selectedAccounts.size} accounts`;
       filterTags += ` <span class="filter-active-tag">Account: ${accountLabel} <span class="filter-clear-x" onclick="clearAccountFilter()" title="Clear filter">&times;</span></span>`;
     }
+    if (selectedDeliveryManagers.size > 0) {
+      const dmLabel = selectedDeliveryManagers.size === 1 ? escapeHtml([...selectedDeliveryManagers][0]) : `${selectedDeliveryManagers.size} DMs`;
+      filterTags += ` <span class="filter-active-tag">DM: ${dmLabel} <span class="filter-clear-x" onclick="clearDMFilter()" title="Clear filter">&times;</span></span>`;
+    }
     if (activeLimitingFactorFilter) {
       filterTags += ` <span class="filter-active-tag">Factor: ${LIMITING_FACTOR_LABELS[activeLimitingFactorFilter]} <span class="filter-clear-x" onclick="clearLimitingFactorFilter()" title="Clear filter">&times;</span></span>`;
     }
@@ -2874,8 +2983,9 @@
     // Surveys table — filtered by active filters
     renderSurveysTable(surveys);
 
-    // Sync accounts dropdown with current data
+    // Sync accounts and DM dropdowns with current data
     populateAccountsFilter();
+    populateDMFilter();
 
     // Collapsed surveys section summary
     updateSurveysSectionSummary(surveys);
@@ -3191,7 +3301,7 @@
 
     // Show/hide filter footer
     const footer = document.getElementById('widgetFooter');
-    const hasAnyFilter = activeMaturityFilter || selectedAccounts.size > 0 || activeLimitingFactorFilter || activeAiToolFilter || activeAiChallengeFilter || activeWfmStageFilter !== null;
+    const hasAnyFilter = activeMaturityFilter || selectedAccounts.size > 0 || selectedDeliveryManagers.size > 0 || activeLimitingFactorFilter || activeAiToolFilter || activeAiChallengeFilter || activeWfmStageFilter !== null;
     if (hasAnyFilter) {
       footer.style.display = 'flex';
       let tags = '';
@@ -3201,6 +3311,10 @@
       if (selectedAccounts.size > 0) {
         const accountLabel = selectedAccounts.size === 1 ? escapeHtml([...selectedAccounts][0]) : `${selectedAccounts.size} accounts`;
         tags += `<span class="filter-active-tag">Account: ${accountLabel} <span class="filter-clear-x" onclick="clearAccountFilter()" title="Clear filter">&times;</span></span>`;
+      }
+      if (selectedDeliveryManagers.size > 0) {
+        const dmLabel = selectedDeliveryManagers.size === 1 ? escapeHtml([...selectedDeliveryManagers][0]) : `${selectedDeliveryManagers.size} DMs`;
+        tags += `<span class="filter-active-tag">DM: ${dmLabel} <span class="filter-clear-x" onclick="clearDMFilter()" title="Clear filter">&times;</span></span>`;
       }
       if (activeLimitingFactorFilter) {
         tags += `<span class="filter-active-tag">Factor: ${LIMITING_FACTOR_LABELS[activeLimitingFactorFilter]} <span class="filter-clear-x" onclick="clearLimitingFactorFilter()" title="Clear filter">&times;</span></span>`;
@@ -4119,6 +4233,7 @@
     await saveToIndexedDB();
     activeMaturityFilter = null;
     selectedAccounts.clear();
+    selectedDeliveryManagers.clear();
     populateFilters();
     refreshDashboard();
   }
@@ -4176,11 +4291,13 @@
     document.getElementById('filterYear').addEventListener('change', () => {
       activeMaturityFilter = null;
       selectedAccounts.clear();
+      selectedDeliveryManagers.clear();
       refreshDashboard();
     });
     document.getElementById('filterQuarter').addEventListener('change', () => {
       activeMaturityFilter = null;
       selectedAccounts.clear();
+      selectedDeliveryManagers.clear();
       refreshDashboard();
     });
     document.getElementById('aiUsageCompPeriod').addEventListener('change', () => {
@@ -4216,6 +4333,15 @@
       if (menu && container && !container.contains(e.target)) {
         menu.classList.remove('open');
         document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
+      }
+    });
+    // Close DM menu when clicking outside
+    document.addEventListener('click', e => {
+      const menu = document.getElementById('dmMenu');
+      const container = document.getElementById('filterDM');
+      if (menu && container && !container.contains(e.target)) {
+        menu.classList.remove('open');
+        document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
       }
     });
 
