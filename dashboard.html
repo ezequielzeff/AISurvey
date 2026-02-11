@@ -287,6 +287,25 @@
       align-items: center;
       gap: 0.5rem;
     }
+    .section-summary-mini-bar {
+      width: 120px;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(to right, #ef4444 0%, #f97316 16%, #eab308 33%, #eab308 50%, #4ade80 72%, #22c55e 100%);
+      position: relative;
+      margin-top: 0.3rem;
+    }
+    .section-summary-mini-marker {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #1f2937;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
     .section-summary-challenge-pill {
       background: #f0f9ff;
       border: 1px solid #bae6fd;
@@ -1945,7 +1964,9 @@
   let activeAiChallengeFilter = null; // null = all, or a challenge key like 'skills'
   let activeWfmStageFilter = null; // null = all, or a stage number (0-5)
   let currentMedianStage = null; // current median stage key for stage description modal
+  let currentStagePosition = 0.5; // 0-1 position for adoption stage progress bar
   let currentWfmStage = null; // current WFM average stage number for description modal
+  let currentWfmPosition = 0.5; // 0-1 position for WFM progress bar
   let tableSortColumn = 'account'; // default sort column
   let tableSortDirection = 'asc';  // 'asc' or 'desc'
 
@@ -2963,6 +2984,7 @@
     const avgPosition = totalKnown > 0 ? medianIndex / (MATURITY_STAGES.length - 1) : 0.5;
     const avgStage = totalKnown > 0 ? MATURITY_STAGES[Math.round(medianIndex)] : null;
     currentMedianStage = avgStage;
+    currentStagePosition = avgPosition;
 
     // Update callout
     const calloutValue = document.getElementById('stageCalloutValue');
@@ -3124,6 +3146,7 @@
     const avgDescEl = document.getElementById('wfmAvgDesc');
     const roundedStage = Math.round(filteredAvg);
     currentWfmStage = filteredTotal > 0 ? roundedStage : null;
+    currentWfmPosition = filteredTotal > 0 ? filteredAvg / 5 : 0.5;
     if (filteredTotal > 0) {
       avgEl.textContent = `Stage ${roundedStage} — ${WFM_LABELS[roundedStage]}`;
       avgDescEl.textContent = `Score: ${filteredAvg.toFixed(1)} / 5.0 · Average across ${filteredTotal} account${filteredTotal !== 1 ? 's' : ''}`;
@@ -3380,10 +3403,18 @@
       `<span class="section-summary-challenge-pill">${AI_CHALLENGE_LABELS[k]}</span>`
     ).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
 
+    const stageMarkerPct = Math.max(4, Math.min(96, currentStagePosition * 100));
+    const miniBarHtml = currentMedianStage
+      ? `<div class="section-summary-mini-bar"><div class="section-summary-mini-marker" style="left:${stageMarkerPct}%"></div></div>`
+      : '';
+
     el.innerHTML = `
-      <div class="section-summary-item">
-        <span class="section-summary-label">Avg Stage:</span>
-        <span class="section-summary-value">${stageHtml}</span>
+      <div class="section-summary-item" style="flex-direction:column;align-items:flex-start;">
+        <div style="display:flex;align-items:center;gap:0.4rem;">
+          <span class="section-summary-label">Avg Stage:</span>
+          <span class="section-summary-value">${stageHtml}</span>
+        </div>
+        ${miniBarHtml}
       </div>
       <div class="section-summary-divider"></div>
       <div class="section-summary-item">
@@ -3438,10 +3469,18 @@
       `<span class="section-summary-challenge-pill" style="background:#eef2ff;border-color:#c7d2fe;color:#4338ca;">${AI_TOOL_LABELS[k]}</span>`
     ).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
 
+    const wfmMarkerPct = Math.max(4, Math.min(96, currentWfmPosition * 100));
+    const wfmMiniBarHtml = currentWfmStage !== null
+      ? `<div class="section-summary-mini-bar"><div class="section-summary-mini-marker" style="left:${wfmMarkerPct}%"></div></div>`
+      : '';
+
     el.innerHTML = `
-      <div class="section-summary-item">
-        <span class="section-summary-label">Avg Maturity:</span>
-        <span class="section-summary-value">${maturityHtml}</span>
+      <div class="section-summary-item" style="flex-direction:column;align-items:flex-start;">
+        <div style="display:flex;align-items:center;gap:0.4rem;">
+          <span class="section-summary-label">Avg Maturity:</span>
+          <span class="section-summary-value">${maturityHtml}</span>
+        </div>
+        ${wfmMiniBarHtml}
       </div>
       <div class="section-summary-divider"></div>
       <div class="section-summary-item">
@@ -3459,18 +3498,10 @@
     const el = document.getElementById('sectionSummarySurveys');
     if (!el) return;
 
-    const count = surveys.length;
-    const accounts = new Set(surveys.map(s => s.data?.account?.name).filter(Boolean));
-
     el.innerHTML = `
       <div class="section-summary-item">
         <span class="section-summary-label">Surveys:</span>
-        <span class="section-summary-value">${count}</span>
-      </div>
-      <div class="section-summary-divider"></div>
-      <div class="section-summary-item">
-        <span class="section-summary-label">Accounts:</span>
-        <span class="section-summary-value">${accounts.size}</span>
+        <span class="section-summary-value">${surveys.length}</span>
       </div>`;
   }
 
