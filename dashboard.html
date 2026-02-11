@@ -242,6 +242,53 @@
       margin-bottom: 0;
       border-bottom-color: transparent;
     }
+    .widget-section-summary {
+      display: none;
+      padding: 0.75rem 0;
+      gap: 1.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+      color: #374151;
+    }
+    .widget-section.collapsed .widget-section-summary {
+      display: flex;
+    }
+    .section-summary-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .section-summary-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .section-summary-value {
+      font-weight: 700;
+      color: #1e3a5f;
+    }
+    .section-summary-divider {
+      width: 1px;
+      height: 1.2rem;
+      background: #e5e7eb;
+    }
+    .section-summary-challenges {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-summary-challenge-pill {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      color: #0369a1;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
     .widget-card {
       background: #fff;
       border: 1px solid #e5e7eb;
@@ -1277,6 +1324,9 @@
         <div class="widget-section-title" onclick="toggleSection(this)">
           <span>Client AI Landscape</span>
           <span class="section-chevron">&#9662;</span>
+        </div>
+        <div class="widget-section-summary" id="sectionSummaryLandscape">
+          <!-- Populated by JS -->
         </div>
         <div class="widget-section-content">
 
@@ -2642,6 +2692,9 @@
     // AI Challenges Widget — shows all challenges (dimmed/highlighted via filter state)
     renderAiChallengesWidget(allSurveys);
 
+    // Collapsed section summary (must run after renderAdoptionStageWidget sets currentMedianStage)
+    updateSectionSummary(allSurveys);
+
     // AI Tools Usage Widget — shows all tools (dimmed/highlighted via filter state)
     renderAiToolsWidget(allSurveys);
 
@@ -3255,6 +3308,50 @@
       <div class="legend-item">
         <div class="legend-dot" style="background:${LF_COLORS.secondary};"></div>
         <span>Secondary factor</span>
+      </div>`;
+  }
+
+  // ═══════════════════════════════════════════
+  // COLLAPSED SECTION SUMMARY
+  // ═══════════════════════════════════════════
+  function updateSectionSummary(surveys) {
+    const el = document.getElementById('sectionSummaryLandscape');
+    if (!el) return;
+
+    // Average Portfolio Stage (reuse currentMedianStage set by renderAdoptionStageWidget)
+    const stageHtml = currentMedianStage
+      ? `${MATURITY_ICONS[currentMedianStage]} ${MATURITY_LABELS[currentMedianStage]}`
+      : '--';
+
+    // Top 3 AI Challenges
+    const chCounts = {};
+    AI_CHALLENGE_ORDER.forEach(k => chCounts[k] = 0);
+    surveys.forEach(s => {
+      const ch = s.data?.clientAILandscape?.challenges;
+      if (!ch) return;
+      Object.entries(ch).forEach(([k, v]) => {
+        if (k.startsWith('_')) return;
+        if (v?.rank === 1 || v?.rank === 2) chCounts[k]++;
+      });
+    });
+    const topChallenges = [...AI_CHALLENGE_ORDER]
+      .sort((a, b) => chCounts[b] - chCounts[a])
+      .filter(k => chCounts[k] > 0)
+      .slice(0, 3);
+
+    const challengePills = topChallenges.map(k =>
+      `<span class="section-summary-challenge-pill">${AI_CHALLENGE_LABELS[k]}</span>`
+    ).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
+
+    el.innerHTML = `
+      <div class="section-summary-item">
+        <span class="section-summary-label">Avg Stage:</span>
+        <span class="section-summary-value">${stageHtml}</span>
+      </div>
+      <div class="section-summary-divider"></div>
+      <div class="section-summary-item">
+        <span class="section-summary-label">Top Challenges:</span>
+        <div class="section-summary-challenges">${challengePills}</div>
       </div>`;
   }
 
