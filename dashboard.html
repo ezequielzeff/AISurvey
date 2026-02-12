@@ -987,6 +987,11 @@
       width: 100%;
       height: 420px;
     }
+    .cloud-platforms-chart-container {
+      position: relative;
+      width: 100%;
+      height: 180px;
+    }
     .ai-challenges-chart-container {
       position: relative;
       width: 100%;
@@ -2521,6 +2526,18 @@
         <div class="widget-legend" id="aiToolsLegend"></div>
       </div>
 
+      <!-- Widget: Cloud Platforms -->
+      <div class="widget-card" id="cloudPlatformsWidget">
+        <div class="widget-header">
+          <div class="widget-title">Cloud Platforms</div>
+          <div class="widget-subtitle">Cloud infrastructure used across the portfolio</div>
+        </div>
+        <div class="cloud-platforms-chart-container">
+          <canvas id="chartCloudPlatforms"></canvas>
+        </div>
+        <div class="widget-legend" id="cloudPlatformsLegend"></div>
+      </div>
+
       <!-- Widget: SDLC AI Coverage Map -->
       <div class="widget-card" id="sdlcCoverageWidget">
         <div class="widget-header">
@@ -3095,6 +3112,13 @@
   const AI_TOOL_ORDER = Object.keys(AI_TOOL_LABELS);
   const AI_TOOL_COLOR = '#6366f1';
 
+  // Cloud Platforms (from survey Step 4: toolsAndInfrastructure.cloud)
+  const CLOUD_PLATFORM_LABELS = {
+    aws: 'AWS', gcp: 'GCP', azure: 'Azure', onprem: 'On-Premises'
+  };
+  const CLOUD_PLATFORM_ORDER = Object.keys(CLOUD_PLATFORM_LABELS);
+  const CLOUD_PLATFORM_COLOR = '#0ea5e9';
+
   const ROLE_LABELS = {
     pm: 'PM / Scrum', ba: 'BA / PM', arch: 'Architects', swe: 'Software Eng.',
     qa: 'Manual QA', qaa: 'QA Automation', data: 'Data Eng.', devops: 'DevOps', ux: 'UI/UX'
@@ -3175,6 +3199,7 @@
   let activeLimitingFactorFilter = null; // null = all, or a factor key like 'time'
   let activeAiToolFilter = null; // null = all, or a tool key like 'copilot' or '_custom'
   let activeAiChallengeFilter = null; // null = all, or a challenge key like 'skills'
+  let activeCloudPlatformFilter = null; // null = all, or a platform key like 'aws'
   let activeWfmStageFilter = null; // null = all, or a stage number (0-5)
   let currentMedianStage = null; // current median stage key for stage description modal
   let currentStagePosition = 0.5; // 0-1 position for adoption stage progress bar
@@ -3458,6 +3483,15 @@
     refreshDashboard();
   }
 
+  function setCloudPlatformFilter(key) {
+    activeCloudPlatformFilter = (activeCloudPlatformFilter === key) ? null : key;
+    refreshDashboard();
+  }
+  function clearCloudPlatformFilter() {
+    activeCloudPlatformFilter = null;
+    refreshDashboard();
+  }
+
   function clearAllFilters() {
     if (comparisonMode) { exitComparison(); return; }
     activeMaturityFilter = null;
@@ -3466,6 +3500,7 @@
     activeLimitingFactorFilter = null;
     activeAiToolFilter = null;
     activeAiChallengeFilter = null;
+    activeCloudPlatformFilter = null;
     activeWfmStageFilter = null;
     activeChampionFilter = null;
     refreshDashboard();
@@ -4388,6 +4423,15 @@
       });
     }
 
+    // Apply cloud platform filter
+    if (activeCloudPlatformFilter) {
+      surveys = surveys.filter(s => {
+        const cloud = s.data?.toolsAndInfrastructure?.cloud;
+        if (!cloud) return false;
+        return cloud[activeCloudPlatformFilter]?.selected === true;
+      });
+    }
+
     // Apply AI challenge filter
     if (activeAiChallengeFilter) {
       surveys = surveys.filter(s => {
@@ -4484,6 +4528,7 @@
     renderWorkflowMaturityComparison(surveysA, surveysB, allSurveys, nameA, nameB);
     renderLimitingFactorsComparison(surveysA, surveysB, nameA, nameB);
     renderAiToolsComparison(surveysA, surveysB, nameA, nameB);
+    renderCloudPlatformsComparison(surveysA, surveysB, nameA, nameB);
     renderSdlcCoverageComparison(surveysA, surveysB, nameA, nameB);
     renderAiAdoptionByRoleComparison(surveysA, surveysB, nameA, nameB);
     renderAiChampionComparison(surveysA, surveysB, nameA, nameB);
@@ -4585,6 +4630,7 @@
 
     // AI Tools Usage Widget — shows all tools (dimmed/highlighted via filter state)
     renderAiToolsWidget(allSurveys);
+    renderCloudPlatformsWidget(allSurveys);
     renderSdlcCoverageWidget(surveys);
     renderAiAdoptionByRoleWidget(surveys);
     renderAiChampionWidget(surveys);
@@ -4775,7 +4821,7 @@
 
     // Show/hide filter footer
     const footer = document.getElementById('widgetFooter');
-    const hasAnyFilter = activeMaturityFilter || selectedAccounts.size > 0 || selectedDeliveryManagers.size > 0 || activeLimitingFactorFilter || activeAiToolFilter || activeAiChallengeFilter || activeWfmStageFilter !== null;
+    const hasAnyFilter = activeMaturityFilter || selectedAccounts.size > 0 || selectedDeliveryManagers.size > 0 || activeLimitingFactorFilter || activeAiToolFilter || activeCloudPlatformFilter || activeAiChallengeFilter || activeWfmStageFilter !== null;
     if (hasAnyFilter) {
       footer.style.display = 'flex';
       let tags = '';
@@ -4799,6 +4845,9 @@
       if (activeAiToolFilter) {
         const toolLabel = activeAiToolFilter === '_custom' ? 'Other / Custom' : (AI_TOOL_LABELS[activeAiToolFilter] || activeAiToolFilter);
         tags += `<span class="filter-active-tag">Tool: ${toolLabel} <span class="filter-clear-x" onclick="clearAiToolFilter()" title="Clear filter">&times;</span></span>`;
+      }
+      if (activeCloudPlatformFilter) {
+        tags += `<span class="filter-active-tag">Platform: ${CLOUD_PLATFORM_LABELS[activeCloudPlatformFilter] || activeCloudPlatformFilter} <span class="filter-clear-x" onclick="clearCloudPlatformFilter()" title="Clear filter">&times;</span></span>`;
       }
       if (activeAiChallengeFilter) {
         tags += `<span class="filter-active-tag">Challenge: ${AI_CHALLENGE_LABELS[activeAiChallengeFilter] || activeAiChallengeFilter} <span class="filter-clear-x" onclick="clearAiChallengeFilter()" title="Clear filter">&times;</span></span>`;
@@ -5182,6 +5231,22 @@
       return `<span class="section-summary-challenge-pill" style="background:#eef2ff;border-color:#c7d2fe;color:#4338ca;">${AI_TOOL_LABELS[k]} ${pct}%</span>`;
     }).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
 
+    // Top Cloud Platforms
+    const cloudCounts = {};
+    CLOUD_PLATFORM_ORDER.forEach(k => cloudCounts[k] = 0);
+    surveys.forEach(s => {
+      const cloud = s.data?.toolsAndInfrastructure?.cloud;
+      if (!cloud) return;
+      CLOUD_PLATFORM_ORDER.forEach(k => { if (cloud[k]?.selected === true) cloudCounts[k]++; });
+    });
+    const topClouds = [...CLOUD_PLATFORM_ORDER]
+      .sort((a, b) => cloudCounts[b] - cloudCounts[a])
+      .filter(k => cloudCounts[k] > 0).slice(0, 3);
+    const cloudPills = topClouds.map(k => {
+      const pct = totalSurveysAcct > 0 ? Math.round((cloudCounts[k] / totalSurveysAcct) * 100) : 0;
+      return `<span class="section-summary-challenge-pill" style="background:#e0f2fe;border-color:#7dd3fc;color:#0369a1;">${CLOUD_PLATFORM_LABELS[k]} ${pct}%</span>`;
+    }).join('') || '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
+
     const wfmMarkerPct = Math.max(4, Math.min(96, currentWfmPosition * 100));
     const wfmMiniBarHtml = currentWfmStage !== null
       ? `<div class="section-summary-mini-bar"><div class="section-summary-mini-marker" style="left:${wfmMarkerPct}%"></div></div>`
@@ -5277,6 +5342,11 @@
       <div class="section-summary-item">
         <span class="section-summary-label">Top Tools:</span>
         <div class="section-summary-challenges">${toolPills}</div>
+      </div>
+      <div class="section-summary-divider"></div>
+      <div class="section-summary-item">
+        <span class="section-summary-label">Platforms:</span>
+        <div class="section-summary-challenges">${cloudPills}</div>
       </div>
       <div class="section-summary-divider"></div>
       <div class="section-summary-item">
@@ -5563,6 +5633,133 @@
   }
 
   // ═══════════════════════════════════════════
+  // CLOUD PLATFORMS WIDGET
+  // ═══════════════════════════════════════════
+  function renderCloudPlatformsWidget(surveys) {
+    destroyChart('chartCloudPlatforms');
+
+    const totalSurveys = surveys.length;
+
+    // Count how many surveys have each platform selected
+    const platformCounts = {};
+    CLOUD_PLATFORM_ORDER.forEach(k => platformCounts[k] = 0);
+
+    surveys.forEach(s => {
+      const cloud = s.data?.toolsAndInfrastructure?.cloud;
+      if (!cloud) return;
+      CLOUD_PLATFORM_ORDER.forEach(k => {
+        if (cloud[k]?.selected === true) platformCounts[k]++;
+      });
+    });
+
+    // Build sorted list of platforms with count > 0
+    const platformKeys = CLOUD_PLATFORM_ORDER.filter(k => platformCounts[k] > 0);
+
+    // Sort by count descending
+    platformKeys.sort((a, b) => platformCounts[b] - platformCounts[a]);
+
+    // Calculate percentages
+    const pcts = {};
+    const counts = {};
+    platformKeys.forEach(k => {
+      counts[k] = platformCounts[k];
+      pcts[k] = totalSurveys > 0 ? Math.round((platformCounts[k] / totalSurveys) * 100) : 0;
+    });
+
+    const labels = platformKeys.map(k => CLOUD_PLATFORM_LABELS[k] || k);
+
+    // Per-bar colors: dim bars not matching the active filter
+    const bgColors = platformKeys.map(k => {
+      if (activeCloudPlatformFilter && activeCloudPlatformFilter !== k) return CLOUD_PLATFORM_COLOR + '30';
+      return CLOUD_PLATFORM_COLOR;
+    });
+    const yTickColors = platformKeys.map(k => {
+      if (activeCloudPlatformFilter && activeCloudPlatformFilter !== k) return '#d1d5db';
+      if (activeCloudPlatformFilter === k) return '#1f2937';
+      return '#374151';
+    });
+
+    // Adjust chart height dynamically based on number of platforms
+    const chartContainer = document.querySelector('.cloud-platforms-chart-container');
+    const barCount = platformKeys.length || 1;
+    chartContainer.style.height = Math.max(100, barCount * 32 + 40) + 'px';
+
+    const ctx = document.getElementById('chartCloudPlatforms').getContext('2d');
+    charts['chartCloudPlatforms'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Usage',
+          data: platformKeys.map(k => pcts[k]),
+          backgroundColor: bgColors,
+          borderRadius: 4,
+          barPercentage: 0.7,
+          categoryPercentage: 0.8
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const platformKey = platformKeys[context.dataIndex];
+                const count = counts[platformKey];
+                return `${context.raw}% (${count} of ${totalSurveys} accounts)`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            max: 100,
+            ticks: {
+              callback: v => v + '%',
+              font: { size: 11 },
+              color: '#9ca3af'
+            },
+            grid: { color: '#f3f4f6' },
+            border: { display: false }
+          },
+          y: {
+            ticks: {
+              font: function(context) {
+                const k = platformKeys[context.index];
+                const isActive = activeCloudPlatformFilter === k;
+                return { size: 12, weight: isActive ? '700' : '500' };
+              },
+              color: yTickColors
+            },
+            grid: { display: false },
+            border: { display: false }
+          }
+        },
+        onClick: (event, elements) => {
+          if (elements.length > 0) {
+            const platformKey = platformKeys[elements[0].index];
+            setCloudPlatformFilter(platformKey);
+          }
+        },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+        }
+      }
+    });
+
+    // Render legend
+    const cpLegend = document.getElementById('cloudPlatformsLegend');
+    cpLegend.innerHTML = `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${CLOUD_PLATFORM_COLOR};"></div>
+        <span>% of accounts using this platform</span>
+      </div>`;
+  }
+
+  // ═══════════════════════════════════════════
   // COMPARISON MODE — WIDGET RENDERERS
   // ═══════════════════════════════════════════
 
@@ -5610,6 +5807,20 @@
       if (Array.isArray(aiTools.custom) && aiTools.custom.length > 0) customCount++;
     });
     return { toolCounts, customCount };
+  }
+
+  // Helper: count cloud platforms from a survey set
+  function countCloudPlatforms(surveys) {
+    const platformCounts = {};
+    CLOUD_PLATFORM_ORDER.forEach(k => platformCounts[k] = 0);
+    surveys.forEach(s => {
+      const cloud = s.data?.toolsAndInfrastructure?.cloud;
+      if (!cloud) return;
+      CLOUD_PLATFORM_ORDER.forEach(k => {
+        if (cloud[k]?.selected === true) platformCounts[k]++;
+      });
+    });
+    return { platformCounts };
   }
 
   // Helper: compute per-account WFM average stages from a survey set
@@ -5767,6 +5978,51 @@
 
     const legend = document.getElementById('aiToolsLegend');
     legend.innerHTML = `<div class="legend-item"><div class="legend-dot" style="background:${COMPARE_COLOR_A};"></div><span>${escapeHtml(nameA)}</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:${COMPARE_COLOR_B};"></div><span>${escapeHtml(nameB)}</span></div>`;
+  }
+
+  // --- Cloud Platforms Comparison ---
+  function renderCloudPlatformsComparison(surveysA, surveysB, nameA, nameB) {
+    destroyChart('chartCloudPlatforms');
+    const totalA = surveysA.length, totalB = surveysB.length;
+    const cpA = countCloudPlatforms(surveysA), cpB = countCloudPlatforms(surveysB);
+
+    const allKeys = CLOUD_PLATFORM_ORDER.filter(k => cpA.platformCounts[k] > 0 || cpB.platformCounts[k] > 0);
+    allKeys.sort((a, b) => Math.max(cpA.platformCounts[b] || 0, cpB.platformCounts[b] || 0) - Math.max(cpA.platformCounts[a] || 0, cpB.platformCounts[a] || 0));
+
+    const labels = allKeys.map(k => CLOUD_PLATFORM_LABELS[k] || k);
+    const pctsA = allKeys.map(k => totalA > 0 ? Math.round((cpA.platformCounts[k] / totalA) * 100) : 0);
+    const pctsB = allKeys.map(k => totalB > 0 ? Math.round((cpB.platformCounts[k] / totalB) * 100) : 0);
+
+    const chartContainer = document.querySelector('.cloud-platforms-chart-container');
+    const barCount = allKeys.length || 1;
+    chartContainer.style.height = Math.max(100, barCount * 36 + 40) + 'px';
+
+    const ctx = document.getElementById('chartCloudPlatforms').getContext('2d');
+    charts['chartCloudPlatforms'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: nameA, data: pctsA, backgroundColor: COMPARE_COLOR_A, borderRadius: 4, barPercentage: 0.45, categoryPercentage: 0.8 },
+          { label: nameB, data: pctsB, backgroundColor: COMPARE_COLOR_B, borderRadius: 4, barPercentage: 0.45, categoryPercentage: 0.8 }
+        ]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
+          tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
+        },
+        scales: {
+          x: { max: 100, ticks: { callback: v => v + '%', font: { size: 11 }, color: '#9ca3af' }, grid: { color: '#f3f4f6' }, border: { display: false } },
+          y: { ticks: { font: { size: 12, weight: '500' }, color: '#374151' }, grid: { display: false }, border: { display: false } }
+        }
+      }
+    });
+
+    const cpLegend = document.getElementById('cloudPlatformsLegend');
+    cpLegend.innerHTML = `<div class="legend-item"><div class="legend-dot" style="background:${COMPARE_COLOR_A};"></div><span>${escapeHtml(nameA)}</span></div>
       <div class="legend-item"><div class="legend-dot" style="background:${COMPARE_COLOR_B};"></div><span>${escapeHtml(nameB)}</span></div>`;
   }
 
