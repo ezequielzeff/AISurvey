@@ -2212,19 +2212,26 @@
           <div style="font-size:0.85rem;color:#6b7280;margin-bottom:1rem;">Get AI-powered insights from your filtered survey data.</div>
         </div>
 
-        <!-- Primary CTA: Use Claude.ai -->
+        <!-- Primary CTA: Copy data context -->
         <div style="padding:0 0.5rem;">
-          <button class="ai-claude-cta-btn" onclick="copyContextAndOpenClaude()">
-            <span>📋</span> Copy Data &amp; Open Claude.ai
+          <button class="ai-claude-cta-btn" onclick="copyDataContext()">
+            <span>📋</span> Copy Data Context
           </button>
+          <div style="font-size:0.75rem;color:#6b7280;margin-top:0.5rem;text-align:center;line-height:1.5;">
+            Paste into any AI assistant:
+            <strong style="color:#374151;">Claude</strong>,
+            <strong style="color:#374151;">ChatGPT</strong>,
+            <strong style="color:#374151;">Gemini</strong>,
+            <strong style="color:#374151;">Copilot</strong>, or others
+          </div>
           <div style="display:flex;align-items:flex-start;gap:0.4rem;margin-top:0.6rem;font-size:0.75rem;color:#92400e;line-height:1.5;">
             <span style="flex-shrink:0;">⚠️</span>
             <span>The copied context includes <strong>account names</strong> and survey details. Be mindful of where you paste it — avoid sharing on public or unauthorized platforms.</span>
           </div>
-          <div id="aiClaudeInstructions" class="ai-claude-instructions" style="display:none;">
+          <div id="aiCopyInstructions" class="ai-claude-instructions" style="display:none;">
             <strong>Context copied to clipboard!</strong>
             <ol>
-              <li>Claude.ai is opening in a new tab</li>
+              <li>Open your preferred AI assistant (Claude, ChatGPT, Gemini, etc.)</li>
               <li>Paste (Ctrl+V) the context as your first message</li>
               <li>Then ask any question about your survey data</li>
             </ol>
@@ -7150,20 +7157,17 @@ Instructions:
     return payload;
   }
 
-  async function copyContextAndOpenClaude() {
+  async function copyDataContext() {
     try {
       const payload = buildClipboardPayload();
       await navigator.clipboard.writeText(payload);
 
       // Show inline instructions
-      const instructionsEl = document.getElementById('aiClaudeInstructions');
+      const instructionsEl = document.getElementById('aiCopyInstructions');
       if (instructionsEl) instructionsEl.style.display = 'block';
 
-      // Open Claude.ai in new tab
-      window.open('https://claude.ai/new', '_blank');
-
       // Show toast
-      showAiToast('Context copied! Paste it in Claude.ai to start chatting.');
+      showAiToast('Context copied! Paste it into your preferred AI assistant.');
     } catch (err) {
       // Fallback for non-HTTPS or file:// protocol
       try {
@@ -7177,10 +7181,9 @@ Instructions:
         document.execCommand('copy');
         document.body.removeChild(textArea);
 
-        const instructionsEl = document.getElementById('aiClaudeInstructions');
+        const instructionsEl = document.getElementById('aiCopyInstructions');
         if (instructionsEl) instructionsEl.style.display = 'block';
-        window.open('https://claude.ai/new', '_blank');
-        showAiToast('Context copied! Paste it in Claude.ai to start chatting.');
+        showAiToast('Context copied! Paste it into your preferred AI assistant.');
       } catch (fallbackErr) {
         showAiToast('Could not copy to clipboard. Please check browser permissions.');
       }
@@ -7345,8 +7348,8 @@ Instructions:
       quickEl.style.display = '';
       container.appendChild(quickEl);
     }
-    // Reset Claude.ai instructions and API section
-    const instructionsEl = document.getElementById('aiClaudeInstructions');
+    // Reset copy instructions and API section
+    const instructionsEl = document.getElementById('aiCopyInstructions');
     if (instructionsEl) instructionsEl.style.display = 'none';
     const apiSection = document.getElementById('aiApiSection');
     if (apiSection) apiSection.classList.remove('open');
