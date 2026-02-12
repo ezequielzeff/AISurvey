@@ -6847,6 +6847,7 @@
     const amount = parseCurrencyInput(rawValue);
     db.run('UPDATE surveys SET forecasted_service_revenue = ? WHERE id = ?', [amount, id]);
     await saveToIndexedDB();
+    refreshDashboard();
   }
 
   async function deleteSurvey(id, name) {
