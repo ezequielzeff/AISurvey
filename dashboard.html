@@ -4711,6 +4711,9 @@
     if (activeAiChallengeFilter) {
       filterTags += ` <span class="filter-active-tag">Challenge: ${AI_CHALLENGE_LABELS[activeAiChallengeFilter] || activeAiChallengeFilter} <span class="filter-clear-x" onclick="clearAiChallengeFilter()" title="Clear filter">&times;</span></span>`;
     }
+    if (activeCloudPlatformFilter) {
+      filterTags += ` <span class="filter-active-tag">Platform: ${CLOUD_PLATFORM_LABELS[activeCloudPlatformFilter] || activeCloudPlatformFilter} <span class="filter-clear-x" onclick="clearCloudPlatformFilter()" title="Clear filter">&times;</span></span>`;
+    }
     if (filterTags) {
       subtitleEl.innerHTML = `${subtitleText}${filterTags}`;
     } else {
@@ -4736,7 +4739,7 @@
     renderAiChallengesWidget(allSurveys);
 
     // Collapsed section summary (must run after renderAdoptionStageWidget sets currentMedianStage)
-    updateSectionSummary(allSurveys);
+    updateSectionSummary(surveys);
 
     // AI Tools Usage Widget — shows all tools (dimmed/highlighted via filter state)
     renderAiToolsWidget(allSurveys);
