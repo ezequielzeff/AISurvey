@@ -715,9 +715,9 @@
     }
     .role-heatmap thead th .rh-stage-name {
       display: block;
-      font-size: 0.68rem;
-      font-weight: 400;
-      opacity: 0.9;
+      font-size: 0.78rem;
+      font-weight: 500;
+      opacity: 1;
       white-space: nowrap;
     }
     .role-heatmap .rh-role-header {
@@ -2435,7 +2435,7 @@
   };
   const ROLE_ORDER = ['pm', 'ba', 'arch', 'swe', 'qa', 'qaa', 'data', 'devops', 'ux'];
   const ROLE_FULL_NAMES = {
-    pm: 'Project Manager', ba: 'Business Analyst', arch: 'Soln Architect',
+    pm: 'Project Manager', ba: 'Business Analyst', arch: 'Solutions Architect',
     swe: 'Developer', qa: 'QA Manual', qaa: 'QA Automation',
     data: 'Data Engineer', devops: 'DevOps', ux: 'UI/UX Designer'
   };
@@ -4759,12 +4759,10 @@
     // Build rows
     let bodyHtml = '';
     ROLE_ORDER.forEach(role => {
-      const abbr = ROLE_LABELS[role];
       const fullName = ROLE_FULL_NAMES[role];
 
       let rowHtml = `<td class="rh-role-header">
-        <span class="rh-role-abbr">${escapeHtml(abbr)}</span>
-        <span class="rh-role-full">${escapeHtml(fullName)}</span>
+        <span class="rh-role-abbr">${escapeHtml(fullName)}</span>
       </td>`;
 
       WFM_STAGES.forEach(stage => {
