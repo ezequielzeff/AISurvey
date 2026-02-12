@@ -3880,7 +3880,8 @@
     // Update callout
     const calloutValue = document.getElementById('stageCalloutValue');
     if (avgStage) {
-      calloutValue.innerHTML = `${MATURITY_ICONS[avgStage]} ${MATURITY_LABELS[avgStage]}`;
+      const avgPct = pcts[avgStage] || 0;
+      calloutValue.innerHTML = `${MATURITY_ICONS[avgStage]} ${MATURITY_LABELS[avgStage]} (${avgPct}%)`;
     } else {
       calloutValue.textContent = '--';
     }
@@ -4039,7 +4040,8 @@
     currentWfmStage = filteredTotal > 0 ? roundedStage : null;
     currentWfmPosition = filteredTotal > 0 ? filteredAvg / 5 : 0.5;
     if (filteredTotal > 0) {
-      avgEl.textContent = WFM_LABELS[roundedStage];
+      const wfmPct = pcts[roundedStage] || 0;
+      avgEl.textContent = `${WFM_LABELS[roundedStage]} (${wfmPct}%)`;
     } else {
       avgEl.textContent = '--';
     }
@@ -4238,8 +4240,20 @@
     if (!el) return;
 
     // Average Portfolio Stage (reuse currentMedianStage set by renderAdoptionStageWidget)
+    let stagePct = '';
+    if (currentMedianStage) {
+      let stageCount = 0, stageTotal = 0;
+      surveys.forEach(s => {
+        const val = s.data?.clientAILandscape?.maturity?.value;
+        if (val && MATURITY_ORDER.includes(val)) {
+          stageTotal++;
+          if (val === currentMedianStage) stageCount++;
+        }
+      });
+      stagePct = stageTotal > 0 ? ` (${Math.round((stageCount / stageTotal) * 100)}%)` : '';
+    }
     const stageHtml = currentMedianStage
-      ? `${MATURITY_ICONS[currentMedianStage]} ${MATURITY_LABELS[currentMedianStage]}`
+      ? `${MATURITY_ICONS[currentMedianStage]} ${MATURITY_LABELS[currentMedianStage]}${stagePct}`
       : '--';
 
     // Top 3 AI Challenges
@@ -4289,8 +4303,25 @@
     if (!el) return;
 
     // Portfolio Average Maturity (reuse currentWfmStage set by renderWorkflowMaturityWidget)
+    let wfmStagePct = '';
+    if (currentWfmStage !== null) {
+      let wfmCount = 0, wfmTotal = 0;
+      surveys.forEach(s => {
+        const wfm = s.data?.workflowMaturity;
+        if (!wfm) return;
+        const roleStages = [];
+        ROLE_ORDER.forEach(role => {
+          const st = wfm[role]?.stage;
+          if (st !== null && st !== undefined && typeof st === 'number') roleStages.push(st);
+        });
+        if (roleStages.length === 0) return;
+        wfmTotal++;
+        if (Math.round(roleStages.reduce((a, b) => a + b, 0) / roleStages.length) === currentWfmStage) wfmCount++;
+      });
+      wfmStagePct = wfmTotal > 0 ? ` (${Math.round((wfmCount / wfmTotal) * 100)}%)` : '';
+    }
     const maturityHtml = currentWfmStage !== null
-      ? `Stage ${currentWfmStage} — ${WFM_LABELS[currentWfmStage]}`
+      ? `Stage ${currentWfmStage} — ${WFM_LABELS[currentWfmStage]}${wfmStagePct}`
       : '--';
 
     // Top 3 Limiting Factors
