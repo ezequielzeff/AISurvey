@@ -4885,7 +4885,7 @@
       </div>${connector}`;
     }).join('');
 
-    // Update progress bar marker position (deferred to next frame so layout is complete)
+    // Update progress bar marker position (double-rAF ensures layout + paint are complete)
     const marker = document.getElementById('progressMarker');
     const targetStageKey = activeMaturityFilter || avgStage;
 
@@ -4893,7 +4893,7 @@
       marker.style.display = 'none';
     } else {
       marker.style.display = '';
-      requestAnimationFrame(() => {
+      requestAnimationFrame(() => { requestAnimationFrame(() => {
         const progressBar = document.querySelector('.progress-gradient-bar');
         const pipelineEl = document.getElementById('stagePipeline');
         const stageCards = pipelineEl.querySelectorAll('.stage-card');
@@ -4907,7 +4907,7 @@
           const pct = Math.max(2, Math.min(98, ((cardCenter - barRect.left) / barRect.width) * 100));
           marker.style.left = pct + '%';
         }
-      });
+      }); });
     }
 
     // Render legend (all stages including dont-know)
@@ -5047,7 +5047,7 @@
       </div>${connector}`;
     }).join('');
 
-    // 7. Position progress bar marker (deferred to next frame so layout is complete)
+    // 7. Position progress bar marker (double-rAF ensures layout + paint are complete)
     const wfmMarker = document.getElementById('wfmProgressMarker');
     const targetWfmIdx = activeWfmStageFilter !== null ? activeWfmStageFilter : roundedStage;
 
@@ -5055,7 +5055,7 @@
       wfmMarker.style.display = 'none';
     } else {
       wfmMarker.style.display = '';
-      requestAnimationFrame(() => {
+      requestAnimationFrame(() => { requestAnimationFrame(() => {
         const wfmBar = document.querySelector('.wfm-gradient-bar');
         const wfmCards = journey.querySelectorAll('.wfm-card');
         const wfmBarRect = wfmBar ? wfmBar.getBoundingClientRect() : null;
@@ -5067,7 +5067,7 @@
           const pct = Math.max(2, Math.min(98, ((cardCenter - wfmBarRect.left) / wfmBarRect.width) * 100));
           wfmMarker.style.left = pct + '%';
         }
-      });
+      }); });
     }
   }
 
