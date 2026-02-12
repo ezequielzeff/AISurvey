@@ -1928,9 +1928,25 @@
     }
     .ai-save-keys-btn:hover { background: #4338ca; }
 
+    /* AI Floating Action Button */
+    .ai-fab {
+      position: fixed; bottom: 2rem; right: 2rem;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff; border: none; font-size: 1.5rem;
+      cursor: pointer; box-shadow: 0 4px 16px rgba(99,102,241,0.4);
+      z-index: 1040; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .ai-fab:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 24px rgba(99,102,241,0.5);
+    }
+    .ai-fab.hidden { display: none; }
+
     @media (max-width: 900px) {
       .ai-chat-panel { width: 100%; }
-      .ai-label-text { display: none; }
+      .ai-fab { bottom: 1rem; right: 1rem; width: 48px; height: 48px; font-size: 1.3rem; }
     }
 
   </style>
@@ -2046,7 +2062,6 @@
       </div>
       <button class="filter-clear-btn" onclick="clearAllFilters()" title="Clear all interactive filters" style="margin-left:0.5rem;">✕ Clear Filters</button>
       <button class="filter-clear-btn" onclick="openCompareModal()" title="Compare two groups of accounts" style="margin-left:0.5rem;">⚖ Compare</button>
-      <button class="filter-clear-btn" onclick="toggleAiChatPanel()" title="AI-powered insights" style="margin-left:0.5rem;">💬 <span class="ai-label-text">AI Insights</span></button>
 
       <!-- Actions dropdown -->
       <div class="actions-wrapper">
@@ -2077,6 +2092,9 @@
     </div>
     <div class="header-subtitle" id="headerSubtitle">Loading...</div>
   </header>
+
+  <!-- AI Floating Action Button -->
+  <button class="ai-fab" id="aiFab" onclick="toggleAiChatPanel()" title="AI Insights">💬</button>
 
   <!-- AI Chat Panel Overlay -->
   <div class="ai-chat-overlay" id="aiChatOverlay" onclick="closeAiChatPanel()"></div>
@@ -6773,6 +6791,7 @@
 
   function openAiChatPanel() {
     aiChatOpen = true;
+    document.getElementById('aiFab').classList.add('hidden');
     document.getElementById('aiChatPanel').classList.add('open');
     document.getElementById('aiChatOverlay').classList.add('open');
     setTimeout(() => document.getElementById('aiChatInput').focus(), 300);
@@ -6782,6 +6801,7 @@
     aiChatOpen = false;
     document.getElementById('aiChatPanel').classList.remove('open');
     document.getElementById('aiChatOverlay').classList.remove('open');
+    document.getElementById('aiFab').classList.remove('hidden');
   }
 
   function toggleAiChatSettings() {
