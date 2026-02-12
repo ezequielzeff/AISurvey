@@ -2484,7 +2484,7 @@
         <div class="widget-header">
           <div class="widget-title">Current AI Usage</div>
           <div class="widget-subtitle">How clients are currently using AI</div>
-          <div class="widget-question">How is the client currently using AI?</div>
+          <div class="widget-question">How is the client currently using AI? <a href="#" class="more-info-link" onclick="event.preventDefault();openAiUsageInfoModal();">More info</a></div>
         </div>
         <div class="ai-usage-chart-container">
           <canvas id="chartAiUsage"></canvas>
@@ -2759,6 +2759,15 @@
     <div class="info-modal" style="max-width:560px;">
       <button class="info-modal-close" onclick="closeStageDescriptionModal()" title="Close">&times;</button>
       <div id="stageDescriptionContent"></div>
+    </div>
+  </div>
+
+  <div class="info-modal-overlay" id="aiUsageInfoModal">
+    <div class="info-modal" style="max-width:660px;">
+      <button class="info-modal-close" onclick="closeAiUsageInfoModal()" title="Close">&times;</button>
+      <h2 style="margin-top:0;">Current AI Usage — Categories &amp; Examples</h2>
+      <p style="color:#6b7280;font-size:0.9rem;margin-bottom:1.5rem;">This widget captures how the client is currently leveraging AI across their organization. Multiple categories can apply to the same account.</p>
+      <div id="aiUsageInfoContent"></div>
     </div>
   </div>
 
@@ -3150,6 +3159,47 @@
   };
   const AI_USAGE_ORDER = ['dont-know', 'not-using', 'off-the-shelf', 'business-apps', 'custom-solutions', 'business-processes', 'customer-facing'];
   const AI_USAGE_COLOR = '#8b5cf6'; // violet-500
+  const AI_USAGE_ICONS = {
+    'dont-know': '❓', 'not-using': '🚫', 'off-the-shelf': '🛒', 'business-apps': '💼',
+    'custom-solutions': '🔧', 'business-processes': '⚙️', 'customer-facing': '🤝'
+  };
+  const AI_USAGE_DESCRIPTIONS = {
+    'dont-know': {
+      title: "❓ Don't Know",
+      desc: 'The delivery manager is not aware of whether or how the client is using AI. This may indicate a lack of visibility into client operations or that AI has not been discussed.',
+      examples: ['AI usage has not come up in client conversations', 'Client stakeholders have not shared their AI strategy', 'No information available about internal tools or initiatives']
+    },
+    'not-using': {
+      title: '🚫 Not Using AI',
+      desc: 'The client is not leveraging AI in any meaningful capacity. This could be due to organizational readiness, regulatory constraints, or simply not having explored the possibility yet.',
+      examples: ['All workflows are fully manual with no AI augmentation', 'Client has explicitly stated they are not pursuing AI', 'No AI tools, integrations, or pilots in use anywhere in the organization']
+    },
+    'off-the-shelf': {
+      title: '🛒 Off-the-Shelf Tools',
+      desc: 'The client uses commercially available, ready-made AI tools without significant customization. These are typically SaaS products with built-in AI capabilities that require minimal technical setup.',
+      examples: ['ChatGPT, Claude, or Gemini for content drafting and research', 'GitHub Copilot or Cursor for code assistance', 'Grammarly, Jasper, or similar AI writing tools', 'AI-powered design tools like Midjourney or DALL-E']
+    },
+    'business-apps': {
+      title: '💼 AI in Business Apps',
+      desc: 'The client uses AI features embedded within their existing business software platforms. These are AI capabilities that come built into enterprise tools they already use, rather than standalone AI products.',
+      examples: ['Salesforce Einstein for lead scoring and sales predictions', 'Microsoft 365 Copilot across Word, Excel, PowerPoint, Teams', 'HubSpot AI for marketing automation and content suggestions', 'ServiceNow AI for IT service management and ticket routing', 'Atlassian Intelligence in Jira and Confluence']
+    },
+    'custom-solutions': {
+      title: '🔧 Custom AI Solutions',
+      desc: 'The client has built or commissioned bespoke AI models, pipelines, or applications tailored to their specific business needs. This indicates a higher level of AI maturity and investment.',
+      examples: ['Custom ML models trained on proprietary data for demand forecasting', 'In-house RAG (Retrieval-Augmented Generation) systems over internal knowledge bases', 'Purpose-built NLP pipelines for document classification or extraction', 'Custom recommendation engines for products or content', 'Proprietary computer vision systems for quality inspection']
+    },
+    'business-processes': {
+      title: '⚙️ Process Automation',
+      desc: 'The client uses AI to automate repetitive business processes and workflows, reducing manual effort and improving consistency. AI is integrated into operational flows rather than used as a standalone tool.',
+      examples: ['AI-powered invoice processing and accounts payable automation', 'Automated contract review and clause extraction', 'Intelligent document processing for onboarding or compliance', 'AI-driven workflow orchestration (e.g., auto-routing, approvals)', 'Automated report generation and data reconciliation']
+    },
+    'customer-facing': {
+      title: '🤝 Customer-Facing AI',
+      desc: 'The client deploys AI in products or services that directly interact with their end customers. This is the most visible form of AI usage and typically requires the highest quality and reliability standards.',
+      examples: ['AI chatbots or virtual assistants for customer support', 'Personalized product or content recommendations on their platform', 'AI-powered search and discovery features', 'Dynamic pricing or offer optimization', 'Voice assistants or conversational interfaces in their products']
+    }
+  };
 
   // AI Tools (from survey Step 4: toolsAndInfrastructure.ai)
   const AI_TOOL_LABELS = {
@@ -4103,6 +4153,29 @@
 
   function closeStageDescriptionModal() {
     document.getElementById('stageDescriptionModal').classList.remove('open');
+  }
+
+  function openAiUsageInfoModal() {
+    const contentEl = document.getElementById('aiUsageInfoContent');
+    contentEl.innerHTML = AI_USAGE_ORDER.filter(k => k !== 'dont-know' && k !== 'not-using').map(k => {
+      const info = AI_USAGE_DESCRIPTIONS[k];
+      if (!info) return '';
+      const examplesHtml = info.examples.map(ex =>
+        `<li style="padding:0.25rem 0;color:#374151;font-size:0.88rem;line-height:1.5;">${ex}</li>`
+      ).join('');
+      return `<div class="info-modal-stage" style="border-left:4px solid ${AI_USAGE_COLOR};padding-left:1rem;margin-bottom:1.25rem;">
+        <h3 style="margin:0 0 0.4rem;font-size:1rem;">${info.title}</h3>
+        <p style="color:#444;font-size:0.92rem;line-height:1.6;margin:0 0 0.6rem;">${info.desc}</p>
+        <div style="background:#f9fafb;border-radius:8px;padding:0.6rem 1rem;">
+          <div style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem;">Examples</div>
+          <ul style="margin:0;padding-left:1.25rem;">${examplesHtml}</ul>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('aiUsageInfoModal').classList.add('open');
+  }
+  function closeAiUsageInfoModal() {
+    document.getElementById('aiUsageInfoModal').classList.remove('open');
   }
 
   function openWfmInfoModal() {
