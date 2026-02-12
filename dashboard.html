@@ -4885,7 +4885,7 @@
       </div>${connector}`;
     }).join('');
 
-    // Update progress bar marker position (double-rAF ensures layout + paint are complete)
+    // Update progress bar marker position (index-based, no DOM measurement needed)
     const marker = document.getElementById('progressMarker');
     const targetStageKey = activeMaturityFilter || avgStage;
 
@@ -4893,21 +4893,12 @@
       marker.style.display = 'none';
     } else {
       marker.style.display = '';
-      requestAnimationFrame(() => { requestAnimationFrame(() => {
-        const progressBar = document.querySelector('.progress-gradient-bar');
-        const pipelineEl = document.getElementById('stagePipeline');
-        const stageCards = pipelineEl.querySelectorAll('.stage-card');
-        const barRect = progressBar ? progressBar.getBoundingClientRect() : null;
-        if (!barRect || stageCards.length === 0) return;
-
-        const idx = MATURITY_ORDER.indexOf(targetStageKey);
-        if (idx >= 0 && idx < stageCards.length) {
-          const cardRect = stageCards[idx].getBoundingClientRect();
-          const cardCenter = cardRect.left + cardRect.width / 2;
-          const pct = Math.max(2, Math.min(98, ((cardCenter - barRect.left) / barRect.width) * 100));
-          marker.style.left = pct + '%';
-        }
-      }); });
+      const idx = MATURITY_ORDER.indexOf(targetStageKey);
+      const total = MATURITY_ORDER.length;
+      if (idx >= 0) {
+        const pct = Math.max(2, Math.min(98, ((idx + 0.5) / total) * 100));
+        marker.style.left = pct + '%';
+      }
     }
 
     // Render legend (all stages including dont-know)
@@ -5047,7 +5038,7 @@
       </div>${connector}`;
     }).join('');
 
-    // 7. Position progress bar marker (double-rAF ensures layout + paint are complete)
+    // 7. Position progress bar marker (index-based, no DOM measurement needed)
     const wfmMarker = document.getElementById('wfmProgressMarker');
     const targetWfmIdx = activeWfmStageFilter !== null ? activeWfmStageFilter : roundedStage;
 
@@ -5055,19 +5046,11 @@
       wfmMarker.style.display = 'none';
     } else {
       wfmMarker.style.display = '';
-      requestAnimationFrame(() => { requestAnimationFrame(() => {
-        const wfmBar = document.querySelector('.wfm-gradient-bar');
-        const wfmCards = journey.querySelectorAll('.wfm-card');
-        const wfmBarRect = wfmBar ? wfmBar.getBoundingClientRect() : null;
-        if (!wfmBarRect || wfmCards.length === 0) return;
-
-        if (targetWfmIdx >= 0 && targetWfmIdx < wfmCards.length) {
-          const cardRect = wfmCards[targetWfmIdx].getBoundingClientRect();
-          const cardCenter = cardRect.left + cardRect.width / 2;
-          const pct = Math.max(2, Math.min(98, ((cardCenter - wfmBarRect.left) / wfmBarRect.width) * 100));
-          wfmMarker.style.left = pct + '%';
-        }
-      }); });
+      const total = WFM_STAGES.length;
+      if (targetWfmIdx >= 0 && targetWfmIdx < total) {
+        const pct = Math.max(2, Math.min(98, ((targetWfmIdx + 0.5) / total) * 100));
+        wfmMarker.style.left = pct + '%';
+      }
     }
   }
 
