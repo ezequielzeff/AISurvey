@@ -467,6 +467,36 @@
       padding: 2px 8px;
       border-radius: 10px;
     }
+
+    /* AI Usage Banner (expanded view) */
+    .ai-usage-banner {
+      display: flex; align-items: center; gap: 1rem;
+      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+      border: 1px solid #c7d2fe;
+      border-radius: 12px; padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .ai-usage-banner-value {
+      font-size: 2rem; font-weight: 800; color: #4f46e5;
+      line-height: 1;
+    }
+    .ai-usage-banner-label {
+      font-size: 0.85rem; font-weight: 600; color: #4338ca;
+    }
+    .ai-usage-banner-sub {
+      font-size: 0.75rem; color: #6366f1; margin-top: 0.1rem;
+    }
+
+    /* AI Usage highlight in collapsed summary */
+    .section-summary-ai-usage {
+      display: flex; align-items: center; gap: 0.4rem;
+      background: #eef2ff; border: 1px solid #c7d2fe;
+      border-radius: 8px; padding: 0.2rem 0.6rem;
+    }
+    .section-summary-ai-usage .section-summary-value {
+      font-size: 0.95rem; font-weight: 800; color: #4f46e5;
+    }
+
     .widget-card {
       background: #fff;
       border: 1px solid #e5e7eb;
@@ -2309,6 +2339,15 @@
           <!-- Populated by JS -->
         </div>
         <div class="widget-section-content">
+
+      <!-- AI Usage Banner -->
+      <div class="ai-usage-banner" id="aiUsageBanner">
+        <div class="ai-usage-banner-value" id="aiUsageBannerValue">--</div>
+        <div>
+          <div class="ai-usage-banner-label">AI Usage</div>
+          <div class="ai-usage-banner-sub" id="aiUsageBannerSub">Accounts using at least one AI tool</div>
+        </div>
+      </div>
 
       <!-- Widget: Account AI Agentic Workflow -->
       <div class="widget-card" id="workflowMaturityWidget">
@@ -5039,13 +5078,31 @@
 
     // AI Usage %
     const aiUsagePct = calculateAiUsagePercent(surveys);
+    const aiUsageCount = surveys.filter(s => {
+      const aiTools = s.data?.toolsAndInfrastructure?.ai;
+      if (!aiTools) return false;
+      const EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
+      const hasNamed = Object.keys(aiTools).some(k => !EXCLUDED_KEYS.includes(k) && aiTools[k]?.selected === true);
+      const hasCustom = Array.isArray(aiTools.custom) && aiTools.custom.length > 0;
+      return hasNamed || hasCustom;
+    }).length;
+
+    // Update expanded banner
+    const bannerValueEl = document.getElementById('aiUsageBannerValue');
+    const bannerSubEl = document.getElementById('aiUsageBannerSub');
+    if (bannerValueEl) bannerValueEl.textContent = aiUsagePct !== null ? aiUsagePct + '%' : '--';
+    if (bannerSubEl) bannerSubEl.textContent = aiUsagePct !== null
+      ? `${aiUsageCount} of ${surveys.length} accounts using at least one AI tool`
+      : 'No data available';
+
+    // Collapsed summary
     const aiUsageHtml = aiUsagePct !== null
-      ? `<span class="section-summary-value" style="font-size:0.85rem;font-weight:800;color:#4f46e5;">${aiUsagePct}%</span>`
+      ? `<span class="section-summary-value">${aiUsagePct}%</span>`
       : '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
 
     el.innerHTML = `
-      <div class="section-summary-item">
-        <span class="section-summary-label">AI Usage:</span>
+      <div class="section-summary-item section-summary-ai-usage">
+        <span class="section-summary-label" style="color:#4338ca;">AI Usage:</span>
         ${aiUsageHtml}
       </div>
       <div class="section-summary-divider"></div>
@@ -5902,10 +5959,25 @@
     const labelA = avgA !== null ? `${WFM_LABELS[avgA]}` : '--';
     const labelB = avgB !== null ? `${WFM_LABELS[avgB]}` : '--';
 
-    el.innerHTML = `<div class="section-summary-item">
-      <span class="section-summary-label">WFM:</span>
-      <span class="section-summary-value"><span style="color:${COMPARE_COLOR_A};">${labelA}</span> vs <span style="color:${COMPARE_COLOR_B};">${labelB}</span></span>
-    </div>`;
+    const pctA = calculateAiUsagePercent(surveysA);
+    const pctB = calculateAiUsagePercent(surveysB);
+
+    // Update expanded banner for comparison
+    const bannerValueEl = document.getElementById('aiUsageBannerValue');
+    const bannerSubEl = document.getElementById('aiUsageBannerSub');
+    if (bannerValueEl) bannerValueEl.innerHTML = `<span style="color:${COMPARE_COLOR_A};">${pctA !== null ? pctA + '%' : '--'}</span> <span style="font-size:0.9rem;color:#9ca3af;">vs</span> <span style="color:${COMPARE_COLOR_B};">${pctB !== null ? pctB + '%' : '--'}</span>`;
+    if (bannerSubEl) bannerSubEl.textContent = `${nameA} vs ${nameB}`;
+
+    el.innerHTML = `
+      <div class="section-summary-item section-summary-ai-usage">
+        <span class="section-summary-label" style="color:#4338ca;">AI Usage:</span>
+        <span class="section-summary-value"><span style="color:${COMPARE_COLOR_A};">${pctA !== null ? pctA + '%' : '--'}</span> vs <span style="color:${COMPARE_COLOR_B};">${pctB !== null ? pctB + '%' : '--'}</span></span>
+      </div>
+      <div class="section-summary-divider"></div>
+      <div class="section-summary-item">
+        <span class="section-summary-label">WFM:</span>
+        <span class="section-summary-value"><span style="color:${COMPARE_COLOR_A};">${labelA}</span> vs <span style="color:${COMPARE_COLOR_B};">${labelB}</span></span>
+      </div>`;
   }
 
   function updateSurveysSectionSummaryComparison(surveysA, surveysB, nameA, nameB) {
