@@ -700,6 +700,10 @@
       font-size: 0.75rem;
       border: 1px solid #2d4a6f;
       vertical-align: bottom;
+      transition: background 0.15s;
+    }
+    .role-heatmap thead th:hover:not(.rh-role-header) {
+      background: #264b73;
     }
     .role-heatmap thead th .rh-stage-num {
       display: inline-flex;
@@ -2471,6 +2475,22 @@
     4: { title: 'Stage 4 — Event-Triggered AI', desc: 'AI reacts automatically to SDLC events. Bots post comments to collaboration tools, integrations exist with project management and CI/CD pipelines, AI tasks execute without manual triggering, reducing repetitive interactions.' },
     5: { title: 'Stage 5 — Semi-Agentic AI', desc: 'AI recommends, humans decide. Dashboards display AI-generated insights and metrics, AI provides confidence and risk scores, regular recommendation reports are produced, and human review/approval gates exist before AI actions take effect.' }
   };
+  const WFM_SIGNALS = [
+    ['AI tools blocked or discouraged', 'No AI policy or guidance', '"Shadow AI" usage only', 'No leadership discussion about AI'],
+    ['Tool usage varies widely', 'No shared standards', 'Outputs differ by person', 'Knowledge not reusable'],
+    ['Prompt libraries', 'AI referenced in ceremonies', 'Repeatable outputs', 'Onboarding includes AI practices'],
+    ['Prompt chains', 'Reused workflows', 'Scripts or templates', 'Consistent flow across tickets'],
+    ['Bots posting comments', 'Jira / GitHub / CI integrations', 'Background AI execution', 'Reduced manual triggering'],
+    ['Dashboards with AI insights', 'Confidence / risk scores', 'Recommendation reports', 'Humans approve actions']
+  ];
+  const WFM_SIGNALS_EXPANDED = [
+    ['AI tools are explicitly prohibited or strongly discouraged by policy', 'No formal AI policy exists or guidelines have been communicated', 'Team members use AI tools privately without management knowledge', 'Leadership has not discussed or acknowledged AI adoption needs'],
+    ['Different team members use AI tools in inconsistent ways', 'No agreed-upon standards for prompts or workflows', 'Same task produces different quality outputs depending on who does it', 'Learnings and techniques are not shared or documented'],
+    ['Team maintains shared libraries of effective prompts', 'AI capabilities and limitations discussed in team ceremonies', 'Outputs follow consistent patterns and quality standards', 'New team members are taught AI practices as part of onboarding'],
+    ['Multiple prompts are chained together for complex tasks', 'Documented workflows that multiple team members follow', 'Scripts or templates standardize common AI interactions', 'Work items follow predictable AI-assisted flows'],
+    ['AI systems post updates directly to collaboration tools', 'Integrations with project management and CI/CD pipelines', 'AI tasks execute without manual triggering', 'Less time spent on repetitive manual AI interactions'],
+    ['Visual dashboards showing AI-generated insights and metrics', 'AI provides confidence scores and risk assessments', 'Regular reports with AI-generated recommendations', 'Human review and approval gates before AI actions take effect']
+  ];
 
   // Account Types
   const ACCOUNT_TYPES = [
@@ -3024,11 +3044,38 @@
 
   function openWfmStageDescriptionModal() {
     if (currentWfmStage === null) return;
-    const info = WFM_DESCRIPTIONS[currentWfmStage];
+    openWfmStageDetailModal(currentWfmStage);
+  }
+
+  function openWfmStageDetailModal(stage) {
+    const info = WFM_DESCRIPTIONS[stage];
     if (!info) return;
+    const signals = WFM_SIGNALS[stage] || [];
+    const signalsExpanded = WFM_SIGNALS_EXPANDED[stage] || signals;
+    const color = WFM_COLORS[stage];
+
+    const signalsHtml = signalsExpanded.length > 0
+      ? `<div style="margin-top:1.25rem;">
+          <h3 style="font-size:0.95rem;font-weight:700;color:#1f2937;margin:0 0 0.6rem;">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:0.4rem;vertical-align:middle;"></span>
+            Signals
+          </h3>
+          <ul style="margin:0;padding-left:1.25rem;list-style:none;">
+            ${signalsExpanded.map((s, i) => `<li style="padding:0.35rem 0;color:#374151;font-size:0.88rem;line-height:1.5;border-bottom:1px solid #f3f4f6;">
+              <span style="color:${color};font-weight:700;margin-right:0.4rem;">${signals[i] || ''}</span>
+              <span style="display:block;color:#6b7280;font-size:0.82rem;margin-top:0.15rem;">${s}</span>
+            </li>`).join('')}
+          </ul>
+        </div>`
+      : '';
+
     document.getElementById('stageDescriptionContent').innerHTML = `
-      <h2 style="margin-top:0;font-size:1.25rem;">${info.title}</h2>
-      <p style="color:#444;font-size:0.97rem;line-height:1.7;">${info.desc}</p>`;
+      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem;">
+        <span style="display:inline-flex;align-items:center;justify-content:center;padding:3px 10px;border-radius:10px;background:${color};color:#fff;font-size:0.75rem;font-weight:700;white-space:nowrap;">Stage ${stage}</span>
+        <h2 style="margin:0;font-size:1.25rem;">${info.title.replace(/^Stage \d+ — /, '')}</h2>
+      </div>
+      <p style="color:#444;font-size:0.95rem;line-height:1.7;margin:0 0 0.5rem;">${info.desc}</p>
+      ${signalsHtml}`;
     document.getElementById('stageDescriptionModal').classList.add('open');
   }
 
@@ -4780,7 +4827,7 @@
     let headerHtml = '<th class="rh-role-header" style="background:#1e3a5f;border:1px solid #2d4a6f;">&nbsp;</th>';
     WFM_STAGES.forEach(stage => {
       const color = WFM_COLORS[stage];
-      headerHtml += `<th>
+      headerHtml += `<th onclick="openWfmStageDetailModal(${stage})" style="cursor:pointer;" title="Click for stage description &amp; signals">
         <span class="rh-stage-num" style="background:${color};">Stage ${stage}</span>
         <span class="rh-stage-name">${WFM_LABELS[stage]}</span>
         <span class="rh-stage-pct">${overallPcts[stage]}%</span>
