@@ -705,19 +705,27 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.68rem;
       font-weight: 700;
       color: #fff;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
+      white-space: nowrap;
     }
     .role-heatmap thead th .rh-stage-name {
       display: block;
-      font-size: 0.78rem;
-      font-weight: 500;
+      font-size: 0.82rem;
+      font-weight: 600;
       opacity: 1;
+      white-space: nowrap;
+      margin-bottom: 2px;
+    }
+    .role-heatmap thead th .rh-stage-pct {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 400;
+      opacity: 0.8;
       white-space: nowrap;
     }
     .role-heatmap .rh-role-header {
@@ -4746,13 +4754,36 @@
     });
     if (maxPct === 0) maxPct = 1;
 
+    // Compute overall per-account stage distribution (matches Maturity Journey widget)
+    const accountStages = [];
+    surveys.forEach(s => {
+      const wfm = s.data?.workflowMaturity;
+      if (!wfm) return;
+      const roleStages = [];
+      ROLE_ORDER.forEach(role => {
+        const st = wfm[role]?.stage;
+        if (st !== null && st !== undefined && typeof st === 'number') roleStages.push(st);
+      });
+      if (roleStages.length === 0) return;
+      accountStages.push(Math.round(roleStages.reduce((a, b) => a + b, 0) / roleStages.length));
+    });
+    const overallCounts = {};
+    WFM_STAGES.forEach(s => overallCounts[s] = 0);
+    accountStages.forEach(s => { if (overallCounts[s] !== undefined) overallCounts[s]++; });
+    const overallTotal = accountStages.length;
+    const overallPcts = {};
+    WFM_STAGES.forEach(s => {
+      overallPcts[s] = overallTotal > 0 ? Math.round((overallCounts[s] / overallTotal) * 100) : 0;
+    });
+
     // Build column headers
     let headerHtml = '<th class="rh-role-header" style="background:#1e3a5f;border:1px solid #2d4a6f;">&nbsp;</th>';
     WFM_STAGES.forEach(stage => {
       const color = WFM_COLORS[stage];
       headerHtml += `<th>
-        <span class="rh-stage-num" style="background:${color};">${stage}</span>
+        <span class="rh-stage-num" style="background:${color};">Stage ${stage}</span>
         <span class="rh-stage-name">${WFM_LABELS[stage]}</span>
+        <span class="rh-stage-pct">${overallPcts[stage]}%</span>
       </th>`;
     });
 
