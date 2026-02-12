@@ -1177,6 +1177,135 @@
     }
 
     /* ═══════════════════════════════════════════
+       COMPARE GROUPS
+       ═══════════════════════════════════════════ */
+    .compare-banner {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 0.6rem 1rem;
+      background: linear-gradient(135deg, #eef2ff 0%, #ecfdf5 100%);
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      color: #374151;
+    }
+    .compare-banner.active { display: flex; }
+    .compare-banner .group-a-name { color: #6366f1; font-weight: 700; }
+    .compare-banner .group-b-name { color: #10b981; font-weight: 700; }
+    .compare-banner button {
+      background: none; border: 1px solid #d1d5db; color: #6b7280;
+      font-size: 0.78rem; font-weight: 600; padding: 0.25rem 0.7rem;
+      border-radius: 16px; cursor: pointer;
+    }
+    .compare-banner button:hover { background: #f9fafb; color: #374151; border-color: #9ca3af; }
+
+    .compare-modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 1100;
+      justify-content: center; align-items: center;
+    }
+    .compare-modal-overlay.open { display: flex; }
+    .compare-modal {
+      background: #fff; border-radius: 16px; max-width: 960px; width: 95%;
+      max-height: 88vh; overflow-y: auto;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15); padding: 1.5rem; position: relative;
+    }
+    .compare-modal h2 {
+      font-size: 1.15rem; font-weight: 700; color: #1f2937;
+      margin: 0 0 1rem; padding-right: 2rem;
+    }
+    .compare-modal-close {
+      position: absolute; top: 0.75rem; right: 0.75rem;
+      background: none; border: none; font-size: 1.4rem;
+      cursor: pointer; color: #6b7280; padding: 0.2rem 0.4rem; border-radius: 6px;
+    }
+    .compare-modal-close:hover { background: #f3f4f6; color: #1f2937; }
+    .compare-columns {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;
+    }
+    .compare-group-col {
+      border: 2px solid #e5e7eb; border-radius: 12px; padding: 1rem;
+    }
+    .compare-group-col.group-a { border-color: #c7d2fe; }
+    .compare-group-col.group-b { border-color: #a7f3d0; }
+    .compare-group-header {
+      display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;
+    }
+    .compare-group-badge {
+      display: inline-block; padding: 0.15rem 0.6rem; border-radius: 12px;
+      font-size: 0.75rem; font-weight: 700; color: #fff;
+    }
+    .compare-group-badge.a { background: #6366f1; }
+    .compare-group-badge.b { background: #10b981; }
+    .compare-group-name-input {
+      border: 1px solid #d1d5db; border-radius: 6px; padding: 0.3rem 0.5rem;
+      font-size: 0.85rem; font-weight: 600; color: #374151; width: 140px;
+    }
+    .compare-group-name-input:focus { outline: none; border-color: #6366f1; }
+    .compare-filter-section {
+      margin-bottom: 0.75rem;
+    }
+    .compare-filter-label {
+      font-size: 0.75rem; font-weight: 700; color: #6b7280;
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;
+    }
+    .compare-filter-list {
+      max-height: 130px; overflow-y: auto; border: 1px solid #e5e7eb;
+      border-radius: 6px; padding: 0.3rem;
+    }
+    .compare-filter-list label {
+      display: flex; align-items: center; gap: 0.35rem;
+      font-size: 0.8rem; color: #374151; padding: 0.15rem 0.25rem;
+      cursor: pointer; border-radius: 4px;
+    }
+    .compare-filter-list label:hover { background: #f9fafb; }
+    .compare-filter-list input[type="checkbox"],
+    .compare-filter-list input[type="radio"] { margin: 0; accent-color: #6366f1; }
+    .compare-filter-actions {
+      display: flex; gap: 0.5rem; margin-top: 0.4rem;
+    }
+    .compare-filter-actions button {
+      font-size: 0.72rem; color: #6366f1; background: none; border: none;
+      cursor: pointer; font-weight: 600; padding: 0;
+    }
+    .compare-filter-actions button:hover { text-decoration: underline; }
+    .compare-modal-footer {
+      display: flex; justify-content: flex-end; gap: 0.75rem;
+      padding-top: 1rem; border-top: 1px solid #e5e7eb;
+    }
+    .compare-modal-footer button {
+      padding: 0.45rem 1.2rem; border-radius: 8px; font-size: 0.85rem;
+      font-weight: 600; cursor: pointer;
+    }
+    .compare-btn-cancel {
+      background: none; border: 1px solid #d1d5db; color: #6b7280;
+    }
+    .compare-btn-cancel:hover { background: #f9fafb; }
+    .compare-btn-start {
+      background: #6366f1; border: none; color: #fff;
+    }
+    .compare-btn-start:hover { background: #4f46e5; }
+
+    /* Comparison widget dual panels */
+    .compare-widget-dual {
+      display: flex; gap: 1rem;
+    }
+    .compare-panel {
+      flex: 1; border-left: 3px solid #e5e7eb; padding-left: 0.75rem; min-width: 0;
+    }
+    .compare-panel.panel-a { border-color: #6366f1; }
+    .compare-panel.panel-b { border-color: #10b981; }
+    .compare-panel-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 0.4rem;
+    }
+    .compare-panel-label.label-a { color: #6366f1; }
+    .compare-panel-label.label-b { color: #10b981; }
+
+    /* ═══════════════════════════════════════════
        MATURITY INFO MODAL
        ═══════════════════════════════════════════ */
     .info-modal-overlay {
@@ -1769,6 +1898,7 @@
         </div>
       </div>
       <button class="filter-clear-btn" onclick="clearAllFilters()" title="Clear all interactive filters" style="margin-left:0.5rem;">✕ Clear Filters</button>
+      <button class="filter-clear-btn" onclick="openCompareModal()" title="Compare two groups of accounts" style="margin-left:0.5rem;">⚖ Compare</button>
 
       <!-- Actions dropdown -->
       <div class="actions-wrapper">
@@ -1839,6 +1969,13 @@
             </select>
           </div>
         </div>
+      </div>
+
+      <!-- Comparison Banner -->
+      <div id="comparisonBanner" class="compare-banner">
+        <span>⚖ Comparing: <span class="group-a-name" id="compareNameA">Group A</span> vs <span class="group-b-name" id="compareNameB">Group B</span></span>
+        <button onclick="openCompareModal()">✎ Edit Groups</button>
+        <button onclick="exitComparison()">✕ Exit Comparison</button>
       </div>
 
       <!-- Section: Client AI Landscape -->
@@ -2192,6 +2329,94 @@
     </div>
   </div>
 
+  <!-- Compare Groups Modal -->
+  <div class="compare-modal-overlay" id="compareModal">
+    <div class="compare-modal">
+      <button class="compare-modal-close" onclick="closeCompareModal()" title="Close">&times;</button>
+      <h2>⚖ Compare Two Groups</h2>
+      <p style="font-size:0.85rem;color:#6b7280;margin:-0.5rem 0 1rem;">Define two groups of accounts using filters, then compare them across all dashboard widgets.</p>
+
+      <div class="compare-columns">
+        <!-- Group A -->
+        <div class="compare-group-col group-a">
+          <div class="compare-group-header">
+            <span class="compare-group-badge a">A</span>
+            <input type="text" class="compare-group-name-input" id="compareGroupAName" value="Group A" placeholder="Group name">
+            <div style="margin-left:auto;">
+              <button style="font-size:0.7rem;color:#6366f1;background:none;border:none;cursor:pointer;font-weight:600;" onclick="copyCurrentFiltersToGroup('A')" title="Copy current dashboard filters">📋 Copy Current</button>
+              <button style="font-size:0.7rem;color:#ef4444;background:none;border:none;cursor:pointer;font-weight:600;margin-left:0.3rem;" onclick="clearCompareGroupFilters('A')">✕ Clear</button>
+            </div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Accounts</div>
+            <div class="compare-filter-list" id="compareAccountsA"></div>
+            <div class="compare-filter-actions">
+              <button onclick="compareSelectAll('compareAccountsA')">Select All</button>
+              <button onclick="compareClearAll('compareAccountsA')">Clear All</button>
+            </div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Delivery Manager</div>
+            <div class="compare-filter-list" id="compareDMsA"></div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Adoption Stage</div>
+            <div class="compare-filter-list" id="compareMaturityA"></div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">WFM Stage</div>
+            <div class="compare-filter-list" id="compareWfmA"></div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">AI Champion</div>
+            <div class="compare-filter-list" id="compareChampionA"></div>
+          </div>
+        </div>
+
+        <!-- Group B -->
+        <div class="compare-group-col group-b">
+          <div class="compare-group-header">
+            <span class="compare-group-badge b">B</span>
+            <input type="text" class="compare-group-name-input" id="compareGroupBName" value="Group B" placeholder="Group name">
+            <div style="margin-left:auto;">
+              <button style="font-size:0.7rem;color:#10b981;background:none;border:none;cursor:pointer;font-weight:600;" onclick="copyCurrentFiltersToGroup('B')" title="Copy current dashboard filters">📋 Copy Current</button>
+              <button style="font-size:0.7rem;color:#ef4444;background:none;border:none;cursor:pointer;font-weight:600;margin-left:0.3rem;" onclick="clearCompareGroupFilters('B')">✕ Clear</button>
+            </div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Accounts</div>
+            <div class="compare-filter-list" id="compareAccountsB"></div>
+            <div class="compare-filter-actions">
+              <button onclick="compareSelectAll('compareAccountsB')">Select All</button>
+              <button onclick="compareClearAll('compareAccountsB')">Clear All</button>
+            </div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Delivery Manager</div>
+            <div class="compare-filter-list" id="compareDMsB"></div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Adoption Stage</div>
+            <div class="compare-filter-list" id="compareMaturityB"></div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">WFM Stage</div>
+            <div class="compare-filter-list" id="compareWfmB"></div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">AI Champion</div>
+            <div class="compare-filter-list" id="compareChampionB"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="compare-modal-footer">
+        <button class="compare-btn-cancel" onclick="closeCompareModal()">Cancel</button>
+        <button class="compare-btn-start" onclick="startComparison()">⚖ Compare Groups</button>
+      </div>
+    </div>
+  </div>
+
 <script>
   // ═══════════════════════════════════════════
   // SCHEMA DEFINITIONS (mirrors index.html)
@@ -2529,6 +2754,13 @@
   let tableSortColumn = 'account'; // default sort column
   let tableSortDirection = 'asc';  // 'asc' or 'desc'
 
+  // ── Comparison Mode State ──
+  let comparisonMode = false;
+  const COMPARE_COLOR_A = '#6366f1'; // Indigo
+  const COMPARE_COLOR_B = '#10b981'; // Emerald
+  let groupA = { name: 'Group A', filters: { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null } };
+  let groupB = { name: 'Group B', filters: { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null } };
+
   function setMaturityFilter(stage) {
     activeMaturityFilter = (activeMaturityFilter === stage) ? null : stage;
     refreshDashboard();
@@ -2770,6 +3002,7 @@
   }
 
   function clearAllFilters() {
+    if (comparisonMode) { exitComparison(); return; }
     activeMaturityFilter = null;
     selectedAccounts.clear();
     selectedDeliveryManagers.clear();
@@ -2779,6 +3012,212 @@
     activeWfmStageFilter = null;
     activeChampionFilter = null;
     refreshDashboard();
+  }
+
+  // ═══════════════════════════════════════════
+  // COMPARE GROUPS — MODAL & STATE
+  // ═══════════════════════════════════════════
+  function openCompareModal() {
+    const surveys = getAllFilteredSurveys();
+    // Collect unique accounts and DMs
+    const accounts = [...new Set(surveys.map(s => s.account_name))].sort();
+    const dms = [...new Set(surveys.map(s => s.delivery_manager).filter(Boolean))].sort();
+
+    ['A', 'B'].forEach(side => {
+      const g = side === 'A' ? groupA : groupB;
+      // Accounts checklist
+      const acctEl = document.getElementById('compareAccounts' + side);
+      acctEl.innerHTML = accounts.map(a =>
+        `<label><input type="checkbox" value="${escapeHtml(a)}" ${g.filters.accounts.has(a) ? 'checked' : ''}> ${escapeHtml(a)}</label>`
+      ).join('');
+
+      // DM checklist
+      const dmEl = document.getElementById('compareDMs' + side);
+      dmEl.innerHTML = dms.map(d =>
+        `<label><input type="checkbox" value="${escapeHtml(d)}" ${g.filters.deliveryManagers.has(d) ? 'checked' : ''}> ${escapeHtml(d)}</label>`
+      ).join('');
+
+      // Maturity radio buttons
+      const matEl = document.getElementById('compareMaturity' + side);
+      const maturityStages = ['not-started', 'exploring', 'piloting', 'scaling', 'optimizing'];
+      matEl.innerHTML = `<label><input type="radio" name="compareMaturity${side}" value="" ${!g.filters.maturity ? 'checked' : ''}> All</label>` +
+        maturityStages.map(k =>
+          `<label><input type="radio" name="compareMaturity${side}" value="${k}" ${g.filters.maturity === k ? 'checked' : ''}> ${MATURITY_ICONS[k]} ${MATURITY_LABELS[k]}</label>`
+        ).join('');
+
+      // WFM radio buttons
+      const wfmEl = document.getElementById('compareWfm' + side);
+      wfmEl.innerHTML = `<label><input type="radio" name="compareWfm${side}" value="" ${g.filters.wfmStage === null ? 'checked' : ''}> All</label>` +
+        WFM_STAGES.map(n =>
+          `<label><input type="radio" name="compareWfm${side}" value="${n}" ${g.filters.wfmStage === n ? 'checked' : ''}> Stage ${n} — ${WFM_LABELS[n]}</label>`
+        ).join('');
+
+      // Champion radio buttons
+      const champEl = document.getElementById('compareChampion' + side);
+      champEl.innerHTML = `<label><input type="radio" name="compareChampion${side}" value="" ${!g.filters.champion ? 'checked' : ''}> All</label>` +
+        `<label><input type="radio" name="compareChampion${side}" value="yes" ${g.filters.champion === 'yes' ? 'checked' : ''}> ✅ Yes</label>` +
+        `<label><input type="radio" name="compareChampion${side}" value="no" ${g.filters.champion === 'no' ? 'checked' : ''}> ❌ No</label>`;
+
+      // Restore name
+      document.getElementById('compareGroup' + side + 'Name').value = g.name;
+    });
+
+    document.getElementById('compareModal').classList.add('open');
+  }
+
+  function closeCompareModal() {
+    document.getElementById('compareModal').classList.remove('open');
+  }
+
+  function captureGroupFilters(side) {
+    const filters = {
+      maturity: null, accounts: new Set(), deliveryManagers: new Set(),
+      limitingFactor: null, aiTool: null, aiChallenge: null,
+      wfmStage: null, champion: null
+    };
+
+    // Accounts
+    document.querySelectorAll(`#compareAccounts${side} input[type="checkbox"]:checked`).forEach(cb => {
+      filters.accounts.add(cb.value);
+    });
+
+    // DMs
+    document.querySelectorAll(`#compareDMs${side} input[type="checkbox"]:checked`).forEach(cb => {
+      filters.deliveryManagers.add(cb.value);
+    });
+
+    // Maturity
+    const matVal = document.querySelector(`input[name="compareMaturity${side}"]:checked`)?.value;
+    filters.maturity = matVal || null;
+
+    // WFM Stage
+    const wfmVal = document.querySelector(`input[name="compareWfm${side}"]:checked`)?.value;
+    filters.wfmStage = wfmVal !== '' && wfmVal !== undefined ? parseInt(wfmVal) : null;
+
+    // Champion
+    const champVal = document.querySelector(`input[name="compareChampion${side}"]:checked`)?.value;
+    filters.champion = champVal || null;
+
+    return filters;
+  }
+
+  function copyCurrentFiltersToGroup(side) {
+    const g = side === 'A' ? groupA : groupB;
+    // Copy current global filters
+    g.filters.maturity = activeMaturityFilter;
+    g.filters.accounts = new Set(selectedAccounts);
+    g.filters.deliveryManagers = new Set(selectedDeliveryManagers);
+    g.filters.limitingFactor = activeLimitingFactorFilter;
+    g.filters.aiTool = activeAiToolFilter;
+    g.filters.aiChallenge = activeAiChallengeFilter;
+    g.filters.wfmStage = activeWfmStageFilter;
+    g.filters.champion = activeChampionFilter;
+    // Re-open modal to refresh checkboxes
+    openCompareModal();
+  }
+
+  function clearCompareGroupFilters(side) {
+    const g = side === 'A' ? groupA : groupB;
+    g.filters = { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null };
+    openCompareModal();
+  }
+
+  function compareSelectAll(containerId) {
+    document.querySelectorAll(`#${containerId} input[type="checkbox"]`).forEach(cb => cb.checked = true);
+  }
+
+  function compareClearAll(containerId) {
+    document.querySelectorAll(`#${containerId} input[type="checkbox"]`).forEach(cb => cb.checked = false);
+  }
+
+  function startComparison() {
+    // Capture filters from modal
+    groupA.name = document.getElementById('compareGroupAName').value || 'Group A';
+    groupB.name = document.getElementById('compareGroupBName').value || 'Group B';
+    groupA.filters = captureGroupFilters('A');
+    groupB.filters = captureGroupFilters('B');
+
+    comparisonMode = true;
+    closeCompareModal();
+    refreshDashboard();
+  }
+
+  function exitComparison() {
+    comparisonMode = false;
+    document.getElementById('comparisonBanner').classList.remove('active');
+    refreshDashboard();
+  }
+
+  function getFilteredSurveysForGroup(groupFilters) {
+    let surveys = getAllFilteredSurveys(); // base dataset (year/quarter/type/engagement only)
+
+    // Maturity filter
+    if (groupFilters.maturity) {
+      surveys = surveys.filter(s => s.data?.clientAILandscape?.maturity?.value === groupFilters.maturity);
+    }
+
+    // Account filter
+    if (groupFilters.accounts.size > 0) {
+      surveys = surveys.filter(s => groupFilters.accounts.has(s.account_name));
+    }
+
+    // DM filter
+    if (groupFilters.deliveryManagers.size > 0) {
+      surveys = surveys.filter(s => groupFilters.deliveryManagers.has(s.delivery_manager));
+    }
+
+    // Limiting factor filter
+    if (groupFilters.limitingFactor) {
+      surveys = surveys.filter(s => {
+        const lf = s.data?.limitingFactors?.[groupFilters.limitingFactor];
+        return lf && (lf.rank === 1 || lf.rank === 2);
+      });
+    }
+
+    // WFM stage filter
+    if (groupFilters.wfmStage !== null) {
+      surveys = surveys.filter(s => {
+        const wfm = s.data?.workflowMaturity;
+        if (!wfm) return false;
+        const stages = [];
+        ROLE_ORDER.forEach(role => {
+          const st = wfm[role]?.stage;
+          if (st !== null && st !== undefined && typeof st === 'number') stages.push(st);
+        });
+        if (stages.length === 0) return false;
+        const avg = stages.reduce((a, b) => a + b, 0) / stages.length;
+        return Math.round(avg) === groupFilters.wfmStage;
+      });
+    }
+
+    // AI tool filter
+    if (groupFilters.aiTool) {
+      surveys = surveys.filter(s => {
+        const aiTools = s.data?.toolsAndInfrastructure?.ai;
+        if (!aiTools) return false;
+        if (groupFilters.aiTool === '_custom') return Array.isArray(aiTools.custom) && aiTools.custom.length > 0;
+        return aiTools[groupFilters.aiTool]?.selected === true;
+      });
+    }
+
+    // AI challenge filter
+    if (groupFilters.aiChallenge) {
+      surveys = surveys.filter(s => {
+        const ch = s.data?.clientAILandscape?.challenges?.[groupFilters.aiChallenge];
+        return ch && (ch.rank === 1 || ch.rank === 2);
+      });
+    }
+
+    // Champion filter
+    if (groupFilters.champion) {
+      surveys = surveys.filter(s => {
+        const val = s.data?.teamRoles?.aiChampion?.value;
+        if (groupFilters.champion === 'yes') return val === 'yes';
+        return val !== 'yes';
+      });
+    }
+
+    return surveys;
   }
 
   // ═══════════════════════════════════════════
@@ -3553,11 +3992,64 @@
   // ═══════════════════════════════════════════
   let charts = {};
 
+  function refreshDashboardComparison(allSurveys, totalCount) {
+    const surveysA = getFilteredSurveysForGroup(groupA.filters);
+    const surveysB = getFilteredSurveysForGroup(groupB.filters);
+    const nameA = groupA.name;
+    const nameB = groupB.name;
+
+    // Show/hide states
+    document.getElementById('emptyState').style.display = totalCount === 0 ? 'block' : 'none';
+    document.getElementById('dashboardContent').style.display = totalCount > 0 ? 'block' : 'none';
+
+    // Update banner
+    const banner = document.getElementById('comparisonBanner');
+    banner.classList.add('active');
+    document.getElementById('compareNameA').textContent = `${nameA} (${surveysA.length})`;
+    document.getElementById('compareNameB').textContent = `${nameB} (${surveysB.length})`;
+
+    // Update subtitle
+    const subtitleEl = document.getElementById('headerSubtitle');
+    subtitleEl.innerHTML = `⚖ Comparing: <strong style="color:${COMPARE_COLOR_A}">${escapeHtml(nameA)}</strong> (${surveysA.length}) vs <strong style="color:${COMPARE_COLOR_B}">${escapeHtml(nameB)}</strong> (${surveysB.length})`;
+
+    if (totalCount === 0) return;
+
+    // Summary cards — comparison mode
+    updateSummaryCardsComparison(surveysA, surveysB, nameA, nameB);
+
+    // Widget comparisons
+    renderAdoptionStageComparison(surveysA, surveysB, nameA, nameB);
+    renderAiChallengesComparison(surveysA, surveysB, nameA, nameB);
+    updateSectionSummaryComparison(surveysA, surveysB, nameA, nameB);
+
+    renderWorkflowMaturityComparison(surveysA, surveysB, allSurveys, nameA, nameB);
+    renderLimitingFactorsComparison(surveysA, surveysB, nameA, nameB);
+    renderAiToolsComparison(surveysA, surveysB, nameA, nameB);
+    renderSdlcCoverageComparison(surveysA, surveysB, nameA, nameB);
+    renderAiAdoptionByRoleComparison(surveysA, surveysB, nameA, nameB);
+    renderAiChampionComparison(surveysA, surveysB, nameA, nameB);
+    updateAccountSectionSummaryComparison(surveysA, surveysB, nameA, nameB);
+
+    renderSurveysTableComparison(allSurveys, surveysA, surveysB, nameA, nameB);
+    updateSurveysSectionSummaryComparison(surveysA, surveysB, nameA, nameB);
+
+    // Sync dropdowns
+    populateAccountsFilter();
+    populateDMFilter();
+  }
+
   function refreshDashboard() {
     const surveys = getFilteredSurveys();
     const allSurveys = getAllFilteredSurveys(); // for the widget (unfiltered by maturity)
     const totalAll = db.exec('SELECT COUNT(*) FROM surveys');
     const totalCount = totalAll.length > 0 ? totalAll[0].values[0][0] : 0;
+
+    // ── Comparison Mode Branch ──
+    if (comparisonMode) {
+      refreshDashboardComparison(allSurveys, totalCount);
+      return;
+    }
+    document.getElementById('comparisonBanner').classList.remove('active');
 
     // Update subtitle
     const year = document.getElementById('filterYear').value;
@@ -4700,6 +5192,591 @@
   }
 
   // ═══════════════════════════════════════════
+  // COMPARISON MODE — WIDGET RENDERERS
+  // ═══════════════════════════════════════════
+
+  // Helper: count limiting factors from a survey set
+  function countLimitingFactors(surveys) {
+    const counts = {};
+    LIMITING_FACTOR_ORDER.forEach(k => counts[k] = 0);
+    surveys.forEach(s => {
+      const lf = s.data?.limitingFactors;
+      if (!lf) return;
+      Object.entries(lf).forEach(([k, v]) => {
+        if (k.startsWith('_')) return;
+        if (v?.rank === 1 || v?.rank === 2) counts[k]++;
+      });
+    });
+    return counts;
+  }
+
+  // Helper: count AI challenges from a survey set
+  function countAiChallenges(surveys) {
+    const counts = {};
+    AI_CHALLENGE_ORDER.forEach(k => counts[k] = 0);
+    surveys.forEach(s => {
+      const ch = s.data?.clientAILandscape?.challenges;
+      if (!ch) return;
+      Object.entries(ch).forEach(([k, v]) => {
+        if (k.startsWith('_')) return;
+        if (v?.rank === 1 || v?.rank === 2) counts[k]++;
+      });
+    });
+    return counts;
+  }
+
+  // Helper: count AI tools from a survey set
+  function countAiTools(surveys) {
+    const toolCounts = {};
+    AI_TOOL_ORDER.forEach(k => toolCounts[k] = 0);
+    let customCount = 0;
+    surveys.forEach(s => {
+      const aiTools = s.data?.toolsAndInfrastructure?.ai;
+      if (!aiTools) return;
+      AI_TOOL_ORDER.forEach(toolKey => {
+        if (aiTools[toolKey]?.selected === true) toolCounts[toolKey]++;
+      });
+      if (Array.isArray(aiTools.custom) && aiTools.custom.length > 0) customCount++;
+    });
+    return { toolCounts, customCount };
+  }
+
+  // Helper: compute per-account WFM average stages from a survey set
+  function computeWfmAccountStages(surveyList) {
+    const stages = [];
+    surveyList.forEach(s => {
+      const wfm = s.data?.workflowMaturity;
+      if (!wfm) return;
+      const roleStages = [];
+      ROLE_ORDER.forEach(role => {
+        const st = wfm[role]?.stage;
+        if (st !== null && st !== undefined && typeof st === 'number') roleStages.push(st);
+      });
+      if (roleStages.length === 0) return;
+      const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
+      stages.push(Math.round(avg));
+    });
+    return stages;
+  }
+
+  function renderLimitingFactorsComparison(surveysA, surveysB, nameA, nameB) {
+    destroyChart('chartLimitingFactors');
+    const countsA = countLimitingFactors(surveysA);
+    const countsB = countLimitingFactors(surveysB);
+    const totalA = surveysA.length, totalB = surveysB.length;
+
+    // Use consistent sort order: sort by max of A and B
+    const sorted = [...LIMITING_FACTOR_ORDER].sort((a, b) => {
+      const maxA = Math.max(countsA[a] || 0, countsB[a] || 0);
+      const maxB = Math.max(countsA[b] || 0, countsB[b] || 0);
+      return maxB - maxA;
+    });
+
+    const labels = sorted.map(k => LIMITING_FACTOR_LABELS[k] || k);
+    const pctsA = sorted.map(k => totalA > 0 ? Math.round((countsA[k] / totalA) * 100) : 0);
+    const pctsB = sorted.map(k => totalB > 0 ? Math.round((countsB[k] / totalB) * 100) : 0);
+
+    const ctx = document.getElementById('chartLimitingFactors').getContext('2d');
+    charts['chartLimitingFactors'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: nameA, data: pctsA, backgroundColor: COMPARE_COLOR_A, borderRadius: 4, barPercentage: 0.45, categoryPercentage: 0.8 },
+          { label: nameB, data: pctsB, backgroundColor: COMPARE_COLOR_B, borderRadius: 4, barPercentage: 0.45, categoryPercentage: 0.8 }
+        ]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
+          tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
+        },
+        scales: {
+          x: { max: 100, ticks: { callback: v => v + '%', font: { size: 11 }, color: '#9ca3af' }, grid: { color: '#f3f4f6' }, border: { display: false } },
+          y: { ticks: { font: { size: 12, weight: '500' }, color: '#374151' }, grid: { display: false }, border: { display: false } }
+        }
+      }
+    });
+
+    const legend = document.getElementById('lfLegend');
+    legend.innerHTML = `<div class="legend-item"><div class="legend-dot" style="background:${COMPARE_COLOR_A};"></div><span>${escapeHtml(nameA)}</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:${COMPARE_COLOR_B};"></div><span>${escapeHtml(nameB)}</span></div>`;
+  }
+
+  function renderAiChallengesComparison(surveysA, surveysB, nameA, nameB) {
+    destroyChart('chartAiChallenges');
+    const countsA = countAiChallenges(surveysA);
+    const countsB = countAiChallenges(surveysB);
+    const totalA = surveysA.length, totalB = surveysB.length;
+
+    const sorted = [...AI_CHALLENGE_ORDER].sort((a, b) => {
+      const maxA = Math.max(countsA[a] || 0, countsB[a] || 0);
+      const maxB = Math.max(countsA[b] || 0, countsB[b] || 0);
+      return maxB - maxA;
+    });
+
+    const labels = sorted.map(k => AI_CHALLENGE_LABELS[k] || k);
+    const pctsA = sorted.map(k => totalA > 0 ? Math.round((countsA[k] / totalA) * 100) : 0);
+    const pctsB = sorted.map(k => totalB > 0 ? Math.round((countsB[k] / totalB) * 100) : 0);
+
+    const ctx = document.getElementById('chartAiChallenges').getContext('2d');
+    charts['chartAiChallenges'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: nameA, data: pctsA, backgroundColor: COMPARE_COLOR_A, borderRadius: 4, barPercentage: 0.45, categoryPercentage: 0.8 },
+          { label: nameB, data: pctsB, backgroundColor: COMPARE_COLOR_B, borderRadius: 4, barPercentage: 0.45, categoryPercentage: 0.8 }
+        ]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
+          tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
+        },
+        scales: {
+          x: { max: 100, ticks: { callback: v => v + '%', font: { size: 11 }, color: '#9ca3af' }, grid: { color: '#f3f4f6' }, border: { display: false } },
+          y: { ticks: { font: { size: 12, weight: '500' }, color: '#374151' }, grid: { display: false }, border: { display: false } }
+        }
+      }
+    });
+
+    const legend = document.getElementById('aiChallengesLegend');
+    legend.innerHTML = `<div class="legend-item"><div class="legend-dot" style="background:${COMPARE_COLOR_A};"></div><span>${escapeHtml(nameA)}</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:${COMPARE_COLOR_B};"></div><span>${escapeHtml(nameB)}</span></div>`;
+  }
+
+  function renderAiToolsComparison(surveysA, surveysB, nameA, nameB) {
+    destroyChart('chartAiTools');
+    const totalA = surveysA.length, totalB = surveysB.length;
+    const tA = countAiTools(surveysA), tB = countAiTools(surveysB);
+
+    // Merge all tool keys that have at least 1 count in either group
+    const allKeys = AI_TOOL_ORDER.filter(k => tA.toolCounts[k] > 0 || tB.toolCounts[k] > 0);
+    if (tA.customCount > 0 || tB.customCount > 0) allKeys.push('_custom');
+
+    allKeys.sort((a, b) => {
+      const ca = a === '_custom' ? Math.max(tA.customCount, tB.customCount) : Math.max(tA.toolCounts[a] || 0, tB.toolCounts[a] || 0);
+      const cb = b === '_custom' ? Math.max(tA.customCount, tB.customCount) : Math.max(tA.toolCounts[b] || 0, tB.toolCounts[b] || 0);
+      return cb - ca;
+    });
+
+    const labels = allKeys.map(k => k === '_custom' ? 'Other / Custom' : (AI_TOOL_LABELS[k] || k));
+    const pctsA = allKeys.map(k => { const c = k === '_custom' ? tA.customCount : (tA.toolCounts[k] || 0); return totalA > 0 ? Math.round((c / totalA) * 100) : 0; });
+    const pctsB = allKeys.map(k => { const c = k === '_custom' ? tB.customCount : (tB.toolCounts[k] || 0); return totalB > 0 ? Math.round((c / totalB) * 100) : 0; });
+
+    const chartContainer = document.querySelector('.ai-tools-chart-container');
+    const barCount = allKeys.length || 1;
+    chartContainer.style.height = Math.max(180, barCount * 36 + 40) + 'px';
+
+    const ctx = document.getElementById('chartAiTools').getContext('2d');
+    charts['chartAiTools'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: nameA, data: pctsA, backgroundColor: COMPARE_COLOR_A, borderRadius: 4, barPercentage: 0.45, categoryPercentage: 0.8 },
+          { label: nameB, data: pctsB, backgroundColor: COMPARE_COLOR_B, borderRadius: 4, barPercentage: 0.45, categoryPercentage: 0.8 }
+        ]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
+          tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
+        },
+        scales: {
+          x: { max: 100, ticks: { callback: v => v + '%', font: { size: 11 }, color: '#9ca3af' }, grid: { color: '#f3f4f6' }, border: { display: false } },
+          y: { ticks: { font: { size: 12, weight: '500' }, color: '#374151' }, grid: { display: false }, border: { display: false } }
+        }
+      }
+    });
+
+    const legend = document.getElementById('aiToolsLegend');
+    legend.innerHTML = `<div class="legend-item"><div class="legend-dot" style="background:${COMPARE_COLOR_A};"></div><span>${escapeHtml(nameA)}</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:${COMPARE_COLOR_B};"></div><span>${escapeHtml(nameB)}</span></div>`;
+  }
+
+  // --- Adoption Stage Comparison ---
+  function renderAdoptionStageComparison(surveysA, surveysB, nameA, nameB) {
+    const maturityOrder = ['not-started', 'exploring', 'piloting', 'scaling', 'optimizing'];
+
+    function computeStageData(surveys) {
+      const counts = {}; maturityOrder.forEach(k => counts[k] = 0);
+      let total = 0;
+      surveys.forEach(s => {
+        const val = s.data?.clientAILandscape?.maturity?.value;
+        if (val && maturityOrder.includes(val)) { counts[val]++; total++; }
+      });
+      const pcts = {}; maturityOrder.forEach(k => pcts[k] = total > 0 ? Math.round((counts[k] / total) * 100) : 0);
+      // Weighted average for position
+      let weightedSum = 0;
+      maturityOrder.forEach((k, i) => weightedSum += counts[k] * i);
+      const avgPos = total > 0 ? weightedSum / (total * (maturityOrder.length - 1)) : 0.5;
+      // Median stage
+      const idx = total > 0 ? Math.round(weightedSum / total) : 2;
+      return { counts, pcts, total, avgPos, medianStage: maturityOrder[idx] };
+    }
+
+    const dataA = computeStageData(surveysA);
+    const dataB = computeStageData(surveysB);
+
+    // Render pipeline with two rows
+    const pipeline = document.getElementById('stagePipeline');
+    pipeline.innerHTML = maturityOrder.map((k, i) => {
+      const color = MATURITY_COLORS[k];
+      return `<div class="stage-card" style="border-color:${color};opacity:1;cursor:default;">
+        <div class="stage-card-icon">${MATURITY_ICONS[k]}</div>
+        <div class="stage-card-label">${MATURITY_LABELS[k]}</div>
+        <div style="display:flex;gap:0.5rem;align-items:center;justify-content:center;margin-top:0.3rem;">
+          <span style="font-size:0.85rem;font-weight:700;color:${COMPARE_COLOR_A};">${dataA.pcts[k]}%</span>
+          <span style="font-size:0.7rem;color:#9ca3af;">vs</span>
+          <span style="font-size:0.85rem;font-weight:700;color:${COMPARE_COLOR_B};">${dataB.pcts[k]}%</span>
+        </div>
+        <div class="stage-card-count" style="font-size:0.65rem;color:#9ca3af;">${dataA.counts[k]} vs ${dataB.counts[k]}</div>
+      </div>${i < maturityOrder.length - 1 ? '<div class="stage-connector">&#9654;</div>' : ''}`;
+    }).join('');
+
+    // Update badge callout with both groups
+    const calloutValue = document.getElementById('stageCalloutValue');
+    if (calloutValue) {
+      const iconA = MATURITY_ICONS[dataA.medianStage];
+      const iconB = MATURITY_ICONS[dataB.medianStage];
+      const pctA = dataA.pcts[dataA.medianStage] || 0;
+      const pctB = dataB.pcts[dataB.medianStage] || 0;
+      calloutValue.innerHTML = `<span style="color:${COMPARE_COLOR_A};">${iconA} ${MATURITY_LABELS[dataA.medianStage]} (${pctA}%)</span> <span style="color:#9ca3af;font-size:0.75rem;">vs</span> <span style="color:${COMPARE_COLOR_B};">${iconB} ${MATURITY_LABELS[dataB.medianStage]} (${pctB}%)</span>`;
+      calloutValue.style.cursor = 'default';
+      calloutValue.onclick = null;
+    }
+
+    // Progress marker — show two markers
+    const marker = document.getElementById('progressMarker');
+    if (marker) {
+      marker.innerHTML = `<span style="color:${COMPARE_COLOR_A};position:absolute;left:${dataA.avgPos * 100}%;transform:translateX(-50%);">▲</span>` +
+        `<span style="color:${COMPARE_COLOR_B};position:absolute;left:${dataB.avgPos * 100}%;transform:translateX(-50%);">▲</span>`;
+      marker.style.left = '0%';
+      marker.style.color = 'transparent';
+    }
+
+    // Legend with both groups
+    const legend = document.getElementById('widgetLegend');
+    if (legend) {
+      legend.innerHTML = `<div class="legend-item"><div class="legend-dot" style="background:${COMPARE_COLOR_A};"></div><span>${escapeHtml(nameA)} (${surveysA.length})</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:${COMPARE_COLOR_B};"></div><span>${escapeHtml(nameB)} (${surveysB.length})</span></div>`;
+    }
+
+    // Hide filter footer in comparison mode
+    const footer = document.getElementById('widgetFooter');
+    if (footer) footer.style.display = 'none';
+  }
+
+  // --- Workflow Maturity Comparison ---
+  function renderWorkflowMaturityComparison(surveysA, surveysB, allSurveys, nameA, nameB) {
+    const stagesA = computeWfmAccountStages(surveysA);
+    const stagesB = computeWfmAccountStages(surveysB);
+
+    const countsA = {}, countsB = {};
+    WFM_STAGES.forEach(s => { countsA[s] = 0; countsB[s] = 0; });
+    stagesA.forEach(s => { if (countsA[s] !== undefined) countsA[s]++; });
+    stagesB.forEach(s => { if (countsB[s] !== undefined) countsB[s]++; });
+    const totalA = stagesA.length, totalB = stagesB.length;
+
+    const pctsA = {}, pctsB = {};
+    WFM_STAGES.forEach(s => {
+      pctsA[s] = totalA > 0 ? Math.round((countsA[s] / totalA) * 100) : 0;
+      pctsB[s] = totalB > 0 ? Math.round((countsB[s] / totalB) * 100) : 0;
+    });
+
+    const avgA = totalA > 0 ? stagesA.reduce((a, b) => a + b, 0) / totalA : 0;
+    const avgB = totalB > 0 ? stagesB.reduce((a, b) => a + b, 0) / totalB : 0;
+    const roundedA = Math.round(avgA), roundedB = Math.round(avgB);
+
+    // Update badge
+    const avgEl = document.getElementById('wfmAvgValue');
+    if (avgEl) {
+      avgEl.innerHTML = `<span style="color:${COMPARE_COLOR_A};">${WFM_LABELS[roundedA]} (${pctsA[roundedA] || 0}%)</span> <span style="color:#9ca3af;font-size:0.75rem;">vs</span> <span style="color:${COMPARE_COLOR_B};">${WFM_LABELS[roundedB]} (${pctsB[roundedB] || 0}%)</span>`;
+    }
+
+    // Journey cards with dual percentages
+    const journey = document.getElementById('wfmJourney');
+    journey.innerHTML = WFM_STAGES.map((stage, i) => {
+      const color = WFM_COLORS[stage];
+      const connector = i < WFM_STAGES.length - 1 ? '<div class="stage-connector">&#9654;</div>' : '';
+      return `<div class="wfm-card" style="border-color:${color};cursor:default;">
+        <div class="wfm-card-badge" style="background:${color}30;color:#374151;">Stage ${stage}</div>
+        <div class="wfm-card-title">${WFM_LABELS[stage]}</div>
+        <div style="display:flex;gap:0.4rem;align-items:center;justify-content:center;margin:0.2rem 0;">
+          <span style="font-size:0.85rem;font-weight:700;color:${COMPARE_COLOR_A};">${pctsA[stage]}%</span>
+          <span style="font-size:0.65rem;color:#9ca3af;">vs</span>
+          <span style="font-size:0.85rem;font-weight:700;color:${COMPARE_COLOR_B};">${pctsB[stage]}%</span>
+        </div>
+        <div class="wfm-card-count" style="font-size:0.65rem;">${countsA[stage]} vs ${countsB[stage]}</div>
+      </div>${connector}`;
+    }).join('');
+
+    // Dual progress markers
+    const markerEl = document.getElementById('wfmProgressMarker');
+    if (markerEl) {
+      markerEl.innerHTML = `<span style="color:${COMPARE_COLOR_A};position:absolute;left:${(avgA / 5) * 100}%;transform:translateX(-50%);">▲</span>` +
+        `<span style="color:${COMPARE_COLOR_B};position:absolute;left:${(avgB / 5) * 100}%;transform:translateX(-50%);">▲</span>`;
+      markerEl.style.left = '0%';
+      markerEl.style.color = 'transparent';
+    }
+  }
+
+  // --- SDLC Coverage Comparison ---
+  function renderSdlcCoverageComparison(surveysA, surveysB, nameA, nameB) {
+    const container = document.getElementById('sdlcCoverageContent');
+    const insightEl = document.getElementById('sdlcKeyInsight');
+    if (!container) return;
+
+    function computeSdlcData(surveys) {
+      const data = {};
+      SDLC_PHASES.forEach(ph => {
+        let using = 0, notUsing = 0;
+        surveys.forEach(s => {
+          const val = s.data?.sdlcAiUsage?.[ph.key]?.value;
+          if (val === 'yes') using++;
+          else if (val === 'no') notUsing++;
+        });
+        const total = using + notUsing;
+        data[ph.key] = { using, notUsing, total, pct: total > 0 ? Math.round((using / total) * 100) : 0 };
+      });
+      return data;
+    }
+
+    const dataA = computeSdlcData(surveysA);
+    const dataB = computeSdlcData(surveysB);
+
+    container.innerHTML = SDLC_PHASES.map(ph => {
+      const pctA = dataA[ph.key].pct, pctB = dataB[ph.key].pct;
+      return `<div style="margin-bottom:0.75rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
+          <span style="font-size:0.82rem;font-weight:600;color:#374151;">${ph.label}</span>
+          <div style="display:flex;gap:0.75rem;font-size:0.78rem;font-weight:700;">
+            <span style="color:${COMPARE_COLOR_A};">${pctA}%</span>
+            <span style="color:${COMPARE_COLOR_B};">${pctB}%</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;height:18px;">
+          <div style="flex:1;background:#e5e7eb;border-radius:4px;overflow:hidden;position:relative;">
+            <div style="width:${pctA}%;height:100%;background:${COMPARE_COLOR_A};border-radius:4px;"></div>
+          </div>
+          <div style="flex:1;background:#e5e7eb;border-radius:4px;overflow:hidden;position:relative;">
+            <div style="width:${pctB}%;height:100%;background:${COMPARE_COLOR_B};border-radius:4px;"></div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    if (insightEl) {
+      insightEl.innerHTML = `<span style="color:${COMPARE_COLOR_A};font-weight:600;">${escapeHtml(nameA)}</span> vs <span style="color:${COMPARE_COLOR_B};font-weight:600;">${escapeHtml(nameB)}</span> — AI coverage comparison by SDLC phase`;
+    }
+  }
+
+  // --- AI Adoption by Role Heatmap Comparison ---
+  function renderAiAdoptionByRoleComparison(surveysA, surveysB, nameA, nameB) {
+    const container = document.getElementById('aiAdoptionByRoleContent');
+    if (!container) return;
+
+    function computeRoleData(surveys) {
+      const roleStageCounts = {};
+      ROLE_ORDER.forEach(role => { roleStageCounts[role] = {}; WFM_STAGES.forEach(s => roleStageCounts[role][s] = 0); });
+      surveys.forEach(s => {
+        const wfm = s.data?.workflowMaturity;
+        if (!wfm) return;
+        ROLE_ORDER.forEach(role => {
+          const st = wfm[role]?.stage;
+          if (st !== null && st !== undefined && typeof st === 'number' && roleStageCounts[role][st] !== undefined) {
+            roleStageCounts[role][st]++;
+          }
+        });
+      });
+      const rolePcts = {};
+      ROLE_ORDER.forEach(role => {
+        const total = WFM_STAGES.reduce((acc, s) => acc + roleStageCounts[role][s], 0);
+        rolePcts[role] = {};
+        WFM_STAGES.forEach(s => rolePcts[role][s] = total > 0 ? Math.round((roleStageCounts[role][s] / total) * 100) : 0);
+      });
+      return rolePcts;
+    }
+
+    const pctsA = computeRoleData(surveysA);
+    const pctsB = computeRoleData(surveysB);
+
+    function renderHeatmapTable(pcts, groupName, color) {
+      let maxPct = 0;
+      ROLE_ORDER.forEach(role => WFM_STAGES.forEach(s => { if (pcts[role][s] > maxPct) maxPct = pcts[role][s]; }));
+
+      let html = `<div style="margin-bottom:1rem;">
+        <div style="font-size:0.8rem;font-weight:700;color:${color};margin-bottom:0.4rem;">${escapeHtml(groupName)}</div>
+        <table class="role-heatmap"><thead><tr><th class="rh-role-header"></th>`;
+      WFM_STAGES.forEach(s => html += `<th><span class="rh-stage-num">S${s}</span><span class="rh-stage-name">${WFM_LABELS[s]}</span></th>`);
+      html += '</tr></thead><tbody>';
+      ROLE_ORDER.forEach(role => {
+        html += `<tr><td class="rh-role-header">${ROLE_FULL_NAMES[role]}</td>`;
+        WFM_STAGES.forEach(s => {
+          const pct = pcts[role][s];
+          const intensity = maxPct > 0 ? pct / maxPct : 0;
+          const alpha = Math.round(intensity * 200 + 20).toString(16).padStart(2, '0');
+          const bg = pct > 0 ? (color + alpha) : '#f9fafb';
+          const textColor = intensity > 0.6 ? '#fff' : '#374151';
+          html += `<td><div class="rh-pct-circle ${pct === 0 ? 'rh-pct-zero' : ''}" style="background:${bg};color:${pct > 0 ? textColor : '#9ca3af'};">${pct}%</div></td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+      return html;
+    }
+
+    container.innerHTML = renderHeatmapTable(pctsA, nameA, COMPARE_COLOR_A) + renderHeatmapTable(pctsB, nameB, COMPARE_COLOR_B);
+  }
+
+  // --- AI Champion Comparison ---
+  function renderAiChampionComparison(surveysA, surveysB, nameA, nameB) {
+    const container = document.getElementById('aiChampionContent');
+    if (!container) return;
+
+    function computeChampionData(surveys) {
+      let yes = 0, no = 0;
+      surveys.forEach(s => {
+        const val = s.data?.teamRoles?.aiChampion?.value;
+        if (val === 'yes') yes++; else no++;
+      });
+      const total = surveys.length;
+      return { yes, no, total, pct: total > 0 ? Math.round((yes / total) * 100) : 0 };
+    }
+
+    const dataA = computeChampionData(surveysA);
+    const dataB = computeChampionData(surveysB);
+
+    container.innerHTML = `<div class="compare-widget-dual">
+      <div class="compare-panel panel-a">
+        <div class="compare-panel-label label-a">${escapeHtml(nameA)}</div>
+        <div style="font-size:1.5rem;font-weight:800;color:${COMPARE_COLOR_A};">${dataA.pct}%</div>
+        <div style="font-size:0.8rem;color:#6b7280;">${dataA.yes} of ${dataA.total} accounts</div>
+      </div>
+      <div class="compare-panel panel-b">
+        <div class="compare-panel-label label-b">${escapeHtml(nameB)}</div>
+        <div style="font-size:1.5rem;font-weight:800;color:${COMPARE_COLOR_B};">${dataB.pct}%</div>
+        <div style="font-size:0.8rem;color:#6b7280;">${dataB.yes} of ${dataB.total} accounts</div>
+      </div>
+    </div>`;
+  }
+
+  // --- Summary Cards Comparison ---
+  function updateSummaryCardsComparison(surveysA, surveysB, nameA, nameB) {
+    const totalEl = document.getElementById('totalSurveys');
+    totalEl.innerHTML = `<span style="color:${COMPARE_COLOR_A};font-size:0.85em;">${surveysA.length}</span> <span style="color:#9ca3af;font-size:0.7em;">vs</span> <span style="color:${COMPARE_COLOR_B};font-size:0.85em;">${surveysB.length}</span>`;
+
+    const pctEl = document.getElementById('aiUsagePct');
+    const pctA = calculateAiUsagePercent(surveysA);
+    const pctB = calculateAiUsagePercent(surveysB);
+    pctEl.innerHTML = `<span style="color:${COMPARE_COLOR_A};font-size:0.85em;">${pctA !== null ? pctA + '%' : '--'}</span> <span style="color:#9ca3af;font-size:0.7em;">vs</span> <span style="color:${COMPARE_COLOR_B};font-size:0.85em;">${pctB !== null ? pctB + '%' : '--'}</span>`;
+
+    const compEl = document.getElementById('aiUsageComparison');
+    if (compEl) compEl.innerHTML = '';
+  }
+
+  // --- Surveys Table Comparison ---
+  function renderSurveysTableComparison(allSurveys, surveysA, surveysB, nameA, nameB) {
+    const idsA = new Set(surveysA.map(s => s.id));
+    const idsB = new Set(surveysB.map(s => s.id));
+    const sorted = sortSurveys(allSurveys);
+
+    const tbody = document.getElementById('surveysTableBody');
+    if (allSurveys.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the base filters.</td></tr>';
+      return;
+    }
+
+    let html = '';
+
+    sorted.forEach(s => {
+      const inA = idsA.has(s.id);
+      const inB = idsB.has(s.id);
+      const inNeither = !inA && !inB;
+      const rowStyle = inNeither ? 'opacity:0.3;' : '';
+
+      let groupTag = '';
+      if (inA && inB) groupTag = `<span style="display:inline-block;padding:0.1rem 0.4rem;border-radius:8px;font-size:0.65rem;font-weight:700;background:${COMPARE_COLOR_A};color:#fff;margin-right:2px;">A</span><span style="display:inline-block;padding:0.1rem 0.4rem;border-radius:8px;font-size:0.65rem;font-weight:700;background:${COMPARE_COLOR_B};color:#fff;">B</span>`;
+      else if (inA) groupTag = `<span style="display:inline-block;padding:0.1rem 0.4rem;border-radius:8px;font-size:0.65rem;font-weight:700;background:${COMPARE_COLOR_A};color:#fff;">A</span>`;
+      else if (inB) groupTag = `<span style="display:inline-block;padding:0.1rem 0.4rem;border-radius:8px;font-size:0.65rem;font-weight:700;background:${COMPARE_COLOR_B};color:#fff;">B</span>`;
+      else groupTag = `<span style="font-size:0.65rem;color:#9ca3af;">—</span>`;
+
+      const maturityVal = s.data?.clientAILandscape?.maturity?.value || '-';
+      const maturityLabel = MATURITY_LABELS[maturityVal] || maturityVal;
+
+      const wfm = s.data?.workflowMaturity;
+      let wfmCell = '-';
+      if (wfm) {
+        const roleStages = [];
+        ROLE_ORDER.forEach(role => { const st = wfm[role]?.stage; if (typeof st === 'number') roleStages.push(st); });
+        if (roleStages.length > 0) {
+          const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
+          const rounded = Math.round(avg);
+          wfmCell = `<span class="maturity-badge">${WFM_LABELS[rounded] || 'Stage ' + rounded} (${avg.toFixed(1)})</span>`;
+        }
+      }
+
+      const maturityClass = maturityVal !== '-' ? `maturity-${maturityVal}` : '';
+      const accountType = s.account_type || 'other';
+
+      html += `<tr style="${rowStyle}cursor:pointer;" onclick="window.location.href='account-detail.html?id=${s.id}'" title="Click to view ${escapeHtml(s.account_name)} details">
+        <td style="text-align:center;width:40px;">${groupTag}</td>
+        <td><strong>${escapeHtml(s.account_name)}</strong></td>
+        <td><span class="type-badge type-${accountType}">${ACCOUNT_TYPE_LABELS[accountType] || accountType}</span></td>
+        <td><span class="maturity-badge ${maturityClass}">${maturityLabel}</span></td>
+        <td>${wfmCell}</td>
+        <td>${escapeHtml(s.delivery_manager || '--')}</td>
+        <td>Q${s.quarter} ${s.year}</td>
+        <td class="actions" onclick="event.stopPropagation();">
+          <button class="btn-icon" title="Download JSON" onclick="downloadSurvey(${s.id})">📥</button>
+        </td>
+      </tr>`;
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  // --- Section Summaries Comparison ---
+  function updateSectionSummaryComparison(surveysA, surveysB, nameA, nameB) {
+    const el = document.getElementById('sectionSummaryLandscape');
+    if (!el) return;
+    el.innerHTML = `<div class="section-summary-item">
+      <span class="section-summary-label">Comparing:</span>
+      <span class="section-summary-value"><span style="color:${COMPARE_COLOR_A};">${escapeHtml(nameA)} (${surveysA.length})</span> vs <span style="color:${COMPARE_COLOR_B};">${escapeHtml(nameB)} (${surveysB.length})</span></span>
+    </div>`;
+  }
+
+  function updateAccountSectionSummaryComparison(surveysA, surveysB, nameA, nameB) {
+    const el = document.getElementById('sectionSummaryAccount');
+    if (!el) return;
+    const stagesA = computeWfmAccountStages(surveysA);
+    const stagesB = computeWfmAccountStages(surveysB);
+    const avgA = stagesA.length > 0 ? Math.round(stagesA.reduce((a, b) => a + b, 0) / stagesA.length) : null;
+    const avgB = stagesB.length > 0 ? Math.round(stagesB.reduce((a, b) => a + b, 0) / stagesB.length) : null;
+    const labelA = avgA !== null ? `${WFM_LABELS[avgA]}` : '--';
+    const labelB = avgB !== null ? `${WFM_LABELS[avgB]}` : '--';
+
+    el.innerHTML = `<div class="section-summary-item">
+      <span class="section-summary-label">WFM:</span>
+      <span class="section-summary-value"><span style="color:${COMPARE_COLOR_A};">${labelA}</span> vs <span style="color:${COMPARE_COLOR_B};">${labelB}</span></span>
+    </div>`;
+  }
+
+  function updateSurveysSectionSummaryComparison(surveysA, surveysB, nameA, nameB) {
+    const el = document.getElementById('sectionSummarySurveys');
+    if (!el) return;
+    el.innerHTML = `<div class="section-summary-item">
+      <span class="section-summary-label">Surveys:</span>
+      <span class="section-summary-value"><span style="color:${COMPARE_COLOR_A};">${surveysA.length}</span> vs <span style="color:${COMPARE_COLOR_B};">${surveysB.length}</span></span>
+    </div>`;
+  }
+
+  // ═══════════════════════════════════════════
   // SDLC AI COVERAGE MAP
   // ═══════════════════════════════════════════
   const SDLC_PHASES = [
@@ -5075,7 +6152,14 @@
       tableSortColumn = column;
       tableSortDirection = 'asc';
     }
-    renderSurveysTable(getAllFilteredSurveys(), getFilteredSurveys());
+    if (comparisonMode) {
+      const allSurveys = getAllFilteredSurveys();
+      const surveysA = getFilteredSurveysForGroup(groupA.filters);
+      const surveysB = getFilteredSurveysForGroup(groupB.filters);
+      renderSurveysTableComparison(allSurveys, surveysA, surveysB, groupA.name, groupB.name);
+    } else {
+      renderSurveysTable(getAllFilteredSurveys(), getFilteredSurveys());
+    }
   }
 
   function renderSurveysTable(allSurveys, filteredSurveys) {
