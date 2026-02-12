@@ -2216,6 +2216,33 @@
           </div>
         </div>
       </div>
+      <div class="filter-group" style="position:relative;">
+        <span class="filter-label">Cloud:</span>
+        <div class="multi-select" id="filterCloudPlatforms">
+          <button class="multi-select-btn" onclick="toggleCloudPlatformsMenu()" type="button">
+            <span class="multi-select-text" id="cloudPlatformsLabel">All Platforms</span>
+            <span class="multi-select-arrow">&#9662;</span>
+          </button>
+          <div class="multi-select-menu" id="cloudPlatformsMenu">
+            <label class="multi-select-item">
+              <input type="checkbox" value="aws" checked onchange="onCloudPlatformChange()"> AWS
+            </label>
+            <label class="multi-select-item">
+              <input type="checkbox" value="gcp" checked onchange="onCloudPlatformChange()"> GCP
+            </label>
+            <label class="multi-select-item">
+              <input type="checkbox" value="azure" checked onchange="onCloudPlatformChange()"> Azure
+            </label>
+            <label class="multi-select-item">
+              <input type="checkbox" value="onprem" checked onchange="onCloudPlatformChange()"> On-Premises
+            </label>
+            <div class="multi-select-actions">
+              <button type="button" onclick="selectAllCloudPlatforms()">Select All</button>
+              <button type="button" onclick="clearAllCloudPlatformsCb()">Clear All</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <button class="filter-clear-btn" onclick="clearAllFilters()" title="Clear all interactive filters" style="margin-left:0.5rem;">✕ Clear Filters</button>
       <button class="filter-clear-btn" onclick="openCompareModal()" title="Compare two groups of accounts" style="margin-left:0.5rem;">⚖ Compare</button>
 
@@ -3291,6 +3318,8 @@
     document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
     document.getElementById('dmMenu')?.classList.remove('open');
     document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
+    document.getElementById('cloudPlatformsMenu')?.classList.remove('open');
+    document.querySelector('#filterCloudPlatforms .multi-select-btn')?.classList.remove('open');
 
     const menu = document.getElementById('actionsMenu');
     const btn = document.getElementById('actionsToggle');
@@ -3306,6 +3335,8 @@
     document.querySelector('#filterEngagementType .multi-select-btn')?.classList.remove('open');
     document.getElementById('dmMenu')?.classList.remove('open');
     document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
+    document.getElementById('cloudPlatformsMenu')?.classList.remove('open');
+    document.querySelector('#filterCloudPlatforms .multi-select-btn')?.classList.remove('open');
     document.getElementById('actionsMenu')?.classList.remove('open');
     document.getElementById('actionsToggle')?.classList.remove('open');
 
@@ -3378,6 +3409,8 @@
     document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
     document.getElementById('actionsMenu')?.classList.remove('open');
     document.getElementById('actionsToggle')?.classList.remove('open');
+    document.getElementById('cloudPlatformsMenu')?.classList.remove('open');
+    document.querySelector('#filterCloudPlatforms .multi-select-btn')?.classList.remove('open');
 
     const menu = document.getElementById('dmMenu');
     const btn = document.querySelector('#filterDM .multi-select-btn');
@@ -3492,6 +3525,67 @@
     refreshDashboard();
   }
 
+  // Cloud Platforms top-bar multi-select dropdown
+  function toggleCloudPlatformsMenu() {
+    document.getElementById('accountTypeMenu')?.classList.remove('open');
+    document.querySelector('#filterAccountType .multi-select-btn')?.classList.remove('open');
+    document.getElementById('engagementTypeMenu')?.classList.remove('open');
+    document.querySelector('#filterEngagementType .multi-select-btn')?.classList.remove('open');
+    document.getElementById('accountsMenu')?.classList.remove('open');
+    document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
+    document.getElementById('dmMenu')?.classList.remove('open');
+    document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
+    document.getElementById('actionsMenu')?.classList.remove('open');
+    document.getElementById('actionsToggle')?.classList.remove('open');
+
+    const menu = document.getElementById('cloudPlatformsMenu');
+    const btn = document.querySelector('#filterCloudPlatforms .multi-select-btn');
+    const isOpen = menu.classList.contains('open');
+    menu.classList.toggle('open');
+    btn.classList.toggle('open');
+    if (!isOpen) btn.focus();
+  }
+
+  function getSelectedCloudPlatforms() {
+    const checkboxes = document.querySelectorAll('#cloudPlatformsMenu input[type="checkbox"]');
+    const selected = [];
+    checkboxes.forEach(cb => { if (cb.checked) selected.push(cb.value); });
+    return selected;
+  }
+
+  function onCloudPlatformChange() {
+    updateCloudPlatformsLabel();
+    refreshDashboard();
+  }
+
+  function updateCloudPlatformsLabel() {
+    const selected = getSelectedCloudPlatforms();
+    const label = document.getElementById('cloudPlatformsLabel');
+    if (!label) return;
+    if (selected.length === CLOUD_PLATFORM_ORDER.length || selected.length === 0) {
+      label.textContent = 'All Platforms';
+    } else if (selected.length === 1) {
+      label.textContent = CLOUD_PLATFORM_LABELS[selected[0]] || selected[0];
+    } else {
+      label.textContent = `${selected.length} Platforms`;
+    }
+  }
+
+  function selectAllCloudPlatforms() {
+    document.querySelectorAll('#cloudPlatformsMenu input[type="checkbox"]').forEach(cb => cb.checked = true);
+    onCloudPlatformChange();
+  }
+
+  function clearAllCloudPlatformsCb() {
+    document.querySelectorAll('#cloudPlatformsMenu input[type="checkbox"]').forEach(cb => cb.checked = false);
+    onCloudPlatformChange();
+  }
+
+  function resetCloudPlatformCheckboxes() {
+    document.querySelectorAll('#cloudPlatformsMenu input[type="checkbox"]').forEach(cb => cb.checked = true);
+    updateCloudPlatformsLabel();
+  }
+
   function clearAllFilters() {
     if (comparisonMode) { exitComparison(); return; }
     activeMaturityFilter = null;
@@ -3503,6 +3597,7 @@
     activeCloudPlatformFilter = null;
     activeWfmStageFilter = null;
     activeChampionFilter = null;
+    resetCloudPlatformCheckboxes();
     refreshDashboard();
   }
 
@@ -3731,6 +3826,8 @@
     document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
     document.getElementById('dmMenu')?.classList.remove('open');
     document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
+    document.getElementById('cloudPlatformsMenu')?.classList.remove('open');
+    document.querySelector('#filterCloudPlatforms .multi-select-btn')?.classList.remove('open');
     document.getElementById('actionsMenu')?.classList.remove('open');
     document.getElementById('actionsToggle')?.classList.remove('open');
 
@@ -3785,6 +3882,8 @@
     document.querySelector('#filterAccounts .multi-select-btn')?.classList.remove('open');
     document.getElementById('dmMenu')?.classList.remove('open');
     document.querySelector('#filterDM .multi-select-btn')?.classList.remove('open');
+    document.getElementById('cloudPlatformsMenu')?.classList.remove('open');
+    document.querySelector('#filterCloudPlatforms .multi-select-btn')?.classList.remove('open');
     document.getElementById('actionsMenu')?.classList.remove('open');
     document.getElementById('actionsToggle')?.classList.remove('open');
 
@@ -4423,7 +4522,18 @@
       });
     }
 
-    // Apply cloud platform filter
+    // Apply cloud platform multi-select filter (top bar dropdown)
+    const selectedCloudPlatforms = getSelectedCloudPlatforms();
+    if (selectedCloudPlatforms.length < CLOUD_PLATFORM_ORDER.length) {
+      if (selectedCloudPlatforms.length === 0) return [];
+      surveys = surveys.filter(s => {
+        const cloud = s.data?.toolsAndInfrastructure?.cloud;
+        if (!cloud) return false;
+        return selectedCloudPlatforms.some(k => cloud[k]?.selected === true);
+      });
+    }
+
+    // Apply cloud platform single-click filter (chart bar click)
     if (activeCloudPlatformFilter) {
       surveys = surveys.filter(s => {
         const cloud = s.data?.toolsAndInfrastructure?.cloud;
