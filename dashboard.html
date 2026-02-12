@@ -657,6 +657,97 @@
       font-size: 0.75rem;
     }
 
+    /* Revenue at Risk Widget */
+    .revenue-at-risk-summary {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .revenue-at-risk-card {
+      flex: 1;
+      padding: 1rem;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      cursor: default;
+      transition: all 0.2s;
+    }
+    .revenue-at-risk-card:hover {
+      border-color: #818cf8;
+    }
+    .revenue-at-risk-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .revenue-at-risk-label {
+      font-size: 0.78rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+    .revenue-at-risk-count {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      margin-top: 0.15rem;
+    }
+    .revenue-bar-container {
+      margin-bottom: 1rem;
+    }
+    .revenue-bar {
+      display: flex;
+      height: 10px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #f1f5f9;
+    }
+    .revenue-bar-safe {
+      background: #22c55e;
+      transition: width 0.4s;
+    }
+    .revenue-bar-risk {
+      background: #ef4444;
+      transition: width 0.4s;
+    }
+    .revenue-bar-label {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      margin-top: 0.35rem;
+    }
+    .revenue-accounts-collapsible {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .revenue-accounts-collapsible.open {
+      max-height: 600px;
+    }
+    .revenue-accounts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .revenue-accounts-title {
+      font-weight: 700;
+      font-size: 0.82rem;
+      margin-bottom: 0.4rem;
+    }
+    .revenue-account-item {
+      font-size: 0.8rem;
+      padding: 0.25rem 0;
+      color: #4b5563;
+      border-bottom: 1px solid #f3f4f6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .revenue-account-item:last-child {
+      border-bottom: none;
+    }
+    .revenue-account-amount {
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
     /* AI Adoption by Role Heatmap */
     .role-heatmap-wrapper {
       overflow-x: auto;
@@ -1127,6 +1218,27 @@
       box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
     }
     .dm-input::placeholder {
+      color: #9ca3af;
+      font-weight: 400;
+    }
+
+    .revenue-input {
+      padding: 0.2rem 0.4rem;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      color: #1e293b;
+      background: transparent;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      width: 110px;
+      box-sizing: border-box;
+      text-align: right;
+    }
+    .revenue-input:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+    }
+    .revenue-input::placeholder {
       color: #9ca3af;
       font-weight: 400;
     }
@@ -2452,6 +2564,17 @@
         </div>
       </div>
 
+      <!-- Widget: Revenue at Risk -->
+      <div class="widget-card" id="revenueAtRiskWidget">
+        <div class="widget-header">
+          <div class="widget-title">Revenue at Risk</div>
+          <div class="widget-subtitle">Forecasted revenue from accounts not yet using any AI tool</div>
+        </div>
+        <div id="revenueAtRiskContent">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
         </div> <!-- end widget-section-content -->
       </div> <!-- end Account AI Landscape section -->
 
@@ -2478,6 +2601,7 @@
               <th class="sortable" data-sort="maturity">Client AI Maturity</th>
               <th class="sortable" data-sort="wfm">Account AI Agentic Workflow</th>
               <th class="sortable" data-sort="dm">Delivery Manager</th>
+              <th class="sortable" data-sort="revenue">Forecasted Revenue</th>
               <th class="sortable" data-sort="quarter">Quarter</th>
               <th>Actions</th>
             </tr>
@@ -3724,6 +3848,12 @@
     } catch (e) {
       // Column already exists — ignore
     }
+    // Migration: add forecasted_service_revenue to existing databases
+    try {
+      db.run("ALTER TABLE surveys ADD COLUMN forecasted_service_revenue REAL DEFAULT 0");
+    } catch (e) {
+      // Column already exists — ignore
+    }
     db.run(`
       CREATE TABLE IF NOT EXISTS schema_options (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -4175,7 +4305,7 @@
     // No types selected = no results
     if (selectedTypes.length === 0) return [];
 
-    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager FROM surveys WHERE 1=1';
+    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue FROM surveys WHERE 1=1';
     const params = [];
     if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
     if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
@@ -4191,7 +4321,7 @@
     let surveys = result[0].values.map(row => ({
       id: row[0], account_name: row[1], exported_at: row[2],
       year: row[3], quarter: row[4], schema_version: row[5],
-      data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || ''
+      data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || '', forecasted_service_revenue: row[9] || 0
     }));
 
     // Apply engagement type filter (structural filter on JSON data)
@@ -4286,7 +4416,7 @@
 
     if (selectedTypes.length === 0) return [];
 
-    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager FROM surveys WHERE 1=1';
+    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue FROM surveys WHERE 1=1';
     const params = [];
     if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
     if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
@@ -4302,7 +4432,7 @@
     let surveys = result[0].values.map(row => ({
       id: row[0], account_name: row[1], exported_at: row[2],
       year: row[3], quarter: row[4], schema_version: row[5],
-      data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || ''
+      data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || '', forecasted_service_revenue: row[9] || 0
     }));
 
     // Apply engagement type filter (structural filter on JSON data)
@@ -4458,6 +4588,7 @@
     renderSdlcCoverageWidget(surveys);
     renderAiAdoptionByRoleWidget(surveys);
     renderAiChampionWidget(surveys);
+    renderRevenueAtRiskWidget(surveys);
 
     // Collapsed account section summary (must run after renderWorkflowMaturityWidget sets currentWfmStage)
     updateAccountSectionSummary(surveys);
@@ -5086,14 +5217,30 @@
 
     // AI Usage %
     const aiUsagePct = calculateAiUsagePercent(surveys);
+    const EXCL_KEYS_SUMMARY = ['dont-know', 'not-applicable', 'custom', '_meta'];
     const aiUsageCount = surveys.filter(s => {
       const aiTools = s.data?.toolsAndInfrastructure?.ai;
       if (!aiTools) return false;
-      const EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
-      const hasNamed = Object.keys(aiTools).some(k => !EXCLUDED_KEYS.includes(k) && aiTools[k]?.selected === true);
+      const hasNamed = Object.keys(aiTools).some(k => !EXCL_KEYS_SUMMARY.includes(k) && aiTools[k]?.selected === true);
       const hasCustom = Array.isArray(aiTools.custom) && aiTools.custom.length > 0;
       return hasNamed || hasCustom;
     }).length;
+
+    // Revenue at Risk — sum revenue from accounts NOT using any AI tool
+    let revenueAtRiskTotal = 0;
+    surveys.forEach(s => {
+      const aiTools = s.data?.toolsAndInfrastructure?.ai;
+      let hasAi = false;
+      if (aiTools) {
+        const hasNamed = Object.keys(aiTools).some(k => !EXCL_KEYS_SUMMARY.includes(k) && aiTools[k]?.selected === true);
+        const hasCustom = Array.isArray(aiTools.custom) && aiTools.custom.length > 0;
+        hasAi = hasNamed || hasCustom;
+      }
+      if (!hasAi) revenueAtRiskTotal += (s.forecasted_service_revenue || 0);
+    });
+    const revenueAtRiskHtml = revenueAtRiskTotal > 0
+      ? `<span class="section-summary-value" style="color:#dc2626;">${formatCurrency(revenueAtRiskTotal)}</span>`
+      : '<span style="color:#9ca3af;font-size:0.75rem;">$0</span>';
 
     // Update expanded banner
     const bannerValueEl = document.getElementById('aiUsageBannerValue');
@@ -5140,6 +5287,11 @@
       <div class="section-summary-item">
         <span class="section-summary-label">AI Champions:</span>
         ${champHtml}
+      </div>
+      <div class="section-summary-divider"></div>
+      <div class="section-summary-item">
+        <span class="section-summary-label" style="color:#dc2626;">Revenue at Risk:</span>
+        ${revenueAtRiskHtml}
       </div>`;
   }
 
@@ -5976,6 +6128,24 @@
     if (bannerValueEl) bannerValueEl.innerHTML = `<span style="color:${COMPARE_COLOR_A};">${pctA !== null ? pctA + '%' : '--'}</span> <span style="font-size:0.9rem;color:#9ca3af;">vs</span> <span style="color:${COMPARE_COLOR_B};">${pctB !== null ? pctB + '%' : '--'}</span>`;
     if (bannerSubEl) bannerSubEl.textContent = `${nameA} vs ${nameB}`;
 
+    // Revenue at Risk for comparison
+    const EXCL_CMP = ['dont-know', 'not-applicable', 'custom', '_meta'];
+    const riskCalc = (surveys) => {
+      let total = 0;
+      surveys.forEach(s => {
+        const aiTools = s.data?.toolsAndInfrastructure?.ai;
+        let hasAi = false;
+        if (aiTools) {
+          hasAi = Object.keys(aiTools).some(k => !EXCL_CMP.includes(k) && aiTools[k]?.selected === true)
+            || (Array.isArray(aiTools.custom) && aiTools.custom.length > 0);
+        }
+        if (!hasAi) total += (s.forecasted_service_revenue || 0);
+      });
+      return total;
+    };
+    const riskA = riskCalc(surveysA);
+    const riskB = riskCalc(surveysB);
+
     el.innerHTML = `
       <div class="section-summary-item section-summary-ai-usage">
         <span class="section-summary-label" style="color:#4338ca;">AI Usage:</span>
@@ -5985,6 +6155,11 @@
       <div class="section-summary-item">
         <span class="section-summary-label">WFM:</span>
         <span class="section-summary-value"><span style="color:${COMPARE_COLOR_A};">${labelA}</span> vs <span style="color:${COMPARE_COLOR_B};">${labelB}</span></span>
+      </div>
+      <div class="section-summary-divider"></div>
+      <div class="section-summary-item">
+        <span class="section-summary-label" style="color:#dc2626;">Revenue at Risk:</span>
+        <span class="section-summary-value"><span style="color:${COMPARE_COLOR_A};">${formatCurrency(riskA) || '$0'}</span> vs <span style="color:${COMPARE_COLOR_B};">${formatCurrency(riskB) || '$0'}</span></span>
       </div>`;
   }
 
@@ -6317,6 +6492,119 @@
   }
 
   // ═══════════════════════════════════════════
+  // REVENUE AT RISK WIDGET
+  // ═══════════════════════════════════════════
+  function toggleRevenueDetails() {
+    const collapsible = document.querySelector('.revenue-accounts-collapsible');
+    if (!collapsible) return;
+    const isExpanded = collapsible.classList.contains('open');
+    collapsible.classList.toggle('open');
+    const toggle = collapsible.previousElementSibling;
+    if (toggle) toggle.querySelector('.toggle-text').textContent = isExpanded ? 'Show accounts' : 'Hide accounts';
+  }
+
+  function renderRevenueAtRiskWidget(surveys) {
+    const container = document.getElementById('revenueAtRiskContent');
+    if (!container) return;
+
+    const EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
+
+    const atRisk = [];
+    const usingAi = [];
+
+    surveys.forEach(s => {
+      const acctName = s.data?.accountName || s.account_name || 'Unknown';
+      const revenue = s.forecasted_service_revenue || 0;
+
+      const aiTools = s.data?.toolsAndInfrastructure?.ai;
+      let hasAi = false;
+      if (aiTools) {
+        const hasNamedTool = Object.keys(aiTools).some(key =>
+          !EXCLUDED_KEYS.includes(key) && aiTools[key]?.selected === true
+        );
+        const hasCustomTool = Array.isArray(aiTools.custom) && aiTools.custom.length > 0;
+        hasAi = hasNamedTool || hasCustomTool;
+      }
+
+      if (hasAi) {
+        usingAi.push({ name: acctName, revenue });
+      } else {
+        atRisk.push({ name: acctName, revenue });
+      }
+    });
+
+    // Sort by revenue descending within each group
+    atRisk.sort((a, b) => b.revenue - a.revenue);
+    usingAi.sort((a, b) => b.revenue - a.revenue);
+
+    const totalAtRisk = atRisk.reduce((sum, a) => sum + a.revenue, 0);
+    const totalUsingAi = usingAi.reduce((sum, a) => sum + a.revenue, 0);
+    const grandTotal = totalAtRisk + totalUsingAi;
+
+    const riskPct = grandTotal > 0 ? Math.round((totalAtRisk / grandTotal) * 100) : 0;
+    const safePct = grandTotal > 0 ? 100 - riskPct : 0;
+
+    const atRiskDisplay = formatCurrency(totalAtRisk) || '$0';
+    const usingAiDisplay = formatCurrency(totalUsingAi) || '$0';
+
+    let html = '';
+
+    if (grandTotal === 0) {
+      html = `<div style="text-align:center;padding:2rem 1rem;color:#94a3b8;">
+        <div style="font-size:1.5rem;margin-bottom:0.5rem;">💰</div>
+        <div style="font-size:0.85rem;">No revenue data yet</div>
+        <div style="font-size:0.78rem;margin-top:0.25rem;">Add forecasted revenue to accounts in the Surveys table below</div>
+      </div>`;
+    } else {
+      html = `
+        <div class="revenue-at-risk-summary">
+          <div class="revenue-at-risk-card" style="border-left:4px solid #ef4444;">
+            <div class="revenue-at-risk-value" style="color:#ef4444;">${atRiskDisplay}</div>
+            <div class="revenue-at-risk-label">Revenue at Risk</div>
+            <div class="revenue-at-risk-count">${atRisk.length} account${atRisk.length !== 1 ? 's' : ''} not using AI</div>
+          </div>
+          <div class="revenue-at-risk-card" style="border-left:4px solid #22c55e;">
+            <div class="revenue-at-risk-value" style="color:#22c55e;">${usingAiDisplay}</div>
+            <div class="revenue-at-risk-label">Revenue with AI</div>
+            <div class="revenue-at-risk-count">${usingAi.length} account${usingAi.length !== 1 ? 's' : ''} using AI</div>
+          </div>
+        </div>
+
+        <div class="revenue-bar-container">
+          <div class="revenue-bar">
+            <div class="revenue-bar-safe" style="width:${safePct}%;"></div>
+            <div class="revenue-bar-risk" style="width:${riskPct}%;"></div>
+          </div>
+          <div class="revenue-bar-label">${riskPct}% of forecasted revenue (${atRiskDisplay}) at risk across ${surveys.length} account${surveys.length !== 1 ? 's' : ''}</div>
+        </div>
+
+        <div class="champion-details-toggle" onclick="toggleRevenueDetails()">
+          <span class="toggle-text">Show accounts</span>
+          <span class="chevron">&#9662;</span>
+        </div>
+        <div class="revenue-accounts-collapsible">
+          <div class="revenue-accounts">
+            <div>
+              <div class="revenue-accounts-title" style="color:#ef4444;">⚠ Not Using AI (${atRisk.length})</div>
+              ${atRisk.length > 0 ? atRisk.map(a =>
+                `<div class="revenue-account-item">${a.name} <span class="revenue-account-amount" style="color:#ef4444;">${formatCurrency(a.revenue) || '$0'}</span></div>`
+              ).join('') : '<div class="revenue-account-item" style="color:#9ca3af;font-style:italic;">None</div>'}
+            </div>
+            <div>
+              <div class="revenue-accounts-title" style="color:#22c55e;">✅ Using AI (${usingAi.length})</div>
+              ${usingAi.length > 0 ? usingAi.map(a =>
+                `<div class="revenue-account-item">${a.name} <span class="revenue-account-amount" style="color:#22c55e;">${formatCurrency(a.revenue) || '$0'}</span></div>`
+              ).join('') : '<div class="revenue-account-item" style="color:#9ca3af;font-style:italic;">None</div>'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+  }
+
+  // ═══════════════════════════════════════════
   // SURVEYS TABLE
   // ═══════════════════════════════════════════
   function getWfmAverage(s) {
@@ -6355,6 +6643,8 @@
           return dir * (va - vb);
         case 'dm':
           return dir * (a.delivery_manager || '').localeCompare(b.delivery_manager || '');
+        case 'revenue':
+          return dir * ((a.forecasted_service_revenue || 0) - (b.forecasted_service_revenue || 0));
         case 'quarter':
           va = (a.year || 0) * 10 + (a.quarter || 0);
           vb = (b.year || 0) * 10 + (b.quarter || 0);
@@ -6421,6 +6711,7 @@
       ).join('');
 
       const dmValue = escapeHtml(s.delivery_manager || '');
+      const revenueDisplay = s.forecasted_service_revenue ? formatCurrency(s.forecasted_service_revenue) : '';
 
       // Compute WFM stage for this account (same logic as widget)
       let wfmCell = '-';
@@ -6455,6 +6746,11 @@
           <input type="text" class="dm-input" value="${dmValue}" placeholder="—"
             onchange="updateDeliveryManager(${s.id}, this.value.trim())"
             title="Edit delivery manager">
+        </td>
+        <td onclick="event.stopPropagation();">
+          <input type="text" class="revenue-input" value="${revenueDisplay}" placeholder="$0"
+            onchange="updateForecastedRevenue(${s.id}, this.value)"
+            title="Edit forecasted service revenue (USD)">
         </td>
         <td>Q${s.quarter} ${s.year}</td>
         <td class="actions" onclick="event.stopPropagation();">
@@ -6496,7 +6792,7 @@
   }
 
   function exportAllSurveys() {
-    const result = db.exec('SELECT account_name, exported_at, year, quarter, raw_json FROM surveys ORDER BY account_name, year, quarter');
+    const result = db.exec('SELECT account_name, exported_at, year, quarter, raw_json, forecasted_service_revenue FROM surveys ORDER BY account_name, year, quarter');
     if (result.length === 0 || result[0].values.length === 0) {
       alert('No surveys to export.');
       return;
@@ -6506,7 +6802,8 @@
       exported_at: row[1],
       year: row[2],
       quarter: row[3],
-      data: JSON.parse(row[4])
+      data: JSON.parse(row[4]),
+      forecasted_service_revenue: row[5] || 0
     }));
     const json = JSON.stringify(surveys, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -6528,6 +6825,27 @@
 
   async function updateDeliveryManager(id, newDM) {
     db.run('UPDATE surveys SET delivery_manager = ? WHERE id = ?', [newDM, id]);
+    await saveToIndexedDB();
+  }
+
+  function formatCurrency(value) {
+    if (!value || value === 0) return '';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD',
+      minimumFractionDigits: 0, maximumFractionDigits: 0
+    }).format(value);
+  }
+
+  function parseCurrencyInput(str) {
+    if (!str) return 0;
+    const cleaned = str.replace(/[^0-9.\-]/g, '');
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : Math.round(num);
+  }
+
+  async function updateForecastedRevenue(id, rawValue) {
+    const amount = parseCurrencyInput(rawValue);
+    db.run('UPDATE surveys SET forecasted_service_revenue = ? WHERE id = ?', [amount, id]);
     await saveToIndexedDB();
   }
 
