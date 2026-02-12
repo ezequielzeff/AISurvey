@@ -1880,6 +1880,70 @@
     }
 
     /* ═══════════════════════════════════════════
+       PRINT / PDF EXPORT STYLES
+       ═══════════════════════════════════════════ */
+    @media print {
+      /* Hide interactive UI chrome */
+      .dashboard-header .header-controls,
+      .filter-bar,
+      .actions-wrapper,
+      .ai-chat-fab,
+      .ai-chat-overlay,
+      .ai-chat-panel,
+      .widget-footer,
+      .section-chevron,
+      .widget-section-summary,
+      .more-info-link,
+      .filter-active-tag,
+      .filter-clear-btn,
+      .surveys-table .actions,
+      .info-modal-overlay,
+      #comparisonBanner,
+      #emptyState,
+      #loadingState { display: none !important; }
+
+      /* Expand all collapsed sections */
+      .widget-section .widget-section-content { display: block !important; }
+      .widget-section-title { cursor: default; pointer-events: none; }
+
+      /* Page layout */
+      body, html { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .dashboard-content { max-width: 100%; padding: 0; }
+      .dashboard-header { box-shadow: none; border-bottom: 2px solid #e5e7eb; padding: 0.75rem 1rem; }
+
+      /* Widget cards */
+      .widget-card {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 1rem;
+        page-break-inside: avoid;
+      }
+
+      /* Section breaks */
+      .widget-section { break-before: auto; margin-bottom: 0; }
+      .widget-section + .widget-section { break-before: page; }
+
+      /* Pipeline cards — keep colors */
+      .stage-card, .wfm-card { cursor: default; }
+      .stage-card:hover, .wfm-card:hover { transform: none !important; box-shadow: none !important; }
+      .progress-gradient-bar, .wfm-gradient-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+      /* Chart images (inserted by exportDashboardPDF) */
+      .print-chart-img { max-width: 100%; height: auto; break-inside: avoid; page-break-inside: avoid; }
+
+      /* Table */
+      .surveys-table { font-size: 9pt; }
+      .surveys-table th, .surveys-table td { padding: 4px 8px; }
+      .surveys-table tr { page-break-inside: avoid; }
+      .surveys-table .row-dimmed { opacity: 1 !important; }
+
+      /* Ensure text is readable */
+      * { color-adjust: exact; }
+      a { text-decoration: none !important; color: inherit !important; }
+    }
+
+    /* ═══════════════════════════════════════════
        AI CHAT PANEL
        ═══════════════════════════════════════════ */
     .ai-chat-overlay {
@@ -2258,6 +2322,9 @@
           </button>
           <button class="actions-menu-item" id="exportSurveysBtn" type="button">
             <span class="item-icon">&#128196;</span> Export Surveys
+          </button>
+          <button class="actions-menu-item" id="exportPdfBtn" type="button">
+            <span class="item-icon">&#128248;</span> Export as PDF
           </button>
           <div class="actions-menu-divider"></div>
           <button class="actions-menu-item" id="exportDbBtn" type="button">
@@ -7460,6 +7527,40 @@
     URL.revokeObjectURL(url);
   }
 
+  function exportDashboardPDF() {
+    // 1. Expand all collapsed sections temporarily
+    const collapsedSections = [...document.querySelectorAll('.widget-section.collapsed')];
+    collapsedSections.forEach(s => s.classList.remove('collapsed'));
+
+    // 2. Convert each Chart.js canvas to a static <img> for print
+    const canvasMap = [];
+    Object.entries(charts).forEach(([id, chart]) => {
+      if (!chart || !chart.canvas) return;
+      const canvas = chart.canvas;
+      try {
+        const img = document.createElement('img');
+        img.src = chart.toBase64Image();
+        img.className = 'print-chart-img';
+        img.style.width = '100%';
+        canvas.style.display = 'none';
+        canvas.parentNode.insertBefore(img, canvas);
+        canvasMap.push({ canvas, img });
+      } catch (e) {
+        console.warn('Could not convert chart to image:', id, e);
+      }
+    });
+
+    // 3. Trigger browser print (user picks "Save as PDF")
+    window.print();
+
+    // 4. Restore after print dialog closes
+    canvasMap.forEach(({ canvas, img }) => {
+      canvas.style.display = '';
+      img.remove();
+    });
+    collapsedSections.forEach(s => s.classList.add('collapsed'));
+  }
+
   async function updateAccountType(id, newType) {
     db.run('UPDATE surveys SET account_type = ? WHERE id = ?', [newType, id]);
     await saveToIndexedDB();
@@ -7690,6 +7791,7 @@
     // Database export/import/clear
     document.getElementById('exportDbBtn').addEventListener('click', exportDatabase);
     document.getElementById('exportSurveysBtn').addEventListener('click', exportAllSurveys);
+    document.getElementById('exportPdfBtn').addEventListener('click', exportDashboardPDF);
     document.getElementById('importDbInput').addEventListener('change', e => {
       if (e.target.files.length > 0) importDatabase(e.target.files[0]);
       e.target.value = '';
