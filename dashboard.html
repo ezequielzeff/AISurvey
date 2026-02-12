@@ -357,38 +357,6 @@
     }
 
     /* ═══════════════════════════════════════════
-       SUMMARY CARDS
-       ═══════════════════════════════════════════ */
-    .summary-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .summary-card {
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    .summary-card-icon {
-      font-size: 1.5rem;
-      margin-bottom: 0.25rem;
-    }
-    .summary-card-value {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: #1f2937;
-    }
-    .summary-card-label {
-      font-size: 0.85rem;
-      color: #6b7280;
-      font-weight: 500;
-    }
-    /* ═══════════════════════════════════════════
        WIDGET CARD
        ═══════════════════════════════════════════ */
     .widget-section {
@@ -1747,7 +1715,6 @@
       .wfm-card { min-width: 80px; }
     }
     @media (max-width: 600px) {
-      .summary-cards { grid-template-columns: repeat(2, 1fr); }
       .surveys-table { font-size: 0.8rem; }
       .surveys-table th, .surveys-table td { padding: 0.5rem; }
       .widget-card { padding: 1.25rem; }
@@ -2261,15 +2228,6 @@
 
     <!-- Dashboard Content (hidden when empty) -->
     <div id="dashboardContent" style="display:none;">
-
-      <!-- Summary Cards -->
-      <div class="summary-cards">
-        <div class="summary-card">
-          <div class="summary-card-icon">📋</div>
-          <div class="summary-card-value" id="totalSurveys">0</div>
-          <div class="summary-card-label">Surveys</div>
-        </div>
-      </div>
 
       <!-- Comparison Banner -->
       <div id="comparisonBanner" class="compare-banner">
@@ -4341,9 +4299,6 @@
 
     if (totalCount === 0) return;
 
-    // Summary cards — comparison mode
-    updateSummaryCardsComparison(surveysA, surveysB, nameA, nameB);
-
     // Widget comparisons
     renderAdoptionStageComparison(surveysA, surveysB, nameA, nameB);
     renderAiChallengesComparison(surveysA, surveysB, nameA, nameB);
@@ -4436,9 +4391,6 @@
 
     if (totalCount === 0) return;
 
-    // Summary cards (show count of filtered surveys)
-    updateSummaryCards(surveys);
-
     // Adoption Stage Widget — percentages reflect active filters
     renderAdoptionStageWidget(surveys);
 
@@ -4474,9 +4426,6 @@
     updateSurveysSectionSummary(surveys, allSurveys);
   }
 
-  function updateSummaryCards(surveys) {
-    document.getElementById('totalSurveys').textContent = surveys.length;
-  }
 
   function calculateAiUsagePercent(surveys) {
     if (surveys.length === 0) return null;
@@ -5871,11 +5820,6 @@
     </div>`;
   }
 
-  // --- Summary Cards Comparison ---
-  function updateSummaryCardsComparison(surveysA, surveysB, nameA, nameB) {
-    const totalEl = document.getElementById('totalSurveys');
-    totalEl.innerHTML = `<span style="color:${COMPARE_COLOR_A};font-size:0.85em;">${surveysA.length}</span> <span style="color:#9ca3af;font-size:0.7em;">vs</span> <span style="color:${COMPARE_COLOR_B};font-size:0.85em;">${surveysB.length}</span>`;
-  }
 
   // --- Surveys Table Comparison ---
   function renderSurveysTableComparison(allSurveys, surveysA, surveysB, nameA, nameB) {
