@@ -3567,8 +3567,12 @@
     if (quarter !== 'all') filterDesc += (filterDesc ? ' ' : '') + 'Q' + quarter;
 
     let subtitleText = '';
-    if (surveys.length > 0) {
-      subtitleText = `Showing ${surveys.length} survey${surveys.length !== 1 ? 's' : ''}${filterDesc ? ' for ' + filterDesc : ''}`;
+    if (allSurveys.length > 0) {
+      if (surveys.length < allSurveys.length) {
+        subtitleText = `Showing ${surveys.length} of ${allSurveys.length} survey${allSurveys.length !== 1 ? 's' : ''}${filterDesc ? ' for ' + filterDesc : ''}`;
+      } else {
+        subtitleText = `Showing ${surveys.length} survey${surveys.length !== 1 ? 's' : ''}${filterDesc ? ' for ' + filterDesc : ''}`;
+      }
     } else if (totalCount > 0) {
       subtitleText = 'No surveys match the selected filters';
     } else {
@@ -3640,15 +3644,15 @@
     // Collapsed account section summary (must run after renderWorkflowMaturityWidget sets currentWfmStage)
     updateAccountSectionSummary(allSurveys);
 
-    // Surveys table — filtered by active filters
-    renderSurveysTable(surveys);
+    // Surveys table — show all rows, dim non-matching
+    renderSurveysTable(allSurveys, surveys);
 
     // Sync accounts and DM dropdowns with current data
     populateAccountsFilter();
     populateDMFilter();
 
     // Collapsed surveys section summary
-    updateSurveysSectionSummary(surveys);
+    updateSurveysSectionSummary(surveys, allSurveys);
   }
 
   function updateSummaryCards(surveys) {
@@ -4428,14 +4432,19 @@
       </div>`;
   }
 
-  function updateSurveysSectionSummary(surveys) {
+  function updateSurveysSectionSummary(filteredSurveys, allSurveys) {
     const el = document.getElementById('sectionSummarySurveys');
     if (!el) return;
+
+    const hasActiveFilters = allSurveys && filteredSurveys.length < allSurveys.length;
+    const countText = hasActiveFilters
+      ? `${filteredSurveys.length} of ${allSurveys.length}`
+      : `${filteredSurveys.length}`;
 
     el.innerHTML = `
       <div class="section-summary-item">
         <span class="section-summary-label">Surveys:</span>
-        <span class="section-summary-value">${surveys.length}</span>
+        <span class="section-summary-value">${countText}</span>
       </div>`;
   }
 
@@ -5066,18 +5075,21 @@
       tableSortColumn = column;
       tableSortDirection = 'asc';
     }
-    renderSurveysTable(getFilteredSurveys());
+    renderSurveysTable(getAllFilteredSurveys(), getFilteredSurveys());
   }
 
-  function renderSurveysTable(surveys) {
+  function renderSurveysTable(allSurveys, filteredSurveys) {
     const tbody = document.getElementById('surveysTableBody');
-    if (surveys.length === 0) {
+    if (allSurveys.length === 0) {
       tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
       return;
     }
 
+    const filteredIds = new Set(filteredSurveys.map(s => s.id));
+    const hasActiveFilters = filteredSurveys.length < allSurveys.length;
+
     // Sort surveys before rendering
-    const sorted = sortSurveys(surveys);
+    const sorted = sortSurveys(allSurveys);
 
     // Update header sort indicators
     document.querySelectorAll('.surveys-table th.sortable').forEach(th => {
@@ -5093,7 +5105,9 @@
       const maturityClass = maturity !== '-' ? `maturity-${maturity}` : '';
 
       const isSelected = selectedAccounts.has(s.account_name);
-      const rowStyle = isSelected ? 'background:#eef2ff;' : '';
+      const isMatched = filteredIds.has(s.id);
+      const isDimmed = hasActiveFilters && !isMatched;
+      const rowStyle = isSelected ? 'background:#eef2ff;' : (isDimmed ? 'opacity:0.4;' : '');
       const escapedName = escapeHtml(s.account_name).replace(/'/g, "\\'");
 
       const accountType = s.account_type || 'other';
