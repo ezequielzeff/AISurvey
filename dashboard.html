@@ -5073,7 +5073,7 @@
     const champTotal = surveys.length;
     const champPct = champTotal > 0 ? Math.round((champYes / champTotal) * 100) : 0;
     const champHtml = champTotal > 0
-      ? `<span class="section-summary-value" style="font-size:0.85rem;">${champYes}/${champTotal} (${champPct}%)</span>`
+      ? `<div class="section-summary-challenges"><span class="section-summary-challenge-pill" style="background:#fef3c7;border-color:#fcd34d;color:#92400e;">${champYes}/${champTotal} (${champPct}%)</span></div>`
       : '<span style="color:#9ca3af;font-size:0.75rem;">No data</span>';
 
     // AI Usage %
