@@ -4885,42 +4885,29 @@
       </div>${connector}`;
     }).join('');
 
-    // Update progress bar marker position
+    // Update progress bar marker position (deferred to next frame so layout is complete)
     const marker = document.getElementById('progressMarker');
-    const progressBar = document.querySelector('.progress-gradient-bar');
-    const pipelineEl = document.getElementById('stagePipeline');
-    const stageCards = pipelineEl.querySelectorAll('.stage-card');
-    const barRect = progressBar ? progressBar.getBoundingClientRect() : null;
+    const targetStageKey = activeMaturityFilter || avgStage;
 
-    function setAdoptionMarkerPos(pct) {
-      marker.style.left = pct + '%';
-    }
-
-    // Hide marker when no surveys have maturity data
-    if (totalAll === 0) {
+    if (totalAll === 0 || !targetStageKey) {
       marker.style.display = 'none';
-    } else if (barRect && stageCards.length > 0) {
-      marker.style.display = '';
-      if (activeMaturityFilter) {
-        const filterIdx = MATURITY_ORDER.indexOf(activeMaturityFilter);
-        if (filterIdx >= 0 && filterIdx < stageCards.length) {
-          const cardRect = stageCards[filterIdx].getBoundingClientRect();
-          const cardCenter = cardRect.left + cardRect.width / 2;
-          const markerPct = Math.max(2, Math.min(98, ((cardCenter - barRect.left) / barRect.width) * 100));
-          setAdoptionMarkerPos(markerPct);
-        }
-      } else if (avgStage) {
-        // Snap arrow to the center of the average stage card
-        const avgIdx = MATURITY_ORDER.indexOf(avgStage);
-        if (avgIdx >= 0 && avgIdx < stageCards.length) {
-          const cardRect = stageCards[avgIdx].getBoundingClientRect();
-          const cardCenter = cardRect.left + cardRect.width / 2;
-          const markerPct = Math.max(2, Math.min(98, ((cardCenter - barRect.left) / barRect.width) * 100));
-          setAdoptionMarkerPos(markerPct);
-        }
-      }
     } else {
-      marker.style.display = 'none';
+      marker.style.display = '';
+      requestAnimationFrame(() => {
+        const progressBar = document.querySelector('.progress-gradient-bar');
+        const pipelineEl = document.getElementById('stagePipeline');
+        const stageCards = pipelineEl.querySelectorAll('.stage-card');
+        const barRect = progressBar ? progressBar.getBoundingClientRect() : null;
+        if (!barRect || stageCards.length === 0) return;
+
+        const idx = MATURITY_ORDER.indexOf(targetStageKey);
+        if (idx >= 0 && idx < stageCards.length) {
+          const cardRect = stageCards[idx].getBoundingClientRect();
+          const cardCenter = cardRect.left + cardRect.width / 2;
+          const pct = Math.max(2, Math.min(98, ((cardCenter - barRect.left) / barRect.width) * 100));
+          marker.style.left = pct + '%';
+        }
+      });
     }
 
     // Render legend (all stages including dont-know)
@@ -5060,36 +5047,27 @@
       </div>${connector}`;
     }).join('');
 
-    // 7. Position progress bar marker — snap to card center when filter active
+    // 7. Position progress bar marker (deferred to next frame so layout is complete)
     const wfmMarker = document.getElementById('wfmProgressMarker');
-    const wfmBar = document.querySelector('.wfm-gradient-bar');
-    const wfmCards = journey.querySelectorAll('.wfm-card');
-    const wfmBarRect = wfmBar ? wfmBar.getBoundingClientRect() : null;
+    const targetWfmIdx = activeWfmStageFilter !== null ? activeWfmStageFilter : roundedStage;
 
-    function setWfmMarkerPos(pct) {
-      wfmMarker.style.left = pct + '%';
-    }
-
-    if (filteredTotal === 0) {
+    if (filteredTotal === 0 || targetWfmIdx === null || targetWfmIdx < 0) {
       wfmMarker.style.display = 'none';
-    } else if (wfmBarRect && wfmCards.length > 0) {
-      wfmMarker.style.display = '';
-      if (activeWfmStageFilter !== null && activeWfmStageFilter < wfmCards.length) {
-        const cardEl = wfmCards[activeWfmStageFilter];
-        const cardRect = cardEl.getBoundingClientRect();
-        const cardCenter = cardRect.left + cardRect.width / 2;
-        const markerPct = Math.max(2, Math.min(98, ((cardCenter - wfmBarRect.left) / wfmBarRect.width) * 100));
-        setWfmMarkerPos(markerPct);
-      } else if (roundedStage >= 0 && roundedStage < wfmCards.length) {
-        // Snap arrow to the center of the average stage card
-        const cardEl = wfmCards[roundedStage];
-        const cardRect = cardEl.getBoundingClientRect();
-        const cardCenter = cardRect.left + cardRect.width / 2;
-        const markerPct = Math.max(2, Math.min(98, ((cardCenter - wfmBarRect.left) / wfmBarRect.width) * 100));
-        setWfmMarkerPos(markerPct);
-      }
     } else {
-      wfmMarker.style.display = 'none';
+      wfmMarker.style.display = '';
+      requestAnimationFrame(() => {
+        const wfmBar = document.querySelector('.wfm-gradient-bar');
+        const wfmCards = journey.querySelectorAll('.wfm-card');
+        const wfmBarRect = wfmBar ? wfmBar.getBoundingClientRect() : null;
+        if (!wfmBarRect || wfmCards.length === 0) return;
+
+        if (targetWfmIdx >= 0 && targetWfmIdx < wfmCards.length) {
+          const cardRect = wfmCards[targetWfmIdx].getBoundingClientRect();
+          const cardCenter = cardRect.left + cardRect.width / 2;
+          const pct = Math.max(2, Math.min(98, ((cardCenter - wfmBarRect.left) / wfmBarRect.width) * 100));
+          wfmMarker.style.left = pct + '%';
+        }
+      });
     }
   }
 
