@@ -1786,6 +1786,153 @@
       .wfm-card { padding: 0.6rem 0.5rem; }
     }
 
+    /* ═══════════════════════════════════════════
+       AI CHAT PANEL
+       ═══════════════════════════════════════════ */
+    .ai-chat-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.3); z-index: 1050;
+    }
+    .ai-chat-overlay.open { display: block; }
+
+    .ai-chat-panel {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 420px;
+      background: #fff; box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+      z-index: 1100; display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform 0.3s ease;
+    }
+    .ai-chat-panel.open { transform: translateX(0); }
+
+    .ai-chat-panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1.25rem; border-bottom: 1px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+    .ai-chat-panel-header .btn-icon {
+      background: none; border: none; font-size: 1.1rem; cursor: pointer;
+      color: #6b7280; padding: 0.25rem 0.4rem; border-radius: 6px;
+    }
+    .ai-chat-panel-header .btn-icon:hover { background: #f3f4f6; color: #1f2937; }
+
+    .ai-chat-settings {
+      display: none; padding: 0.75rem 1.25rem;
+      background: #f9fafb; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;
+    }
+    .ai-chat-settings.open { display: block; }
+    .ai-chat-settings label {
+      display: block; font-size: 0.72rem; font-weight: 700; color: #6b7280;
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.15rem;
+    }
+    .ai-chat-settings select,
+    .ai-chat-settings input[type="password"] {
+      width: 100%; padding: 0.35rem 0.5rem; border: 1px solid #d1d5db;
+      border-radius: 6px; font-size: 0.85rem; color: #374151;
+      margin-bottom: 0.6rem; font-family: inherit;
+    }
+    .ai-chat-settings select:focus,
+    .ai-chat-settings input:focus { outline: none; border-color: #6366f1; }
+
+    .ai-chat-provider-bar {
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.4rem 1.25rem; border-bottom: 1px solid #f3f4f6;
+      font-size: 0.75rem; color: #6b7280; flex-shrink: 0;
+    }
+
+    .ai-chat-messages {
+      flex: 1; overflow-y: auto; padding: 1rem 1.25rem;
+    }
+
+    .ai-chat-welcome {
+      text-align: center; padding: 1.5rem 0 1rem;
+    }
+
+    .ai-quick-chip {
+      display: inline-block; border: 1px solid #e5e7eb; border-radius: 20px;
+      padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer;
+      background: #fff; color: #4f46e5; transition: all 0.15s;
+      font-family: inherit; margin: 0.2rem;
+    }
+    .ai-quick-chip:hover { background: #eef2ff; border-color: #c7d2fe; }
+
+    .ai-chat-message {
+      margin-bottom: 0.75rem; max-width: 92%;
+      font-size: 0.88rem; line-height: 1.6;
+    }
+    .ai-chat-message.user {
+      margin-left: auto; background: #eef2ff; color: #1e1b4b;
+      padding: 0.6rem 0.9rem; border-radius: 14px 14px 4px 14px;
+    }
+    .ai-chat-message.assistant {
+      margin-right: auto; background: #fff; border: 1px solid #e5e7eb;
+      padding: 0.6rem 0.9rem; border-radius: 14px 14px 14px 4px;
+    }
+    .ai-chat-message.error {
+      margin-right: auto; background: #fef2f2; border: 1px solid #fecaca;
+      padding: 0.6rem 0.9rem; border-radius: 14px 14px 14px 4px;
+    }
+
+    .ai-chat-message .markdown-content p { margin: 0.3rem 0; }
+    .ai-chat-message .markdown-content strong { font-weight: 700; }
+    .ai-chat-message .markdown-content ul,
+    .ai-chat-message .markdown-content ol { margin: 0.3rem 0; padding-left: 1.25rem; }
+    .ai-chat-message .markdown-content li { margin-bottom: 0.15rem; }
+    .ai-chat-message .markdown-content code {
+      background: #f3f4f6; padding: 0.1rem 0.3rem; border-radius: 4px;
+      font-size: 0.84em; font-family: 'SF Mono', 'Consolas', monospace;
+    }
+    .ai-chat-message .markdown-content h3 {
+      font-size: 0.95rem; font-weight: 700; margin: 0.75rem 0 0.25rem; color: #1f2937;
+    }
+    .ai-chat-message .markdown-content h4 {
+      font-size: 0.9rem; font-weight: 700; margin: 0.6rem 0 0.2rem; color: #374151;
+    }
+
+    .ai-chat-loading {
+      display: flex; gap: 5px; padding: 0.75rem 1rem; align-items: center;
+    }
+    .ai-dot {
+      width: 8px; height: 8px; background: #9ca3af; border-radius: 50%;
+      animation: aiDotPulse 1.4s ease-in-out infinite;
+    }
+    .ai-dot:nth-child(2) { animation-delay: 0.2s; }
+    .ai-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes aiDotPulse {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    .ai-chat-input-area {
+      padding: 0.75rem 1.25rem; border-top: 1px solid #e5e7eb;
+      background: #fff; flex-shrink: 0;
+    }
+    .ai-chat-input-area textarea {
+      flex: 1; resize: none; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      padding: 0.55rem 0.75rem; font-size: 0.88rem; font-family: inherit;
+      min-height: 42px; max-height: 120px; width: 100%; box-sizing: border-box;
+      color: #1f2937;
+    }
+    .ai-chat-input-area textarea:focus { outline: none; border-color: #6366f1; }
+    .ai-chat-input-area textarea::placeholder { color: #9ca3af; }
+    .ai-chat-send-btn {
+      background: #4f46e5; color: #fff; border: none; border-radius: 10px;
+      padding: 0.5rem 0.75rem; cursor: pointer; font-size: 1rem;
+      flex-shrink: 0; transition: background 0.15s;
+    }
+    .ai-chat-send-btn:hover { background: #4338ca; }
+    .ai-chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .ai-save-keys-btn {
+      width: 100%; padding: 0.4rem; border-radius: 8px; font-size: 0.82rem;
+      font-weight: 600; cursor: pointer; background: #4f46e5; color: #fff;
+      border: none; font-family: inherit;
+    }
+    .ai-save-keys-btn:hover { background: #4338ca; }
+
+    @media (max-width: 900px) {
+      .ai-chat-panel { width: 100%; }
+      .ai-label-text { display: none; }
+    }
+
   </style>
 </head>
 <body>
@@ -1899,6 +2046,7 @@
       </div>
       <button class="filter-clear-btn" onclick="clearAllFilters()" title="Clear all interactive filters" style="margin-left:0.5rem;">✕ Clear Filters</button>
       <button class="filter-clear-btn" onclick="openCompareModal()" title="Compare two groups of accounts" style="margin-left:0.5rem;">⚖ Compare</button>
+      <button class="filter-clear-btn" onclick="toggleAiChatPanel()" title="AI-powered insights" style="margin-left:0.5rem;">💬 <span class="ai-label-text">AI Insights</span></button>
 
       <!-- Actions dropdown -->
       <div class="actions-wrapper">
@@ -1929,6 +2077,78 @@
     </div>
     <div class="header-subtitle" id="headerSubtitle">Loading...</div>
   </header>
+
+  <!-- AI Chat Panel Overlay -->
+  <div class="ai-chat-overlay" id="aiChatOverlay" onclick="closeAiChatPanel()"></div>
+
+  <!-- AI Chat Panel -->
+  <div class="ai-chat-panel" id="aiChatPanel">
+    <!-- Panel Header -->
+    <div class="ai-chat-panel-header">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span style="font-size:1.1rem;">💬</span>
+        <span style="font-weight:700;font-size:1rem;color:#1f2937;">AI Insights</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.3rem;">
+        <button class="btn-icon" onclick="toggleAiChatSettings()" title="API key settings">⚙</button>
+        <button class="btn-icon" onclick="clearAiChat()" title="Clear chat history">🗑</button>
+        <button class="btn-icon" onclick="closeAiChatPanel()" title="Close panel" style="font-size:1.3rem;">&times;</button>
+      </div>
+    </div>
+
+    <!-- Settings (collapsible) -->
+    <div class="ai-chat-settings" id="aiChatSettings">
+      <label>Provider</label>
+      <select id="aiProvider" onchange="onAiProviderChange()">
+        <option value="openai">OpenAI</option>
+        <option value="anthropic">Anthropic</option>
+      </select>
+      <label>Model</label>
+      <select id="aiModel" onchange="onAiModelChange()"></select>
+      <label>OpenAI API Key</label>
+      <input type="password" id="openaiApiKey" placeholder="sk-...">
+      <label>Anthropic API Key</label>
+      <input type="password" id="anthropicApiKey" placeholder="sk-ant-...">
+      <button class="ai-save-keys-btn" onclick="saveAiKeys()">Save Keys</button>
+      <div id="aiKeyStatus" style="font-size:0.75rem;color:#6b7280;margin-top:0.4rem;text-align:center;"></div>
+    </div>
+
+    <!-- Provider/Model bar (always visible) -->
+    <div class="ai-chat-provider-bar">
+      <span id="aiProviderLabel">OpenAI</span>
+      <span style="color:#d1d5db;">/</span>
+      <span id="aiModelLabel">GPT-4o</span>
+      <span style="margin-left:auto;" id="aiKeyIndicator">🔒 No key</span>
+    </div>
+
+    <!-- Messages -->
+    <div class="ai-chat-messages" id="aiChatMessages">
+      <div id="aiQuickPrompts">
+        <div class="ai-chat-welcome">
+          <div style="font-size:1.5rem;margin-bottom:0.5rem;">💬</div>
+          <div style="font-weight:600;color:#1f2937;margin-bottom:0.25rem;">Ask about your data</div>
+          <div style="font-size:0.85rem;color:#6b7280;margin-bottom:1rem;">Get AI-powered insights from your survey data. Try one of these:</div>
+        </div>
+        <button class="ai-quick-chip" onclick="sendQuickPrompt(this)">Summarize the current AI adoption landscape</button>
+        <button class="ai-quick-chip" onclick="sendQuickPrompt(this)">Which accounts need the most attention?</button>
+        <button class="ai-quick-chip" onclick="sendQuickPrompt(this)">What are the key barriers to AI adoption?</button>
+        <button class="ai-quick-chip" onclick="sendQuickPrompt(this)">Compare adoption stages across account types</button>
+        <button class="ai-quick-chip" onclick="sendQuickPrompt(this)">Recommend next steps for scaling AI</button>
+        <button class="ai-quick-chip" onclick="sendQuickPrompt(this)">Which roles have the lowest AI workflow maturity?</button>
+        <button class="ai-quick-chip" onclick="sendQuickPrompt(this)">What SDLC phases have the most AI coverage gaps?</button>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="ai-chat-input-area">
+      <div style="display:flex;gap:0.5rem;align-items:flex-end;">
+        <textarea id="aiChatInput" rows="1" placeholder="Ask about your survey data..."
+                  onkeydown="handleAiChatKeydown(event)"
+                  oninput="autoResizeAiInput(this)"></textarea>
+        <button class="ai-chat-send-btn" id="aiChatSendBtn" onclick="sendAiMessage()" title="Send message">▶</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Loading State -->
   <div id="loadingState" class="loading-overlay">
@@ -2753,6 +2973,34 @@
   let currentWfmPosition = 0.5; // 0-1 position for WFM progress bar
   let tableSortColumn = 'account'; // default sort column
   let tableSortDirection = 'asc';  // 'asc' or 'desc'
+
+  // ── AI Chat State ──
+  let aiChatOpen = false;
+  let aiChatHistory = [];  // { role: 'user'|'assistant', content: string }
+  let aiChatLoading = false;
+
+  const AI_PROVIDERS = {
+    openai: {
+      label: 'OpenAI',
+      models: [
+        { id: 'gpt-4o', label: 'GPT-4o' },
+        { id: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+        { id: 'gpt-4.1', label: 'GPT-4.1' },
+        { id: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' }
+      ],
+      keyStorageKey: 'ai_dashboard_openai_key',
+      endpoint: 'https://api.openai.com/v1/chat/completions'
+    },
+    anthropic: {
+      label: 'Anthropic',
+      models: [
+        { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
+        { id: 'claude-haiku-35-20241022', label: 'Claude Haiku 3.5' }
+      ],
+      keyStorageKey: 'ai_dashboard_anthropic_key',
+      endpoint: 'https://api.anthropic.com/v1/messages'
+    }
+  };
 
   // ── Comparison Mode State ──
   let comparisonMode = false;
@@ -6518,6 +6766,455 @@
   }
 
   // ═══════════════════════════════════════════
+  // AI CHAT PANEL
+  // ═══════════════════════════════════════════
+
+  function toggleAiChatPanel() { aiChatOpen ? closeAiChatPanel() : openAiChatPanel(); }
+
+  function openAiChatPanel() {
+    aiChatOpen = true;
+    document.getElementById('aiChatPanel').classList.add('open');
+    document.getElementById('aiChatOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('aiChatInput').focus(), 300);
+  }
+
+  function closeAiChatPanel() {
+    aiChatOpen = false;
+    document.getElementById('aiChatPanel').classList.remove('open');
+    document.getElementById('aiChatOverlay').classList.remove('open');
+  }
+
+  function toggleAiChatSettings() {
+    document.getElementById('aiChatSettings').classList.toggle('open');
+  }
+
+  function loadAiKeys() {
+    const openaiKey = localStorage.getItem(AI_PROVIDERS.openai.keyStorageKey) || '';
+    const anthropicKey = localStorage.getItem(AI_PROVIDERS.anthropic.keyStorageKey) || '';
+    document.getElementById('openaiApiKey').value = openaiKey;
+    document.getElementById('anthropicApiKey').value = anthropicKey;
+
+    const savedProvider = localStorage.getItem('ai_dashboard_provider') || 'openai';
+    const savedModel = localStorage.getItem('ai_dashboard_model') || '';
+    document.getElementById('aiProvider').value = savedProvider;
+    populateAiModels(savedProvider, savedModel);
+    updateAiKeyIndicator();
+  }
+
+  function saveAiKeys() {
+    const openaiKey = document.getElementById('openaiApiKey').value.trim();
+    const anthropicKey = document.getElementById('anthropicApiKey').value.trim();
+
+    if (openaiKey) localStorage.setItem(AI_PROVIDERS.openai.keyStorageKey, openaiKey);
+    else localStorage.removeItem(AI_PROVIDERS.openai.keyStorageKey);
+
+    if (anthropicKey) localStorage.setItem(AI_PROVIDERS.anthropic.keyStorageKey, anthropicKey);
+    else localStorage.removeItem(AI_PROVIDERS.anthropic.keyStorageKey);
+
+    localStorage.setItem('ai_dashboard_provider', document.getElementById('aiProvider').value);
+    localStorage.setItem('ai_dashboard_model', document.getElementById('aiModel').value);
+
+    updateAiKeyIndicator();
+    const status = document.getElementById('aiKeyStatus');
+    status.textContent = '✓ Keys saved!';
+    status.style.color = '#10b981';
+    setTimeout(() => { status.textContent = ''; }, 2000);
+  }
+
+  function onAiProviderChange() {
+    const provider = document.getElementById('aiProvider').value;
+    populateAiModels(provider, '');
+    localStorage.setItem('ai_dashboard_provider', provider);
+    updateAiKeyIndicator();
+  }
+
+  function onAiModelChange() {
+    const provider = document.getElementById('aiProvider').value;
+    const model = document.getElementById('aiModel').value;
+    localStorage.setItem('ai_dashboard_model', model);
+    const models = AI_PROVIDERS[provider]?.models || [];
+    document.getElementById('aiModelLabel').textContent = models.find(m => m.id === model)?.label || model;
+  }
+
+  function populateAiModels(provider, selectedModel) {
+    const models = AI_PROVIDERS[provider]?.models || [];
+    const select = document.getElementById('aiModel');
+    select.innerHTML = models.map(m =>
+      `<option value="${m.id}"${m.id === selectedModel ? ' selected' : ''}>${m.label}</option>`
+    ).join('');
+    if (!selectedModel && models.length > 0) select.value = models[0].id;
+
+    document.getElementById('aiProviderLabel').textContent = AI_PROVIDERS[provider]?.label || provider;
+    document.getElementById('aiModelLabel').textContent = models.find(m => m.id === select.value)?.label || select.value;
+  }
+
+  function updateAiKeyIndicator() {
+    const provider = document.getElementById('aiProvider').value;
+    const keyStorageKey = AI_PROVIDERS[provider]?.keyStorageKey;
+    const hasKey = !!localStorage.getItem(keyStorageKey);
+    document.getElementById('aiKeyIndicator').innerHTML = hasKey
+      ? '<span style="color:#10b981;">🔑 Key set</span>'
+      : '<span style="color:#f59e0b;">🔒 No key</span>';
+  }
+
+  // ── Data Context Builder ──
+  function buildDataContext() {
+    const surveys = getFilteredSurveys();
+    const allSurveys = getAllFilteredSurveys();
+    const yearVal = document.getElementById('filterYear').value;
+    const quarterVal = document.getElementById('filterQuarter').value;
+
+    let ctx = '=== DASHBOARD DATA CONTEXT ===\n\n';
+
+    // 1. Filter state
+    ctx += '## Current Filters\n';
+    ctx += `Year: ${yearVal === 'all' ? 'All' : yearVal}\n`;
+    ctx += `Quarter: ${quarterVal === 'all' ? 'All' : 'Q' + quarterVal}\n`;
+    ctx += `Total surveys (base): ${allSurveys.length}\n`;
+    ctx += `Filtered surveys shown: ${surveys.length}\n`;
+    if (activeMaturityFilter) ctx += `Maturity filter: ${MATURITY_LABELS[activeMaturityFilter]}\n`;
+    if (selectedAccounts.size > 0) ctx += `Account filter: ${[...selectedAccounts].join(', ')}\n`;
+    if (selectedDeliveryManagers.size > 0) ctx += `DM filter: ${[...selectedDeliveryManagers].join(', ')}\n`;
+    if (activeLimitingFactorFilter) ctx += `Limiting factor filter: ${LIMITING_FACTOR_LABELS[activeLimitingFactorFilter]}\n`;
+    if (activeWfmStageFilter !== null) ctx += `WFM stage filter: Stage ${activeWfmStageFilter}\n`;
+    if (activeAiToolFilter) ctx += `AI tool filter: ${AI_TOOL_LABELS[activeAiToolFilter] || activeAiToolFilter}\n`;
+    if (activeAiChallengeFilter) ctx += `AI challenge filter: ${AI_CHALLENGE_LABELS[activeAiChallengeFilter]}\n`;
+    ctx += '\n';
+
+    // 2. Adoption stage distribution
+    ctx += '## AI Adoption Stage Distribution\n';
+    const matCounts = {};
+    MATURITY_ORDER.forEach(k => matCounts[k] = 0);
+    surveys.forEach(s => {
+      const val = s.data?.clientAILandscape?.maturity?.value;
+      if (val && matCounts[val] !== undefined) matCounts[val]++;
+    });
+    MATURITY_ORDER.forEach(k => {
+      const pct = surveys.length > 0 ? Math.round((matCounts[k] / surveys.length) * 100) : 0;
+      ctx += `${MATURITY_LABELS[k]}: ${matCounts[k]} (${pct}%)\n`;
+    });
+    ctx += '\n';
+
+    // 3. WFM by role
+    ctx += '## Workflow Maturity by Role (Average Stage 0-5)\n';
+    ROLE_ORDER.forEach(role => {
+      const stages = [];
+      surveys.forEach(s => {
+        const st = s.data?.workflowMaturity?.[role]?.stage;
+        if (typeof st === 'number') stages.push(st);
+      });
+      const avg = stages.length > 0 ? (stages.reduce((a, b) => a + b, 0) / stages.length).toFixed(1) : 'N/A';
+      ctx += `${ROLE_FULL_NAMES[role]}: avg stage ${avg} (${stages.length} responses)\n`;
+    });
+    ctx += '\n';
+
+    // 4. Limiting factors
+    ctx += '## Limiting Factors (ranked #1 or #2)\n';
+    const lfCounts = countLimitingFactors(surveys);
+    LIMITING_FACTOR_ORDER.forEach(k => {
+      const pct = surveys.length > 0 ? Math.round((lfCounts[k] / surveys.length) * 100) : 0;
+      ctx += `${LIMITING_FACTOR_LABELS[k]}: ${lfCounts[k]} accounts (${pct}%)\n`;
+    });
+    ctx += '\n';
+
+    // 5. AI challenges
+    ctx += '## AI Challenges (ranked #1 or #2)\n';
+    const chCounts = countAiChallenges(surveys);
+    AI_CHALLENGE_ORDER.forEach(k => {
+      const pct = surveys.length > 0 ? Math.round((chCounts[k] / surveys.length) * 100) : 0;
+      ctx += `${AI_CHALLENGE_LABELS[k]}: ${chCounts[k]} accounts (${pct}%)\n`;
+    });
+    ctx += '\n';
+
+    // 6. AI tools
+    ctx += '## AI Tools Usage\n';
+    const toolData = countAiTools(surveys);
+    AI_TOOL_ORDER.filter(k => toolData.toolCounts[k] > 0)
+      .sort((a, b) => toolData.toolCounts[b] - toolData.toolCounts[a])
+      .forEach(k => {
+        const pct = surveys.length > 0 ? Math.round((toolData.toolCounts[k] / surveys.length) * 100) : 0;
+        ctx += `${AI_TOOL_LABELS[k]}: ${toolData.toolCounts[k]} accounts (${pct}%)\n`;
+      });
+    if (toolData.customCount > 0) {
+      const pct = surveys.length > 0 ? Math.round((toolData.customCount / surveys.length) * 100) : 0;
+      ctx += `Other/Custom: ${toolData.customCount} accounts (${pct}%)\n`;
+    }
+    ctx += '\n';
+
+    // 7. SDLC coverage
+    ctx += '## SDLC AI Coverage\n';
+    SDLC_PHASES.forEach(phase => {
+      let using = 0, notUsing = 0;
+      surveys.forEach(s => {
+        const val = s.data?.sdlcAiUsage?.[phase.key]?.value;
+        if (val === 'yes') using++;
+        else if (val === 'no') notUsing++;
+      });
+      const total = using + notUsing;
+      const pct = total > 0 ? Math.round((using / total) * 100) : 0;
+      ctx += `${phase.label}: ${pct}% using AI (${using} of ${total})\n`;
+    });
+    ctx += '\n';
+
+    // 8. AI Champion
+    let champYes = 0;
+    surveys.forEach(s => { if (s.data?.teamRoles?.aiChampion?.value === 'yes') champYes++; });
+    const champPct = surveys.length > 0 ? Math.round((champYes / surveys.length) * 100) : 0;
+    ctx += `## AI Champion\n${champYes} of ${surveys.length} accounts have a designated AI champion (${champPct}%)\n\n`;
+
+    // 9. Per-account detail (only if manageable)
+    if (surveys.length > 0 && surveys.length <= 30) {
+      ctx += '## Per-Account Detail\n';
+      surveys.forEach(s => {
+        const maturity = s.data?.clientAILandscape?.maturity?.value || 'unknown';
+        const wfm = s.data?.workflowMaturity;
+        const wfmStages = [];
+        ROLE_ORDER.forEach(role => {
+          const st = wfm?.[role]?.stage;
+          if (typeof st === 'number') wfmStages.push(st);
+        });
+        const avgWfm = wfmStages.length > 0 ? (wfmStages.reduce((a, b) => a + b, 0) / wfmStages.length).toFixed(1) : 'N/A';
+        const champion = s.data?.teamRoles?.aiChampion?.value === 'yes' ? 'Yes' : 'No';
+        const type = ACCOUNT_TYPE_LABELS[s.account_type] || s.account_type;
+        ctx += `- ${s.account_name} | Type: ${type} | Maturity: ${MATURITY_LABELS[maturity] || maturity} | WFM avg: ${avgWfm} | Champion: ${champion}`;
+        if (s.delivery_manager) ctx += ` | DM: ${s.delivery_manager}`;
+        ctx += '\n';
+      });
+      ctx += '\n';
+    } else if (surveys.length > 30) {
+      ctx += `## Per-Account Detail\n(${surveys.length} accounts — showing summary only. Ask about specific accounts for detail.)\n\n`;
+    }
+
+    return ctx;
+  }
+
+  // ── System Prompt ──
+  function buildSystemPrompt() {
+    return `You are an AI adoption analytics assistant for a delivery management team. You analyze survey data from client accounts to provide insights about AI adoption maturity, workflow automation, tool usage, and team readiness.
+
+You are embedded in the "AI Adoption Dashboard" — a tool used by delivery managers and AI practice leads to track AI adoption progress across their client portfolio. Each survey represents one client account's AI adoption assessment.
+
+Data dimensions available:
+- AI Adoption Stage: Not Started, Exploring, Piloting, Scaling, Optimizing
+- Workflow Maturity (WFM): Stages 0-5 per role (No AI → Individual AI → Standardized AI → Workflow AI → Integrated AI → Semi-Agentic AI)
+- Team Roles: Project Manager, Business Analyst, Solutions Architect, Developer, QA Manual, QA Automation, Data Engineer, DevOps, UI/UX Designer
+- AI Tools: GitHub Copilot, ChatGPT, Claude, Claude Code, Cursor, Windsurf, Gemini, Amazon Q/Kiro, Microsoft Copilot, IntelliJ AI, Rovo, v0, Bolt, Lovable, Perplexity
+- Limiting Factors: Lack of Time, Lack of Knowledge, Unclear Value, Client Not Ready, Lack of Access, Other
+- AI Challenges: Unclear ROI, Skills Gap, Data Issues, Security/Compliance, Budget/Buy-in, Infrastructure, Don't Know
+- SDLC Coverage: Requirements, Development, Documentation, PM, Design & UX, Data & Analytics
+- AI Champion: Whether the account has a designated AI champion (yes/no)
+
+Instructions:
+- Provide specific, data-driven answers. Reference account names, percentages, and distributions.
+- When asked for recommendations, be practical and actionable.
+- Highlight patterns, outliers, and potential risks.
+- If the data is limited or ambiguous, say so.
+- Format responses with markdown: use **bold** for emphasis, bullet lists for clarity, and keep paragraphs concise.
+- You are speaking to a delivery/AI adoption manager. Use professional but approachable language.`;
+  }
+
+  // ── API Callers ──
+  async function callOpenAI(messages, apiKey, model) {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({ model, messages, max_tokens: 2048, temperature: 0.7 })
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `OpenAI API error: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || 'No response generated.';
+  }
+
+  async function callAnthropic(messages, apiKey, model) {
+    const systemContent = messages.filter(m => m.role === 'system').map(m => m.content).join('\n\n');
+    const conversationMessages = messages.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: m.content }));
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model, max_tokens: 2048, system: systemContent, messages: conversationMessages })
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Anthropic API error: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.content?.[0]?.text || 'No response generated.';
+  }
+
+  // ── Message Handling ──
+  async function sendAiMessage(overrideText) {
+    if (aiChatLoading) return;
+
+    const input = document.getElementById('aiChatInput');
+    const text = overrideText || input.value.trim();
+    if (!text) return;
+
+    const provider = document.getElementById('aiProvider').value;
+    const model = document.getElementById('aiModel').value;
+    const keyStorageKey = AI_PROVIDERS[provider]?.keyStorageKey;
+    const apiKey = localStorage.getItem(keyStorageKey);
+
+    if (!apiKey) {
+      appendAiMessage('error', 'Please set your API key in the settings (click the ⚙ gear icon above).');
+      document.getElementById('aiChatSettings').classList.add('open');
+      return;
+    }
+
+    // Clear input and hide quick prompts
+    if (!overrideText) input.value = '';
+    input.style.height = 'auto';
+    const quickEl = document.getElementById('aiQuickPrompts');
+    if (quickEl) quickEl.style.display = 'none';
+
+    // Add user message
+    aiChatHistory.push({ role: 'user', content: text });
+    appendAiMessage('user', text);
+
+    // Show loading
+    aiChatLoading = true;
+    updateSendButtonState();
+    const loadingEl = appendAiLoading();
+
+    try {
+      const dataContext = buildDataContext();
+      const systemPrompt = buildSystemPrompt();
+
+      const messages = [{ role: 'system', content: systemPrompt + '\n\n' + dataContext }];
+
+      // Include conversation history (last 20 messages = ~10 exchanges)
+      const recentHistory = aiChatHistory.slice(-20);
+      recentHistory.forEach(msg => messages.push({ role: msg.role, content: msg.content }));
+
+      let response;
+      if (provider === 'openai') {
+        response = await callOpenAI(messages, apiKey, model);
+      } else {
+        response = await callAnthropic(messages, apiKey, model);
+      }
+
+      loadingEl.remove();
+      aiChatHistory.push({ role: 'assistant', content: response });
+      appendAiMessage('assistant', response);
+    } catch (err) {
+      loadingEl.remove();
+      appendAiMessage('error', `Error: ${err.message}`);
+    } finally {
+      aiChatLoading = false;
+      updateSendButtonState();
+    }
+  }
+
+  function sendQuickPrompt(el) {
+    sendAiMessage(el.textContent);
+  }
+
+  function appendAiMessage(role, content) {
+    const container = document.getElementById('aiChatMessages');
+    const div = document.createElement('div');
+    div.className = `ai-chat-message ${role}`;
+
+    if (role === 'assistant') {
+      div.innerHTML = `<div class="markdown-content">${renderMarkdown(content)}</div>`;
+    } else if (role === 'error') {
+      div.innerHTML = `<div style="color:#ef4444;font-size:0.85rem;">${escapeHtml(content)}</div>`;
+    } else {
+      div.textContent = content;
+    }
+
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return div;
+  }
+
+  function appendAiLoading() {
+    const container = document.getElementById('aiChatMessages');
+    const div = document.createElement('div');
+    div.className = 'ai-chat-message assistant ai-chat-loading';
+    div.innerHTML = '<div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return div;
+  }
+
+  function updateSendButtonState() {
+    const btn = document.getElementById('aiChatSendBtn');
+    btn.disabled = aiChatLoading;
+  }
+
+  function clearAiChat() {
+    aiChatHistory = [];
+    const container = document.getElementById('aiChatMessages');
+    // Save quick prompts reference, clear, re-add
+    const quickEl = document.getElementById('aiQuickPrompts');
+    container.innerHTML = '';
+    if (quickEl) {
+      quickEl.style.display = '';
+      container.appendChild(quickEl);
+    }
+  }
+
+  // ── Lightweight Markdown Renderer ──
+  function renderMarkdown(text) {
+    if (!text) return '';
+    let html = escapeHtml(text);
+
+    // Bold: **text**
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic: *text* (but not inside bold)
+    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+    // Inline code: `code`
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Headers
+    html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+    // Unordered lists
+    html = html.replace(/(^|\n)(- .+(?:\n- .+)*)/g, function(match, pre, listBlock) {
+      const items = listBlock.split('\n').map(line => '<li>' + line.replace(/^- /, '') + '</li>').join('');
+      return pre + '<ul>' + items + '</ul>';
+    });
+    // Ordered lists
+    html = html.replace(/(^|\n)(\d+\. .+(?:\n\d+\. .+)*)/g, function(match, pre, listBlock) {
+      const items = listBlock.split('\n').map(line => '<li>' + line.replace(/^\d+\. /, '') + '</li>').join('');
+      return pre + '<ol>' + items + '</ol>';
+    });
+    // Paragraphs
+    html = html.replace(/\n\n/g, '</p><p>');
+    html = html.replace(/\n/g, '<br>');
+    return '<p>' + html + '</p>';
+  }
+
+  // ── Utilities ──
+  function handleAiChatKeydown(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendAiMessage();
+    }
+  }
+
+  function autoResizeAiInput(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function initAiChat() {
+    loadAiKeys();
+    // Close on Escape
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && aiChatOpen) closeAiChatPanel();
+    });
+  }
+
+  // ═══════════════════════════════════════════
   // INIT
   // ═══════════════════════════════════════════
   async function init() {
@@ -6531,6 +7228,7 @@
       document.getElementById('mainContent').style.display = 'block';
 
       refreshDashboard();
+      initAiChat();
     } catch (e) {
       document.getElementById('loadingState').innerHTML = `
         <div style="color:#ef4444;text-align:center;padding:2rem;">
