@@ -356,6 +356,26 @@
       padding: 1.5rem 2rem;
     }
 
+    /* Two-column layout for landscape sections */
+    .landscape-columns {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+    .landscape-columns > .widget-section {
+      flex: 1;
+      min-width: 0;
+      margin-bottom: 0;
+    }
+    @media (max-width: 1100px) {
+      .landscape-columns {
+        flex-direction: column;
+      }
+      .landscape-columns > .widget-section {
+        margin-bottom: 2rem;
+      }
+    }
+
     /* ═══════════════════════════════════════════
        WIDGET CARD
        ═══════════════════════════════════════════ */
@@ -1920,6 +1940,9 @@
         page-break-inside: avoid;
       }
 
+      /* Landscape columns — single column in print */
+      .landscape-columns { flex-direction: column; gap: 0; }
+
       /* Section breaks */
       .widget-section { break-before: auto; margin-bottom: 0; }
       .widget-section + .widget-section { break-before: page; }
@@ -2486,6 +2509,9 @@
         <button onclick="exitComparison()">✕ Exit Comparison</button>
       </div>
 
+      <!-- Two-column landscape layout -->
+      <div class="landscape-columns">
+
       <!-- Section: Client AI Landscape -->
       <div class="widget-section collapsed">
         <div class="widget-section-title" onclick="toggleSection(this)">
@@ -2702,6 +2728,8 @@
 
         </div> <!-- end widget-section-content -->
       </div> <!-- end Account AI Landscape section -->
+
+      </div> <!-- end landscape-columns -->
 
       <!-- Section: Surveys -->
       <div class="widget-section collapsed">
