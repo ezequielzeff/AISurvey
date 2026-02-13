@@ -6186,14 +6186,19 @@
 
     const labels = platformKeys.map(k => CLOUD_PLATFORM_LABELS[k] || k);
 
-    // Per-bar colors: dim bars not matching the active filter
+    // Per-bar colors: dim bars not matching the active chart-click filter or top-bar dropdown
+    const selectedDropdown = getSelectedCloudPlatforms();
+    const hasDropdownFilter = selectedDropdown.length > 0 && selectedDropdown.length < CLOUD_PLATFORM_ORDER.length;
     const bgColors = platformKeys.map(k => {
       if (activeCloudPlatformFilter && activeCloudPlatformFilter !== k) return CLOUD_PLATFORM_COLOR + '30';
+      if (hasDropdownFilter && !selectedDropdown.includes(k)) return CLOUD_PLATFORM_COLOR + '30';
       return CLOUD_PLATFORM_COLOR;
     });
     const yTickColors = platformKeys.map(k => {
       if (activeCloudPlatformFilter && activeCloudPlatformFilter !== k) return '#d1d5db';
       if (activeCloudPlatformFilter === k) return '#1f2937';
+      if (hasDropdownFilter && !selectedDropdown.includes(k)) return '#d1d5db';
+      if (hasDropdownFilter && selectedDropdown.includes(k)) return '#1f2937';
       return '#374151';
     });
 
@@ -6247,7 +6252,7 @@
             ticks: {
               font: function(context) {
                 const k = platformKeys[context.index];
-                const isActive = activeCloudPlatformFilter === k;
+                const isActive = activeCloudPlatformFilter === k || (hasDropdownFilter && selectedDropdown.includes(k));
                 return { size: 12, weight: isActive ? '700' : '500' };
               },
               color: yTickColors
