@@ -7532,12 +7532,18 @@
     const collapsedSections = [...document.querySelectorAll('.widget-section.collapsed')];
     collapsedSections.forEach(s => s.classList.remove('collapsed'));
 
-    // 2. Force all charts to resize to their now-visible containers
+    // 2. Force all charts to resize and re-render WITHOUT animation
+    //    Charts were created in collapsed (display:none) containers so they have 0×0 dimensions.
+    //    resize() recalculates dimensions, update('none') renders the final frame instantly
+    //    (skipping Chart.js default 1000ms animation that caused blank captures).
     Object.values(charts).forEach(chart => {
-      if (chart && chart.canvas) chart.resize();
+      if (chart && chart.canvas) {
+        chart.resize();
+        chart.update('none');
+      }
     });
 
-    // 3. Wait for browser to lay out + paint the resized charts, then capture
+    // 3. Wait one frame for the browser to paint the fully-rendered charts
     requestAnimationFrame(() => { setTimeout(() => {
       const canvasMap = [];
       Object.entries(charts).forEach(([id, chart]) => {
@@ -7565,7 +7571,7 @@
         img.remove();
       });
       collapsedSections.forEach(s => s.classList.add('collapsed'));
-    }, 100); });  // 100ms delay ensures paint is complete
+    }, 200); });
   }
 
   async function updateAccountType(id, newType) {
