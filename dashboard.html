@@ -5034,20 +5034,20 @@
     // Account AI Agentic Workflow — callout reflects filters, circles show all with dimming
     renderWorkflowMaturityWidget(surveys, allSurveys);
 
-    // Limiting Factors Widget — shows all factors (dimmed/highlighted via filter state)
-    renderLimitingFactorsWidget(allSurveys);
+    // Limiting Factors Widget — reflects active filters, dimmed/highlighted via filter state
+    renderLimitingFactorsWidget(surveys);
 
-    // AI Challenges Widget — shows all challenges (dimmed/highlighted via filter state)
-    renderAiChallengesWidget(allSurveys);
+    // AI Challenges Widget — reflects active filters, dimmed/highlighted via filter state
+    renderAiChallengesWidget(surveys);
 
-    // AI Usage Widget — shows all usage types (dimmed/highlighted via filter state)
-    renderAiUsageWidget(allSurveys);
+    // AI Usage Widget — reflects active filters, dimmed/highlighted via filter state
+    renderAiUsageWidget(surveys);
 
     // Collapsed section summary (must run after renderAdoptionStageWidget sets currentMedianStage)
     updateSectionSummary(surveys);
 
-    // AI Tools Usage Widget — shows all tools (dimmed/highlighted via filter state)
-    renderAiToolsWidget(allSurveys);
+    // AI Tools Usage Widget — reflects active filters, dimmed/highlighted via filter state
+    renderAiToolsWidget(surveys);
     renderRoleToolMatrixWidget(surveys);
     renderCloudPlatformsWidget(surveys);
     renderSdlcCoverageWidget(surveys);
