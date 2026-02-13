@@ -3960,7 +3960,9 @@
           req.onsuccess = () => resolve(req.result ? new Uint8Array(req.result) : null);
           req.onerror = () => reject(req.error);
         });
-        if (!data) return null;
+        idb.close();
+        if (!data) { console.warn('No SQLite data found in IndexedDB'); return null; }
+        console.log(`Loaded SQLite DB from IndexedDB: ${data.byteLength} bytes`);
         const SQL = await initSqlJs({
           locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
         });
@@ -3975,7 +3977,12 @@
       const db = await loadDashboardDB();
       if (!db) return [];
       try {
-        const result = db.exec('SELECT id, account_name, exported_at, year, quarter, raw_json FROM surveys ORDER BY exported_at DESC');
+        // First check count
+        const countResult = db.exec('SELECT COUNT(*) FROM surveys');
+        const count = countResult.length ? countResult[0].values[0][0] : 0;
+        console.log(`Dashboard DB contains ${count} survey(s)`);
+
+        const result = db.exec('SELECT id, account_name, exported_at, year, quarter, raw_json FROM surveys ORDER BY account_name ASC, exported_at DESC');
         if (!result.length) return [];
         return result[0].values.map(row => ({
           id: row[0],
@@ -4260,8 +4267,12 @@
 
       const surveys = await getDashboardSurveys();
 
+      // Update header with count
+      const headerEl = overlay.querySelector('.restore-modal-header h2');
+      headerEl.textContent = surveys.length > 0 ? `Saved Surveys (${surveys.length})` : 'Saved Surveys';
+
       if (surveys.length === 0) {
-        list.innerHTML = '<div class="restore-empty">No surveys found.<br>Import surveys in the Dashboard first, or use "From ZIP File" to restore directly.</div>';
+        list.innerHTML = '<div class="restore-empty">No surveys found in the dashboard database.<br>Import surveys in the Dashboard first, or use "From ZIP File" to restore directly.</div>';
       } else {
         list.innerHTML = surveys.map(s => {
           const d = new Date(s.exported_at);
