@@ -2634,6 +2634,18 @@
         <div class="widget-legend" id="aiToolsLegend"></div>
       </div>
 
+      <!-- Widget: AI Tools by Role -->
+      <div class="widget-card" id="roleToolMatrixWidget">
+        <div class="widget-header">
+          <div class="widget-title">AI Tools by Role</div>
+          <div class="widget-subtitle">Which roles are using which AI tools across the portfolio</div>
+          <div class="widget-question">Who uses which AI tools?</div>
+        </div>
+        <div class="role-heatmap-wrapper">
+          <div id="roleToolMatrixContent"><!-- Populated by JS --></div>
+        </div>
+      </div>
+
       <!-- Widget: Cloud Platforms -->
       <div class="widget-card" id="cloudPlatformsWidget">
         <div class="widget-header">
@@ -4906,6 +4918,7 @@
     renderWorkflowMaturityComparison(surveysA, surveysB, allSurveys, nameA, nameB);
     renderLimitingFactorsComparison(surveysA, surveysB, nameA, nameB);
     renderAiToolsComparison(surveysA, surveysB, nameA, nameB);
+    renderRoleToolMatrixComparison(surveysA, surveysB, nameA, nameB);
     renderCloudPlatformsComparison(surveysA, surveysB, nameA, nameB);
     renderSdlcCoverageComparison(surveysA, surveysB, nameA, nameB);
     renderAiAdoptionByRoleComparison(surveysA, surveysB, nameA, nameB);
@@ -5017,6 +5030,7 @@
 
     // AI Tools Usage Widget — shows all tools (dimmed/highlighted via filter state)
     renderAiToolsWidget(allSurveys);
+    renderRoleToolMatrixWidget(surveys);
     renderCloudPlatformsWidget(allSurveys);
     renderSdlcCoverageWidget(surveys);
     renderAiAdoptionByRoleWidget(surveys);
@@ -7175,6 +7189,195 @@
         <tbody>${bodyHtml}</tbody>
       </table>
     `;
+  }
+
+  // ═══════════════════════════════════════════
+  // AI TOOLS BY ROLE WIDGET (Role × Tool Heatmap)
+  // ═══════════════════════════════════════════
+  function renderRoleToolMatrixWidget(surveys) {
+    const container = document.getElementById('roleToolMatrixContent');
+    if (!container) return;
+
+    if (surveys.length === 0) {
+      container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;">No survey data available</div>';
+      return;
+    }
+
+    // 1. Aggregate: count selected=true per role × tool across all surveys
+    const roleToolCounts = {};
+    let surveysWithData = 0;
+
+    ROLE_ORDER.forEach(role => {
+      roleToolCounts[role] = {};
+      AI_TOOL_ORDER.forEach(tool => { roleToolCounts[role][tool] = 0; });
+    });
+
+    surveys.forEach(s => {
+      const matrix = s.data?.roleToolMatrix;
+      if (!matrix) return;
+      surveysWithData++;
+      ROLE_ORDER.forEach(role => {
+        AI_TOOL_ORDER.forEach(tool => {
+          if (matrix[`${role}:${tool}`]?.selected) {
+            roleToolCounts[role][tool]++;
+          }
+        });
+      });
+    });
+
+    if (surveysWithData === 0) {
+      container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;">No role-tool matrix data available</div>';
+      return;
+    }
+
+    // 2. Compute percentages
+    const roleToolPcts = {};
+    ROLE_ORDER.forEach(role => {
+      roleToolPcts[role] = {};
+      AI_TOOL_ORDER.forEach(tool => {
+        roleToolPcts[role][tool] = Math.round((roleToolCounts[role][tool] / surveysWithData) * 100);
+      });
+    });
+
+    // 3. Filter tools: only include those with at least 1 usage, sorted by total descending
+    const toolTotals = {};
+    AI_TOOL_ORDER.forEach(tool => {
+      toolTotals[tool] = ROLE_ORDER.reduce((sum, role) => sum + roleToolCounts[role][tool], 0);
+    });
+    const activeTools = AI_TOOL_ORDER
+      .filter(tool => toolTotals[tool] > 0)
+      .sort((a, b) => toolTotals[b] - toolTotals[a]);
+
+    if (activeTools.length === 0) {
+      container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;">No tools selected for any role</div>';
+      return;
+    }
+
+    // 4. Find max percentage for heatmap intensity normalization
+    let maxPct = 0;
+    ROLE_ORDER.forEach(role => {
+      activeTools.forEach(tool => {
+        if (roleToolPcts[role][tool] > maxPct) maxPct = roleToolPcts[role][tool];
+      });
+    });
+    if (maxPct === 0) maxPct = 1;
+
+    // 5. Build column headers
+    let headerHtml = '<th class="rh-role-header" style="background:#1e3a5f;border:1px solid #2d4a6f;">&nbsp;</th>';
+    activeTools.forEach(tool => {
+      headerHtml += `<th><span class="rh-stage-name" style="white-space:nowrap;">${escapeHtml(AI_TOOL_LABELS[tool] || tool)}</span></th>`;
+    });
+
+    // 6. Build rows
+    let bodyHtml = '';
+    ROLE_ORDER.forEach(role => {
+      let rowHtml = `<td class="rh-role-header">
+        <span class="rh-role-abbr">${escapeHtml(ROLE_FULL_NAMES[role])}</span>
+      </td>`;
+
+      activeTools.forEach(tool => {
+        const pct = roleToolPcts[role][tool];
+        let bgStyle = '';
+        if (pct > 0) {
+          const intensity = 0.10 + (pct / maxPct) * 0.35;
+          const alphaHex = Math.round(intensity * 255).toString(16).padStart(2, '0');
+          bgStyle = `background: ${AI_TOOL_COLOR}${alphaHex};`;
+        }
+        const pctClass = pct === 0 ? 'rh-pct-circle rh-pct-zero' : 'rh-pct-circle';
+        rowHtml += `<td style="${bgStyle}"><span class="${pctClass}">${pct}%</span></td>`;
+      });
+
+      bodyHtml += `<tr>${rowHtml}</tr>`;
+    });
+
+    container.innerHTML = `
+      <table class="role-heatmap">
+        <thead><tr>${headerHtml}</tr></thead>
+        <tbody>${bodyHtml}</tbody>
+      </table>
+    `;
+  }
+
+  function renderRoleToolMatrixComparison(surveysA, surveysB, nameA, nameB) {
+    const container = document.getElementById('roleToolMatrixContent');
+    if (!container) return;
+
+    function computeRoleToolData(surveys) {
+      const roleToolCounts = {};
+      let surveysWithData = 0;
+      ROLE_ORDER.forEach(role => {
+        roleToolCounts[role] = {};
+        AI_TOOL_ORDER.forEach(tool => { roleToolCounts[role][tool] = 0; });
+      });
+      surveys.forEach(s => {
+        const matrix = s.data?.roleToolMatrix;
+        if (!matrix) return;
+        surveysWithData++;
+        ROLE_ORDER.forEach(role => {
+          AI_TOOL_ORDER.forEach(tool => {
+            if (matrix[`${role}:${tool}`]?.selected) roleToolCounts[role][tool]++;
+          });
+        });
+      });
+      const pcts = {};
+      ROLE_ORDER.forEach(role => {
+        pcts[role] = {};
+        AI_TOOL_ORDER.forEach(tool => {
+          pcts[role][tool] = surveysWithData > 0 ? Math.round((roleToolCounts[role][tool] / surveysWithData) * 100) : 0;
+        });
+      });
+      const toolTotals = {};
+      AI_TOOL_ORDER.forEach(tool => {
+        toolTotals[tool] = ROLE_ORDER.reduce((sum, role) => sum + roleToolCounts[role][tool], 0);
+      });
+      return { pcts, toolTotals };
+    }
+
+    const dataA = computeRoleToolData(surveysA);
+    const dataB = computeRoleToolData(surveysB);
+
+    // Union of active tools from both groups, sorted by combined total descending
+    const activeTools = AI_TOOL_ORDER
+      .filter(tool => (dataA.toolTotals[tool] || 0) > 0 || (dataB.toolTotals[tool] || 0) > 0)
+      .sort((a, b) => ((dataB.toolTotals[b] || 0) + (dataA.toolTotals[b] || 0))
+                     - ((dataB.toolTotals[a] || 0) + (dataA.toolTotals[a] || 0)));
+
+    if (activeTools.length === 0) {
+      container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;">No role-tool data available</div>';
+      return;
+    }
+
+    function renderHeatmapTable(pcts, groupName, color) {
+      let maxPct = 0;
+      ROLE_ORDER.forEach(role => activeTools.forEach(tool => {
+        if (pcts[role][tool] > maxPct) maxPct = pcts[role][tool];
+      }));
+
+      let html = `<div style="margin-bottom:1rem;">
+        <div style="font-size:0.8rem;font-weight:700;color:${color};margin-bottom:0.4rem;">${escapeHtml(groupName)}</div>
+        <table class="role-heatmap"><thead><tr><th class="rh-role-header"></th>`;
+      activeTools.forEach(tool => {
+        html += `<th><span class="rh-stage-name">${escapeHtml(AI_TOOL_LABELS[tool] || tool)}</span></th>`;
+      });
+      html += '</tr></thead><tbody>';
+      ROLE_ORDER.forEach(role => {
+        html += `<tr><td class="rh-role-header">${escapeHtml(ROLE_FULL_NAMES[role])}</td>`;
+        activeTools.forEach(tool => {
+          const pct = pcts[role][tool];
+          const intensity = maxPct > 0 ? pct / maxPct : 0;
+          const alpha = Math.round(intensity * 200 + 20).toString(16).padStart(2, '0');
+          const bg = pct > 0 ? (color + alpha) : '#f9fafb';
+          const textColor = intensity > 0.6 ? '#fff' : '#374151';
+          html += `<td><div class="rh-pct-circle ${pct === 0 ? 'rh-pct-zero' : ''}" style="background:${bg};color:${pct > 0 ? textColor : '#9ca3af'};">${pct}%</div></td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+      return html;
+    }
+
+    container.innerHTML = renderHeatmapTable(dataA.pcts, nameA, COMPARE_COLOR_A)
+                        + renderHeatmapTable(dataB.pcts, nameB, COMPARE_COLOR_B);
   }
 
   // ═══════════════════════════════════════════
