@@ -990,6 +990,15 @@
       width: 100%;
       height: 180px;
     }
+    .landscape-chart-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .landscape-chart-row .widget-card {
+      margin-bottom: 0;
+    }
     .ai-challenges-chart-container {
       position: relative;
       width: 100%;
@@ -1206,6 +1215,28 @@
     }
     .account-type-select:focus {
       border-color: #4f46e5;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+    }
+
+    .account-name-input {
+      padding: 0.2rem 0.4rem;
+      border: 1.5px solid transparent;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #1e293b;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .account-name-input:hover {
+      border-color: #e5e7eb;
+      background: #fff;
+    }
+    .account-name-input:focus {
+      border-color: #4f46e5;
+      background: #fff;
       box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
     }
 
@@ -1857,6 +1888,7 @@
        ═══════════════════════════════════════════ */
     @media (max-width: 900px) {
       .charts-grid { grid-template-columns: 1fr; }
+      .landscape-chart-row { grid-template-columns: 1fr; }
       .dashboard-content { padding: 1rem; }
       .dashboard-header { padding: 1rem; }
       .header-top { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
@@ -2533,30 +2565,33 @@
         </div>
       </div>
 
-      <!-- Widget: AI Challenges -->
-      <div class="widget-card" id="aiChallengesWidget">
-        <div class="widget-header">
-          <div class="widget-title">AI Challenges</div>
-          <div class="widget-subtitle">Top challenges clients face in AI adoption</div>
-          <div class="widget-question">What are the biggest AI challenges reported by clients?</div>
+      <!-- 2-column row: AI Usage (left) + AI Challenges (right) -->
+      <div class="landscape-chart-row">
+        <!-- Widget: AI Usage -->
+        <div class="widget-card" id="aiUsageWidget">
+          <div class="widget-header">
+            <div class="widget-title">Current AI Usage</div>
+            <div class="widget-subtitle">How clients are currently using AI</div>
+            <div class="widget-question">How is the client currently using AI? <a href="#" class="more-info-link" onclick="event.preventDefault();openAiUsageInfoModal();">More info</a></div>
+          </div>
+          <div class="ai-usage-chart-container">
+            <canvas id="chartAiUsage"></canvas>
+          </div>
+          <div class="widget-legend" id="aiUsageLegend"></div>
         </div>
-        <div class="ai-challenges-chart-container">
-          <canvas id="chartAiChallenges"></canvas>
-        </div>
-        <div class="widget-legend" id="aiChallengesLegend"></div>
-      </div>
 
-      <!-- Widget: AI Usage -->
-      <div class="widget-card" id="aiUsageWidget">
-        <div class="widget-header">
-          <div class="widget-title">Current AI Usage</div>
-          <div class="widget-subtitle">How clients are currently using AI</div>
-          <div class="widget-question">How is the client currently using AI? <a href="#" class="more-info-link" onclick="event.preventDefault();openAiUsageInfoModal();">More info</a></div>
+        <!-- Widget: AI Challenges -->
+        <div class="widget-card" id="aiChallengesWidget">
+          <div class="widget-header">
+            <div class="widget-title">AI Challenges</div>
+            <div class="widget-subtitle">Top challenges clients face in AI adoption</div>
+            <div class="widget-question">What are the biggest AI challenges reported by clients?</div>
+          </div>
+          <div class="ai-challenges-chart-container">
+            <canvas id="chartAiChallenges"></canvas>
+          </div>
+          <div class="widget-legend" id="aiChallengesLegend"></div>
         </div>
-        <div class="ai-usage-chart-container">
-          <canvas id="chartAiUsage"></canvas>
-        </div>
-        <div class="widget-legend" id="aiUsageLegend"></div>
       </div>
 
         </div> <!-- end widget-section-content -->
@@ -2638,7 +2673,7 @@
       <div class="widget-card" id="roleToolMatrixWidget">
         <div class="widget-header">
           <div class="widget-title">AI Tools by Role</div>
-          <div class="widget-subtitle">Which roles are using which AI tools across the portfolio</div>
+          <div class="widget-subtitle">AI Tools utilization per roles that are working with AI</div>
           <div class="widget-question">Who uses which AI tools?</div>
         </div>
         <div class="role-heatmap-wrapper">
@@ -7749,7 +7784,12 @@
         <td style="text-align:center;width:40px;" onclick="event.stopPropagation();">
           <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleAccountSelection('${escapedName}')" title="Select ${escapeHtml(s.account_name)}">
         </td>
-        <td><strong style="${isSelected ? 'color:#4f46e5;' : ''}">${escapeHtml(s.account_name)}</strong></td>
+        <td onclick="event.stopPropagation();">
+          <input type="text" class="account-name-input" value="${escapeHtml(s.account_name)}"
+            style="${isSelected ? 'color:#4f46e5;' : ''}"
+            onchange="updateAccountName(${s.id}, this.value.trim(), this)"
+            title="Click to edit account name">
+        </td>
         <td onclick="event.stopPropagation();">
           <select class="account-type-select" onchange="updateAccountType(${s.id}, this.value)" title="Change account type">
             ${typeOptions}
@@ -7837,50 +7877,64 @@
     const collapsedSections = [...document.querySelectorAll('.widget-section.collapsed')];
     collapsedSections.forEach(s => s.classList.remove('collapsed'));
 
-    // 2. Force synchronous reflow — reading offsetHeight after the DOM
-    //    mutation forces the browser to recalculate layout NOW, before
-    //    any further JS executes. Containers now have real dimensions.
+    // 2. Force synchronous reflow so containers get real dimensions
     document.getElementById('dashboardContent').offsetHeight;
 
-    // 3. Disable Chart.js animation so charts render final frame instantly
-    //    (default is 1000ms — capturing mid-animation produces blank images)
+    // 3. Disable Chart.js animation (default 1000ms → 0)
     const savedDuration = Chart.defaults.animation.duration;
     Chart.defaults.animation.duration = 0;
 
-    // 4. Re-render all charts from scratch with correct dimensions
+    // 4. Re-render all charts from scratch
     refreshDashboard();
 
-    // 5. Restore animation for normal dashboard use
+    // 5. Force a SECOND reflow — catches the dynamic container height
+    //    changes that each render function sets (e.g., chartContainer.style.height)
+    document.getElementById('dashboardContent').offsetHeight;
+
+    // 6. Explicitly resize every Chart.js instance so it picks up
+    //    the now-correct container dimensions
+    Object.values(charts).forEach(chart => {
+      if (chart && chart.canvas) chart.resize();
+    });
+
+    // 7. Restore animation default
     Chart.defaults.animation.duration = savedDuration;
 
-    // 6. One rAF to let the browser paint the fully-rendered charts, then capture
+    // 8. Wait multiple animation frames for browser to fully composite
     requestAnimationFrame(() => {
-      const canvasMap = [];
-      Object.entries(charts).forEach(([id, chart]) => {
-        if (!chart || !chart.canvas) return;
-        const canvas = chart.canvas;
-        try {
-          const img = document.createElement('img');
-          img.src = chart.toBase64Image();
-          img.className = 'print-chart-img';
-          img.style.width = '100%';
-          canvas.style.display = 'none';
-          canvas.parentNode.insertBefore(img, canvas);
-          canvasMap.push({ canvas, img });
-        } catch (e) {
-          console.warn('Could not convert chart to image:', id, e);
-        }
-      });
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const canvasMap = [];
+          Object.entries(charts).forEach(([id, chart]) => {
+            if (!chart || !chart.canvas) return;
+            const canvas = chart.canvas;
+            // Validate canvas has real dimensions before capture
+            if (canvas.width === 0 || canvas.height === 0) {
+              console.warn('Chart canvas has zero dimensions, skipping:', id);
+              return;
+            }
+            try {
+              const img = document.createElement('img');
+              img.src = chart.toBase64Image();
+              img.className = 'print-chart-img';
+              img.style.width = '100%';
+              canvas.style.display = 'none';
+              canvas.parentNode.insertBefore(img, canvas);
+              canvasMap.push({ canvas, img });
+            } catch (e) {
+              console.warn('Could not convert chart to image:', id, e);
+            }
+          });
 
-      // 7. Trigger browser print (user picks "Save as PDF")
-      window.print();
+          window.print();
 
-      // 8. Restore after print dialog closes
-      canvasMap.forEach(({ canvas, img }) => {
-        canvas.style.display = '';
-        img.remove();
+          canvasMap.forEach(({ canvas, img }) => {
+            canvas.style.display = '';
+            img.remove();
+          });
+          collapsedSections.forEach(s => s.classList.add('collapsed'));
+        });
       });
-      collapsedSections.forEach(s => s.classList.add('collapsed'));
     });
   }
 
@@ -7893,6 +7947,53 @@
   async function updateDeliveryManager(id, newDM) {
     db.run('UPDATE surveys SET delivery_manager = ? WHERE id = ?', [newDM, id]);
     await saveToIndexedDB();
+  }
+
+  async function updateAccountName(id, newName, inputEl) {
+    if (!newName) {
+      alert('Account name cannot be empty.');
+      const result = db.exec('SELECT account_name FROM surveys WHERE id = ?', [id]);
+      if (result.length > 0) inputEl.value = result[0].values[0][0];
+      return;
+    }
+    const oldResult = db.exec('SELECT account_name FROM surveys WHERE id = ?', [id]);
+    if (oldResult.length === 0) return;
+    const oldName = oldResult[0].values[0][0];
+    if (newName === oldName) return;
+
+    // Check for UNIQUE constraint conflict (same name + exported_at)
+    const conflict = db.exec(
+      'SELECT id FROM surveys WHERE account_name = ? AND exported_at = (SELECT exported_at FROM surveys WHERE id = ?)',
+      [newName, id]
+    );
+    if (conflict.length > 0 && conflict[0].values.length > 0) {
+      alert('An account with this name already exists for the same export date.');
+      inputEl.value = oldName;
+      return;
+    }
+
+    // Update database column
+    db.run('UPDATE surveys SET account_name = ? WHERE id = ?', [newName, id]);
+
+    // Also update accountName inside the raw_json so exports stay consistent
+    const jsonResult = db.exec('SELECT raw_json FROM surveys WHERE id = ?', [id]);
+    if (jsonResult.length > 0) {
+      const data = JSON.parse(jsonResult[0].values[0][0]);
+      data.accountName = newName;
+      db.run('UPDATE surveys SET raw_json = ? WHERE id = ?', [JSON.stringify(data), id]);
+    }
+
+    await saveToIndexedDB();
+
+    // Update selectedAccounts set if the old name was selected
+    if (selectedAccounts.has(oldName)) {
+      selectedAccounts.delete(oldName);
+      selectedAccounts.add(newName);
+    }
+
+    // Full refresh — account name affects filters, dashboard widgets, etc.
+    populateFilters();
+    refreshDashboard();
   }
 
   function formatCurrency(value) {
