@@ -495,35 +495,47 @@
       font-size: 0.75rem; color: #6366f1; margin-top: 0.1rem;
     }
 
-    /* AI Adoption Summary (two-card widget) */
-    .ai-adoption-summary {
+    /* AI Tool Adoption — unified widget cards */
+    .ai-adoption-cards {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.5rem;
     }
-    .ai-adoption-card {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem 1.5rem;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-      background: #fff;
+    .ai-adoption-card-unified {
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s;
     }
-    .ai-adoption-card-value {
+    .ai-adoption-card-unified:hover {
+      border-color: #818cf8;
+    }
+    .ai-adoption-card-pct {
       font-size: 2rem;
       font-weight: 800;
       line-height: 1;
     }
-    .ai-adoption-card-label {
+    .ai-adoption-card-title {
       font-size: 0.85rem;
       font-weight: 600;
       color: #374151;
+      margin-top: 0.35rem;
     }
-    .ai-adoption-card-sub {
+    .ai-adoption-card-detail {
       font-size: 0.75rem;
       color: #6b7280;
+      margin-top: 0.15rem;
+    }
+    .ai-adoption-card-revenue {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.2;
+    }
+    .ai-adoption-card-revenue-label {
+      font-size: 0.7rem;
+      color: #94a3b8;
       margin-top: 0.1rem;
     }
 
@@ -689,61 +701,6 @@
       font-size: 0.75rem;
     }
 
-    /* Revenue at Risk Widget */
-    .revenue-at-risk-summary {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    .revenue-at-risk-card {
-      flex: 1;
-      padding: 1rem;
-      border-radius: 10px;
-      border: 1px solid #e2e8f0;
-      cursor: default;
-      transition: all 0.2s;
-    }
-    .revenue-at-risk-card:hover {
-      border-color: #818cf8;
-    }
-    .revenue-at-risk-value {
-      font-size: 1.5rem;
-      font-weight: 800;
-      line-height: 1.2;
-    }
-    .revenue-at-risk-label {
-      font-size: 0.78rem;
-      color: #64748b;
-      margin-top: 0.25rem;
-    }
-    .revenue-at-risk-count {
-      font-size: 0.72rem;
-      color: #94a3b8;
-      margin-top: 0.15rem;
-    }
-    .revenue-bar-container {
-      margin-bottom: 1rem;
-    }
-    .revenue-bar {
-      display: flex;
-      height: 10px;
-      border-radius: 6px;
-      overflow: hidden;
-      background: #f1f5f9;
-    }
-    .revenue-bar-safe {
-      background: #22c55e;
-      transition: width 0.4s;
-    }
-    .revenue-bar-risk {
-      background: #ef4444;
-      transition: width 0.4s;
-    }
-    .revenue-bar-label {
-      font-size: 0.72rem;
-      color: #94a3b8;
-      margin-top: 0.35rem;
-    }
     .revenue-accounts-collapsible {
       max-height: 0;
       overflow: hidden;
@@ -1921,7 +1878,7 @@
     @media (max-width: 900px) {
       .charts-grid { grid-template-columns: 1fr; }
       .landscape-chart-row { grid-template-columns: 1fr; }
-      .ai-adoption-summary { grid-template-columns: 1fr; }
+      .ai-adoption-cards { grid-template-columns: 1fr; }
       .dashboard-content { padding: 1rem; }
       .dashboard-header { padding: 1rem; }
       .header-top { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
@@ -2641,22 +2598,13 @@
         </div>
         <div class="widget-section-content">
 
-      <!-- AI Adoption Summary -->
-      <div class="ai-adoption-summary" id="aiAdoptionSummary">
-        <div class="ai-adoption-card" style="border-left: 4px solid #22c55e;">
-          <div class="ai-adoption-card-value" style="color:#22c55e;" id="aiAdoptionYesValue">--</div>
-          <div>
-            <div class="ai-adoption-card-label">Using AI Tools</div>
-            <div class="ai-adoption-card-sub" id="aiAdoptionYesSub">Accounts using at least one AI tool</div>
-          </div>
+      <!-- Unified AI Tool Adoption Widget -->
+      <div class="widget-card" id="aiAdoptionWidget">
+        <div class="widget-header">
+          <div class="widget-title">AI Tool Adoption</div>
+          <div class="widget-subtitle">Account AI tool adoption with associated service revenue</div>
         </div>
-        <div class="ai-adoption-card" style="border-left: 4px solid #f59e0b;">
-          <div class="ai-adoption-card-value" style="color:#f59e0b;" id="aiAdoptionNoValue">--</div>
-          <div>
-            <div class="ai-adoption-card-label">Not Using AI Tools</div>
-            <div class="ai-adoption-card-sub" id="aiAdoptionNoSub">Accounts without any AI tool adoption</div>
-          </div>
-        </div>
+        <div id="aiAdoptionContent"><!-- Populated by JS --></div>
       </div>
 
       <!-- Widget: Account AI Agentic Workflow -->
@@ -2774,17 +2722,6 @@
           <div class="widget-subtitle">Accounts with a designated AI adoption champion</div>
         </div>
         <div id="aiChampionContent">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-
-      <!-- Widget: Revenue at Risk -->
-      <div class="widget-card" id="revenueAtRiskWidget">
-        <div class="widget-header">
-          <div class="widget-title">Revenue at Risk</div>
-          <div class="widget-subtitle">Forecasted revenue from accounts not yet using any AI tool</div>
-        </div>
-        <div id="revenueAtRiskContent">
           <!-- Populated by JS -->
         </div>
       </div>
@@ -5000,6 +4937,7 @@
     renderSdlcCoverageComparison(surveysA, surveysB, nameA, nameB);
     renderAiAdoptionByRoleComparison(surveysA, surveysB, nameA, nameB);
     renderAiChampionComparison(surveysA, surveysB, nameA, nameB);
+    renderAiAdoptionWidgetComparison(surveysA, surveysB, nameA, nameB);
     updateAccountSectionSummaryComparison(surveysA, surveysB, nameA, nameB);
 
     renderSurveysTableComparison(allSurveys, surveysA, surveysB, nameA, nameB);
@@ -5112,7 +5050,7 @@
     renderSdlcCoverageWidget(surveys);
     renderAiAdoptionByRoleWidget(surveys);
     renderAiChampionWidget(surveys);
-    renderRevenueAtRiskWidget(surveys);
+    renderAiAdoptionWidget(surveys);
 
     // Collapsed account section summary (must run after renderWorkflowMaturityWidget sets currentWfmStage)
     updateAccountSectionSummary(surveys);
@@ -5772,23 +5710,6 @@
     const revenueAtRiskHtml = revenueAtRiskTotal > 0
       ? `<span class="section-summary-value" style="color:#dc2626;">${formatCurrency(revenueAtRiskTotal)}</span>`
       : '<span style="color:#9ca3af;font-size:0.75rem;">$0</span>';
-
-    // Update AI Adoption Summary cards
-    const aiAdoptionYesVal = document.getElementById('aiAdoptionYesValue');
-    const aiAdoptionYesSub = document.getElementById('aiAdoptionYesSub');
-    const aiAdoptionNoVal = document.getElementById('aiAdoptionNoValue');
-    const aiAdoptionNoSub = document.getElementById('aiAdoptionNoSub');
-    const notUsingCount = surveys.length - aiUsageCount;
-    const notUsingPct = surveys.length > 0 ? (100 - aiUsagePct) : null;
-
-    if (aiAdoptionYesVal) aiAdoptionYesVal.textContent = aiUsagePct !== null ? aiUsagePct + '%' : '--';
-    if (aiAdoptionYesSub) aiAdoptionYesSub.textContent = aiUsagePct !== null
-      ? `${aiUsageCount} of ${surveys.length} accounts`
-      : 'No data available';
-    if (aiAdoptionNoVal) aiAdoptionNoVal.textContent = notUsingPct !== null ? notUsingPct + '%' : '--';
-    if (aiAdoptionNoSub) aiAdoptionNoSub.textContent = notUsingPct !== null
-      ? `${notUsingCount} of ${surveys.length} accounts`
-      : 'No data available';
 
     // Collapsed summary
     const aiUsageHtml = aiUsagePct !== null
@@ -7016,20 +6937,6 @@
     const pctA = calculateAiUsagePercent(surveysA);
     const pctB = calculateAiUsagePercent(surveysB);
 
-    // Update AI Adoption Summary cards for comparison
-    const aiAdoptionYesVal = document.getElementById('aiAdoptionYesValue');
-    const aiAdoptionYesSub = document.getElementById('aiAdoptionYesSub');
-    const aiAdoptionNoVal = document.getElementById('aiAdoptionNoValue');
-    const aiAdoptionNoSub = document.getElementById('aiAdoptionNoSub');
-    if (aiAdoptionYesVal) aiAdoptionYesVal.innerHTML = `<span style="color:${COMPARE_COLOR_A};">${pctA !== null ? pctA + '%' : '--'}</span> <span style="font-size:0.8rem;color:#9ca3af;">vs</span> <span style="color:${COMPARE_COLOR_B};">${pctB !== null ? pctB + '%' : '--'}</span>`;
-    if (aiAdoptionYesSub) aiAdoptionYesSub.textContent = `${nameA} vs ${nameB}`;
-    if (aiAdoptionNoVal) {
-      const noPctA = pctA !== null ? (100 - pctA) : null;
-      const noPctB = pctB !== null ? (100 - pctB) : null;
-      aiAdoptionNoVal.innerHTML = `<span style="color:${COMPARE_COLOR_A};">${noPctA !== null ? noPctA + '%' : '--'}</span> <span style="font-size:0.8rem;color:#9ca3af;">vs</span> <span style="color:${COMPARE_COLOR_B};">${noPctB !== null ? noPctB + '%' : '--'}</span>`;
-    }
-    if (aiAdoptionNoSub) aiAdoptionNoSub.textContent = `${nameA} vs ${nameB}`;
-
     // Revenue at Risk for comparison
     const EXCL_CMP = ['dont-know', 'not-applicable', 'custom', '_meta'];
     const riskCalc = (surveys) => {
@@ -7604,7 +7511,7 @@
   // REVENUE AT RISK WIDGET
   // ═══════════════════════════════════════════
   function toggleRevenueDetails() {
-    const collapsible = document.querySelector('.revenue-accounts-collapsible');
+    const collapsible = document.querySelector('#aiAdoptionContent .revenue-accounts-collapsible');
     if (!collapsible) return;
     const isExpanded = collapsible.classList.contains('open');
     collapsible.classList.toggle('open');
@@ -7612,19 +7519,22 @@
     if (toggle) toggle.querySelector('.toggle-text').textContent = isExpanded ? 'Show accounts' : 'Hide accounts';
   }
 
-  function renderRevenueAtRiskWidget(surveys) {
-    const container = document.getElementById('revenueAtRiskContent');
+  function renderAiAdoptionWidget(surveys) {
+    const container = document.getElementById('aiAdoptionContent');
     if (!container) return;
 
-    const EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
+    if (surveys.length === 0) {
+      container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;">No survey data available</div>';
+      return;
+    }
 
+    const EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
     const atRisk = [];
     const usingAi = [];
 
     surveys.forEach(s => {
       const acctName = s.data?.accountName || s.account_name || 'Unknown';
       const revenue = s.forecasted_service_revenue || 0;
-
       const aiTools = s.data?.toolsAndInfrastructure?.ai;
       let hasAi = false;
       if (aiTools) {
@@ -7634,83 +7544,121 @@
         const hasCustomTool = Array.isArray(aiTools.custom) && aiTools.custom.length > 0;
         hasAi = hasNamedTool || hasCustomTool;
       }
-
-      if (hasAi) {
-        usingAi.push({ name: acctName, revenue });
-      } else {
-        atRisk.push({ name: acctName, revenue });
-      }
+      if (hasAi) { usingAi.push({ name: acctName, revenue }); }
+      else { atRisk.push({ name: acctName, revenue }); }
     });
 
-    // Sort by revenue descending within each group
     atRisk.sort((a, b) => b.revenue - a.revenue);
     usingAi.sort((a, b) => b.revenue - a.revenue);
 
-    const totalAtRisk = atRisk.reduce((sum, a) => sum + a.revenue, 0);
+    const totalAccounts = surveys.length;
+    const yesPct = Math.round((usingAi.length / totalAccounts) * 100);
+    const noPct = 100 - yesPct;
     const totalUsingAi = usingAi.reduce((sum, a) => sum + a.revenue, 0);
-    const grandTotal = totalAtRisk + totalUsingAi;
+    const totalAtRisk = atRisk.reduce((sum, a) => sum + a.revenue, 0);
 
-    const riskPct = grandTotal > 0 ? Math.round((totalAtRisk / grandTotal) * 100) : 0;
-    const safePct = grandTotal > 0 ? 100 - riskPct : 0;
-
-    const atRiskDisplay = formatCurrency(totalAtRisk) || '$0';
-    const usingAiDisplay = formatCurrency(totalUsingAi) || '$0';
-
-    let html = '';
-
-    if (grandTotal === 0) {
-      html = `<div style="text-align:center;padding:2rem 1rem;color:#94a3b8;">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem;">💰</div>
-        <div style="font-size:0.85rem;">No revenue data yet</div>
-        <div style="font-size:0.78rem;margin-top:0.25rem;">Add forecasted revenue to accounts in the Surveys table below</div>
-      </div>`;
-    } else {
-      html = `
-        <div class="revenue-at-risk-summary">
-          <div class="revenue-at-risk-card" style="border-left:4px solid #ef4444;">
-            <div class="revenue-at-risk-value" style="color:#ef4444;">${atRiskDisplay}</div>
-            <div class="revenue-at-risk-label">Revenue at Risk</div>
-            <div class="revenue-at-risk-count">${atRisk.length} account${atRisk.length !== 1 ? 's' : ''} not using AI</div>
-          </div>
-          <div class="revenue-at-risk-card" style="border-left:4px solid #22c55e;">
-            <div class="revenue-at-risk-value" style="color:#22c55e;">${usingAiDisplay}</div>
-            <div class="revenue-at-risk-label">Revenue with AI</div>
-            <div class="revenue-at-risk-count">${usingAi.length} account${usingAi.length !== 1 ? 's' : ''} using AI</div>
-          </div>
+    container.innerHTML = `
+      <div class="ai-adoption-cards">
+        <div class="ai-adoption-card-unified" style="border-left:4px solid #22c55e;">
+          <div class="ai-adoption-card-pct" style="color:#22c55e;">${yesPct}%</div>
+          <div class="ai-adoption-card-title">Using AI Tools</div>
+          <div class="ai-adoption-card-detail">${usingAi.length} of ${totalAccounts} accounts</div>
+          <div class="ai-adoption-card-revenue" style="color:#22c55e;">${formatCurrency(totalUsingAi) || '$0'}</div>
+          <div class="ai-adoption-card-revenue-label">Service Revenue</div>
         </div>
+        <div class="ai-adoption-card-unified" style="border-left:4px solid #f59e0b;">
+          <div class="ai-adoption-card-pct" style="color:#f59e0b;">${noPct}%</div>
+          <div class="ai-adoption-card-title">Not Using AI Tools</div>
+          <div class="ai-adoption-card-detail">${atRisk.length} of ${totalAccounts} accounts</div>
+          <div class="ai-adoption-card-revenue" style="color:#ef4444;">${formatCurrency(totalAtRisk) || '$0'}</div>
+          <div class="ai-adoption-card-revenue-label">Service Revenue at Risk</div>
+        </div>
+      </div>
 
-        <div class="revenue-bar-container">
-          <div class="revenue-bar">
-            <div class="revenue-bar-safe" style="width:${safePct}%;"></div>
-            <div class="revenue-bar-risk" style="width:${riskPct}%;"></div>
+      <div class="champion-details-toggle" onclick="toggleRevenueDetails()">
+        <span class="toggle-text">Show accounts</span>
+        <span class="chevron">&#9662;</span>
+      </div>
+      <div class="revenue-accounts-collapsible">
+        <div class="revenue-accounts">
+          <div>
+            <div class="revenue-accounts-title" style="color:#22c55e;">Using AI (${usingAi.length})</div>
+            ${usingAi.length > 0 ? usingAi.map(a =>
+              `<div class="revenue-account-item">${a.name} <span class="revenue-account-amount" style="color:#22c55e;">${formatCurrency(a.revenue) || '$0'}</span></div>`
+            ).join('') : '<div class="revenue-account-item" style="color:#9ca3af;font-style:italic;">None</div>'}
           </div>
-          <div class="revenue-bar-label">${riskPct}% of forecasted revenue (${atRiskDisplay}) at risk across ${surveys.length} account${surveys.length !== 1 ? 's' : ''}</div>
-        </div>
-
-        <div class="champion-details-toggle" onclick="toggleRevenueDetails()">
-          <span class="toggle-text">Show accounts</span>
-          <span class="chevron">&#9662;</span>
-        </div>
-        <div class="revenue-accounts-collapsible">
-          <div class="revenue-accounts">
-            <div>
-              <div class="revenue-accounts-title" style="color:#ef4444;">⚠ Not Using AI (${atRisk.length})</div>
-              ${atRisk.length > 0 ? atRisk.map(a =>
-                `<div class="revenue-account-item">${a.name} <span class="revenue-account-amount" style="color:#ef4444;">${formatCurrency(a.revenue) || '$0'}</span></div>`
-              ).join('') : '<div class="revenue-account-item" style="color:#9ca3af;font-style:italic;">None</div>'}
-            </div>
-            <div>
-              <div class="revenue-accounts-title" style="color:#22c55e;">✅ Using AI (${usingAi.length})</div>
-              ${usingAi.length > 0 ? usingAi.map(a =>
-                `<div class="revenue-account-item">${a.name} <span class="revenue-account-amount" style="color:#22c55e;">${formatCurrency(a.revenue) || '$0'}</span></div>`
-              ).join('') : '<div class="revenue-account-item" style="color:#9ca3af;font-style:italic;">None</div>'}
-            </div>
+          <div>
+            <div class="revenue-accounts-title" style="color:#ef4444;">Not Using AI (${atRisk.length})</div>
+            ${atRisk.length > 0 ? atRisk.map(a =>
+              `<div class="revenue-account-item">${a.name} <span class="revenue-account-amount" style="color:#ef4444;">${formatCurrency(a.revenue) || '$0'}</span></div>`
+            ).join('') : '<div class="revenue-account-item" style="color:#9ca3af;font-style:italic;">None</div>'}
           </div>
         </div>
-      `;
+      </div>
+    `;
+  }
+
+  function renderAiAdoptionWidgetComparison(surveysA, surveysB, nameA, nameB) {
+    const container = document.getElementById('aiAdoptionContent');
+    if (!container) return;
+
+    const EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
+
+    function classify(surveys) {
+      let usingCount = 0, notUsingCount = 0, revUsing = 0, revAtRisk = 0;
+      surveys.forEach(s => {
+        const revenue = s.forecasted_service_revenue || 0;
+        const aiTools = s.data?.toolsAndInfrastructure?.ai;
+        let hasAi = false;
+        if (aiTools) {
+          hasAi = Object.keys(aiTools).some(k => !EXCLUDED_KEYS.includes(k) && aiTools[k]?.selected === true)
+            || (Array.isArray(aiTools.custom) && aiTools.custom.length > 0);
+        }
+        if (hasAi) { usingCount++; revUsing += revenue; }
+        else { notUsingCount++; revAtRisk += revenue; }
+      });
+      const total = surveys.length;
+      const yesPct = total > 0 ? Math.round((usingCount / total) * 100) : null;
+      return { yesPct, noPct: yesPct !== null ? 100 - yesPct : null, usingCount, notUsingCount, total, revUsing, revAtRisk };
     }
 
-    container.innerHTML = html;
+    const a = classify(surveysA);
+    const b = classify(surveysB);
+
+    container.innerHTML = `
+      <div class="ai-adoption-cards">
+        <div class="ai-adoption-card-unified" style="border-left:4px solid #22c55e;">
+          <div class="ai-adoption-card-pct">
+            <span style="color:${COMPARE_COLOR_A};">${a.yesPct !== null ? a.yesPct + '%' : '--'}</span>
+            <span style="font-size:0.8rem;color:#9ca3af;"> vs </span>
+            <span style="color:${COMPARE_COLOR_B};">${b.yesPct !== null ? b.yesPct + '%' : '--'}</span>
+          </div>
+          <div class="ai-adoption-card-title">Using AI Tools</div>
+          <div class="ai-adoption-card-detail">${nameA} vs ${nameB}</div>
+          <div class="ai-adoption-card-revenue">
+            <span style="color:${COMPARE_COLOR_A};">${formatCurrency(a.revUsing) || '$0'}</span>
+            <span style="font-size:0.7rem;color:#9ca3af;"> vs </span>
+            <span style="color:${COMPARE_COLOR_B};">${formatCurrency(b.revUsing) || '$0'}</span>
+          </div>
+          <div class="ai-adoption-card-revenue-label">Service Revenue</div>
+        </div>
+        <div class="ai-adoption-card-unified" style="border-left:4px solid #f59e0b;">
+          <div class="ai-adoption-card-pct">
+            <span style="color:${COMPARE_COLOR_A};">${a.noPct !== null ? a.noPct + '%' : '--'}</span>
+            <span style="font-size:0.8rem;color:#9ca3af;"> vs </span>
+            <span style="color:${COMPARE_COLOR_B};">${b.noPct !== null ? b.noPct + '%' : '--'}</span>
+          </div>
+          <div class="ai-adoption-card-title">Not Using AI Tools</div>
+          <div class="ai-adoption-card-detail">${nameA} vs ${nameB}</div>
+          <div class="ai-adoption-card-revenue">
+            <span style="color:${COMPARE_COLOR_A};">${formatCurrency(a.revAtRisk) || '$0'}</span>
+            <span style="font-size:0.7rem;color:#9ca3af;"> vs </span>
+            <span style="color:${COMPARE_COLOR_B};">${formatCurrency(b.revAtRisk) || '$0'}</span>
+          </div>
+          <div class="ai-adoption-card-revenue-label">Service Revenue at Risk</div>
+        </div>
+      </div>
+    `;
   }
 
   // ═══════════════════════════════════════════
