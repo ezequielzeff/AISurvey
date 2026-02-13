@@ -495,6 +495,38 @@
       font-size: 0.75rem; color: #6366f1; margin-top: 0.1rem;
     }
 
+    /* AI Adoption Summary (two-card widget) */
+    .ai-adoption-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .ai-adoption-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+    }
+    .ai-adoption-card-value {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .ai-adoption-card-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .ai-adoption-card-sub {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.1rem;
+    }
+
     /* AI Usage highlight in collapsed summary */
     .section-summary-ai-usage {
       display: flex; align-items: center; gap: 0.4rem;
@@ -1889,6 +1921,7 @@
     @media (max-width: 900px) {
       .charts-grid { grid-template-columns: 1fr; }
       .landscape-chart-row { grid-template-columns: 1fr; }
+      .ai-adoption-summary { grid-template-columns: 1fr; }
       .dashboard-content { padding: 1rem; }
       .dashboard-header { padding: 1rem; }
       .header-top { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
@@ -2608,12 +2641,21 @@
         </div>
         <div class="widget-section-content">
 
-      <!-- AI Usage Banner -->
-      <div class="ai-usage-banner" id="aiUsageBanner">
-        <div class="ai-usage-banner-value" id="aiUsageBannerValue">--</div>
-        <div>
-          <div class="ai-usage-banner-label">AI Usage</div>
-          <div class="ai-usage-banner-sub" id="aiUsageBannerSub">Accounts using at least one AI tool</div>
+      <!-- AI Adoption Summary -->
+      <div class="ai-adoption-summary" id="aiAdoptionSummary">
+        <div class="ai-adoption-card" style="border-left: 4px solid #22c55e;">
+          <div class="ai-adoption-card-value" style="color:#22c55e;" id="aiAdoptionYesValue">--</div>
+          <div>
+            <div class="ai-adoption-card-label">Using AI Tools</div>
+            <div class="ai-adoption-card-sub" id="aiAdoptionYesSub">Accounts using at least one AI tool</div>
+          </div>
+        </div>
+        <div class="ai-adoption-card" style="border-left: 4px solid #f59e0b;">
+          <div class="ai-adoption-card-value" style="color:#f59e0b;" id="aiAdoptionNoValue">--</div>
+          <div>
+            <div class="ai-adoption-card-label">Not Using AI Tools</div>
+            <div class="ai-adoption-card-sub" id="aiAdoptionNoSub">Accounts without any AI tool adoption</div>
+          </div>
         </div>
       </div>
 
@@ -5731,12 +5773,21 @@
       ? `<span class="section-summary-value" style="color:#dc2626;">${formatCurrency(revenueAtRiskTotal)}</span>`
       : '<span style="color:#9ca3af;font-size:0.75rem;">$0</span>';
 
-    // Update expanded banner
-    const bannerValueEl = document.getElementById('aiUsageBannerValue');
-    const bannerSubEl = document.getElementById('aiUsageBannerSub');
-    if (bannerValueEl) bannerValueEl.textContent = aiUsagePct !== null ? aiUsagePct + '%' : '--';
-    if (bannerSubEl) bannerSubEl.textContent = aiUsagePct !== null
-      ? `${aiUsageCount} of ${surveys.length} accounts using at least one AI tool`
+    // Update AI Adoption Summary cards
+    const aiAdoptionYesVal = document.getElementById('aiAdoptionYesValue');
+    const aiAdoptionYesSub = document.getElementById('aiAdoptionYesSub');
+    const aiAdoptionNoVal = document.getElementById('aiAdoptionNoValue');
+    const aiAdoptionNoSub = document.getElementById('aiAdoptionNoSub');
+    const notUsingCount = surveys.length - aiUsageCount;
+    const notUsingPct = surveys.length > 0 ? (100 - aiUsagePct) : null;
+
+    if (aiAdoptionYesVal) aiAdoptionYesVal.textContent = aiUsagePct !== null ? aiUsagePct + '%' : '--';
+    if (aiAdoptionYesSub) aiAdoptionYesSub.textContent = aiUsagePct !== null
+      ? `${aiUsageCount} of ${surveys.length} accounts`
+      : 'No data available';
+    if (aiAdoptionNoVal) aiAdoptionNoVal.textContent = notUsingPct !== null ? notUsingPct + '%' : '--';
+    if (aiAdoptionNoSub) aiAdoptionNoSub.textContent = notUsingPct !== null
+      ? `${notUsingCount} of ${surveys.length} accounts`
       : 'No data available';
 
     // Collapsed summary
@@ -6965,11 +7016,19 @@
     const pctA = calculateAiUsagePercent(surveysA);
     const pctB = calculateAiUsagePercent(surveysB);
 
-    // Update expanded banner for comparison
-    const bannerValueEl = document.getElementById('aiUsageBannerValue');
-    const bannerSubEl = document.getElementById('aiUsageBannerSub');
-    if (bannerValueEl) bannerValueEl.innerHTML = `<span style="color:${COMPARE_COLOR_A};">${pctA !== null ? pctA + '%' : '--'}</span> <span style="font-size:0.9rem;color:#9ca3af;">vs</span> <span style="color:${COMPARE_COLOR_B};">${pctB !== null ? pctB + '%' : '--'}</span>`;
-    if (bannerSubEl) bannerSubEl.textContent = `${nameA} vs ${nameB}`;
+    // Update AI Adoption Summary cards for comparison
+    const aiAdoptionYesVal = document.getElementById('aiAdoptionYesValue');
+    const aiAdoptionYesSub = document.getElementById('aiAdoptionYesSub');
+    const aiAdoptionNoVal = document.getElementById('aiAdoptionNoValue');
+    const aiAdoptionNoSub = document.getElementById('aiAdoptionNoSub');
+    if (aiAdoptionYesVal) aiAdoptionYesVal.innerHTML = `<span style="color:${COMPARE_COLOR_A};">${pctA !== null ? pctA + '%' : '--'}</span> <span style="font-size:0.8rem;color:#9ca3af;">vs</span> <span style="color:${COMPARE_COLOR_B};">${pctB !== null ? pctB + '%' : '--'}</span>`;
+    if (aiAdoptionYesSub) aiAdoptionYesSub.textContent = `${nameA} vs ${nameB}`;
+    if (aiAdoptionNoVal) {
+      const noPctA = pctA !== null ? (100 - pctA) : null;
+      const noPctB = pctB !== null ? (100 - pctB) : null;
+      aiAdoptionNoVal.innerHTML = `<span style="color:${COMPARE_COLOR_A};">${noPctA !== null ? noPctA + '%' : '--'}</span> <span style="font-size:0.8rem;color:#9ca3af;">vs</span> <span style="color:${COMPARE_COLOR_B};">${noPctB !== null ? noPctB + '%' : '--'}</span>`;
+    }
+    if (aiAdoptionNoSub) aiAdoptionNoSub.textContent = `${nameA} vs ${nameB}`;
 
     // Revenue at Risk for comparison
     const EXCL_CMP = ['dont-know', 'not-applicable', 'custom', '_meta'];
@@ -7877,65 +7936,57 @@
     const collapsedSections = [...document.querySelectorAll('.widget-section.collapsed')];
     collapsedSections.forEach(s => s.classList.remove('collapsed'));
 
-    // 2. Force synchronous reflow so containers get real dimensions
+    // 2. Force reflow so expanded containers have real dimensions
     document.getElementById('dashboardContent').offsetHeight;
 
-    // 3. Disable Chart.js animation (default 1000ms → 0)
+    // 3. Disable animation so charts render final state instantly
     const savedDuration = Chart.defaults.animation.duration;
     Chart.defaults.animation.duration = 0;
 
-    // 4. Re-render all charts from scratch
+    // 4. Recreate all charts from scratch
     refreshDashboard();
 
-    // 5. Force a SECOND reflow — catches the dynamic container height
-    //    changes that each render function sets (e.g., chartContainer.style.height)
+    // 5. Force second reflow for dynamic container heights set inside render functions
     document.getElementById('dashboardContent').offsetHeight;
 
-    // 6. Explicitly resize every Chart.js instance so it picks up
-    //    the now-correct container dimensions
+    // 6. Resize every chart to pick up final container dimensions
     Object.values(charts).forEach(chart => {
       if (chart && chart.canvas) chart.resize();
     });
 
-    // 7. Restore animation default
-    Chart.defaults.animation.duration = savedDuration;
-
-    // 8. Wait multiple animation frames for browser to fully composite
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const canvasMap = [];
-          Object.entries(charts).forEach(([id, chart]) => {
-            if (!chart || !chart.canvas) return;
-            const canvas = chart.canvas;
-            // Validate canvas has real dimensions before capture
-            if (canvas.width === 0 || canvas.height === 0) {
-              console.warn('Chart canvas has zero dimensions, skipping:', id);
-              return;
-            }
-            try {
-              const img = document.createElement('img');
-              img.src = chart.toBase64Image();
-              img.className = 'print-chart-img';
-              img.style.width = '100%';
-              canvas.style.display = 'none';
-              canvas.parentNode.insertBefore(img, canvas);
-              canvasMap.push({ canvas, img });
-            } catch (e) {
-              console.warn('Could not convert chart to image:', id, e);
-            }
-          });
-
-          window.print();
-
-          canvasMap.forEach(({ canvas, img }) => {
-            canvas.style.display = '';
-            img.remove();
-          });
-          collapsedSections.forEach(s => s.classList.add('collapsed'));
-        });
+    // 7. Use setTimeout to yield to browser — lets paint + composite finish
+    //    before we capture canvas content (rAF fires BEFORE paint, not after)
+    setTimeout(() => {
+      const canvasMap = [];
+      Object.entries(charts).forEach(([id, chart]) => {
+        if (!chart || !chart.canvas) return;
+        const canvas = chart.canvas;
+        if (canvas.width === 0 || canvas.height === 0) {
+          console.warn('Skipping zero-dimension chart:', id);
+          return;
+        }
+        try {
+          const img = document.createElement('img');
+          img.src = chart.toBase64Image();
+          img.className = 'print-chart-img';
+          img.style.width = '100%';
+          canvas.style.display = 'none';
+          canvas.parentNode.insertBefore(img, canvas);
+          canvasMap.push({ canvas, img });
+        } catch (e) {
+          console.warn('Could not convert chart to image:', id, e);
+        }
       });
-    });
+
+      window.print();
+
+      canvasMap.forEach(({ canvas, img }) => {
+        canvas.style.display = '';
+        img.remove();
+      });
+      collapsedSections.forEach(s => s.classList.add('collapsed'));
+      Chart.defaults.animation.duration = savedDuration;
+    }, 500);
   }
 
   async function updateAccountType(id, newType) {
