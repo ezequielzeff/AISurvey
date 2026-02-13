@@ -7528,51 +7528,44 @@
   }
 
   function exportDashboardPDF() {
-    // 1. Expand all collapsed sections so containers get real dimensions
+    // 1. Expand all collapsed sections so chart containers become visible
     const collapsedSections = [...document.querySelectorAll('.widget-section.collapsed')];
     collapsedSections.forEach(s => s.classList.remove('collapsed'));
 
-    // 2. Wait for browser to recalculate layout (sections now visible),
-    //    THEN resize and re-render charts with correct container dimensions
-    requestAnimationFrame(() => {
-      // Now the browser has reflowed — containers have real width/height
-      Object.values(charts).forEach(chart => {
-        if (chart && chart.canvas) {
-          chart.resize();
-          chart.update('none');  // render final frame instantly, no animation
+    // 2. Re-render all charts from scratch in now-visible containers.
+    //    Charts were originally created inside display:none sections with 0×0 dimensions.
+    //    resize()/update() can't recover broken internal state — must destroy & recreate.
+    refreshDashboard();
+
+    // 3. Wait for browser layout + Chart.js render to complete, then capture
+    requestAnimationFrame(() => { setTimeout(() => {
+      const canvasMap = [];
+      Object.entries(charts).forEach(([id, chart]) => {
+        if (!chart || !chart.canvas) return;
+        const canvas = chart.canvas;
+        try {
+          const img = document.createElement('img');
+          img.src = chart.toBase64Image();
+          img.className = 'print-chart-img';
+          img.style.width = '100%';
+          canvas.style.display = 'none';
+          canvas.parentNode.insertBefore(img, canvas);
+          canvasMap.push({ canvas, img });
+        } catch (e) {
+          console.warn('Could not convert chart to image:', id, e);
         }
       });
 
-      // 3. Wait again for Chart.js to paint the resized canvases
-      requestAnimationFrame(() => { setTimeout(() => {
-        const canvasMap = [];
-        Object.entries(charts).forEach(([id, chart]) => {
-          if (!chart || !chart.canvas) return;
-          const canvas = chart.canvas;
-          try {
-            const img = document.createElement('img');
-            img.src = chart.toBase64Image();
-            img.className = 'print-chart-img';
-            img.style.width = '100%';
-            canvas.style.display = 'none';
-            canvas.parentNode.insertBefore(img, canvas);
-            canvasMap.push({ canvas, img });
-          } catch (e) {
-            console.warn('Could not convert chart to image:', id, e);
-          }
-        });
+      // 4. Trigger browser print (user picks "Save as PDF")
+      window.print();
 
-        // 4. Trigger browser print (user picks "Save as PDF")
-        window.print();
-
-        // 5. Restore after print dialog closes
-        canvasMap.forEach(({ canvas, img }) => {
-          canvas.style.display = '';
-          img.remove();
-        });
-        collapsedSections.forEach(s => s.classList.add('collapsed'));
-      }, 300); });
-    });
+      // 5. Restore after print dialog closes
+      canvasMap.forEach(({ canvas, img }) => {
+        canvas.style.display = '';
+        img.remove();
+      });
+      collapsedSections.forEach(s => s.classList.add('collapsed'));
+    }, 500); });
   }
 
   async function updateAccountType(id, newType) {
