@@ -3720,10 +3720,24 @@
   }
 
   function setCloudPlatformFilter(key) {
-    activeCloudPlatformFilter = (activeCloudPlatformFilter === key) ? null : key;
+    const checkboxes = document.querySelectorAll('#cloudPlatformsMenu input[type="checkbox"]');
+    const currentSelected = getSelectedCloudPlatforms();
+    const isSingleActive = currentSelected.length === 1 && currentSelected[0] === key;
+
+    if (isSingleActive) {
+      // Toggle off — restore all platforms
+      checkboxes.forEach(cb => cb.checked = true);
+    } else {
+      // Select only the clicked platform
+      checkboxes.forEach(cb => cb.checked = (cb.value === key));
+    }
+    updateCloudPlatformsLabel();
+    activeCloudPlatformFilter = null;
     refreshDashboard();
   }
   function clearCloudPlatformFilter() {
+    document.querySelectorAll('#cloudPlatformsMenu input[type="checkbox"]').forEach(cb => cb.checked = true);
+    updateCloudPlatformsLabel();
     activeCloudPlatformFilter = null;
     refreshDashboard();
   }
@@ -5010,8 +5024,10 @@
     if (activeAiChallengeFilter) {
       filterTags += ` <span class="filter-active-tag">Challenge: ${AI_CHALLENGE_LABELS[activeAiChallengeFilter] || activeAiChallengeFilter} <span class="filter-clear-x" onclick="clearAiChallengeFilter()" title="Clear filter">&times;</span></span>`;
     }
-    if (activeCloudPlatformFilter) {
-      filterTags += ` <span class="filter-active-tag">Platform: ${CLOUD_PLATFORM_LABELS[activeCloudPlatformFilter] || activeCloudPlatformFilter} <span class="filter-clear-x" onclick="clearCloudPlatformFilter()" title="Clear filter">&times;</span></span>`;
+    const _cpSel = getSelectedCloudPlatforms();
+    if (_cpSel.length > 0 && _cpSel.length < CLOUD_PLATFORM_ORDER.length) {
+      const cpLabel = _cpSel.length === 1 ? (CLOUD_PLATFORM_LABELS[_cpSel[0]] || _cpSel[0]) : `${_cpSel.length} Platforms`;
+      filterTags += ` <span class="filter-active-tag">Platform: ${cpLabel} <span class="filter-clear-x" onclick="clearCloudPlatformFilter()" title="Clear filter">&times;</span></span>`;
     }
     if (activeAiUsageFilter) {
       filterTags += ` <span class="filter-active-tag">Usage: ${AI_USAGE_LABELS[activeAiUsageFilter] || activeAiUsageFilter} <span class="filter-clear-x" onclick="clearAiUsageFilter()" title="Clear filter">&times;</span></span>`;
@@ -5218,7 +5234,9 @@
 
     // Show/hide filter footer
     const footer = document.getElementById('widgetFooter');
-    const hasAnyFilter = activeMaturityFilter || selectedAccounts.size > 0 || selectedDeliveryManagers.size > 0 || activeLimitingFactorFilter || activeAiToolFilter || activeCloudPlatformFilter || activeAiChallengeFilter || activeAiUsageFilter || activeWfmStageFilter !== null;
+    const _cpSelFooter = getSelectedCloudPlatforms();
+    const _cpHasFilter = _cpSelFooter.length > 0 && _cpSelFooter.length < CLOUD_PLATFORM_ORDER.length;
+    const hasAnyFilter = activeMaturityFilter || selectedAccounts.size > 0 || selectedDeliveryManagers.size > 0 || activeLimitingFactorFilter || activeAiToolFilter || _cpHasFilter || activeAiChallengeFilter || activeAiUsageFilter || activeWfmStageFilter !== null;
     if (hasAnyFilter) {
       footer.style.display = 'flex';
       let tags = '';
@@ -5243,8 +5261,9 @@
         const toolLabel = activeAiToolFilter === '_custom' ? 'Other / Custom' : (AI_TOOL_LABELS[activeAiToolFilter] || activeAiToolFilter);
         tags += `<span class="filter-active-tag">Tool: ${toolLabel} <span class="filter-clear-x" onclick="clearAiToolFilter()" title="Clear filter">&times;</span></span>`;
       }
-      if (activeCloudPlatformFilter) {
-        tags += `<span class="filter-active-tag">Platform: ${CLOUD_PLATFORM_LABELS[activeCloudPlatformFilter] || activeCloudPlatformFilter} <span class="filter-clear-x" onclick="clearCloudPlatformFilter()" title="Clear filter">&times;</span></span>`;
+      if (_cpHasFilter) {
+        const _cpLabelFooter = _cpSelFooter.length === 1 ? (CLOUD_PLATFORM_LABELS[_cpSelFooter[0]] || _cpSelFooter[0]) : `${_cpSelFooter.length} Platforms`;
+        tags += `<span class="filter-active-tag">Platform: ${_cpLabelFooter} <span class="filter-clear-x" onclick="clearCloudPlatformFilter()" title="Clear filter">&times;</span></span>`;
       }
       if (activeAiChallengeFilter) {
         tags += `<span class="filter-active-tag">Challenge: ${AI_CHALLENGE_LABELS[activeAiChallengeFilter] || activeAiChallengeFilter} <span class="filter-clear-x" onclick="clearAiChallengeFilter()" title="Clear filter">&times;</span></span>`;
