@@ -2934,6 +2934,18 @@
             <div class="compare-filter-label">AI Champion</div>
             <div class="compare-filter-list" id="compareChampionA"></div>
           </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Account Type</div>
+            <div class="compare-filter-list" id="compareAccountTypeA"></div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Engagement Type</div>
+            <div class="compare-filter-list" id="compareEngagementA"></div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Cloud Platforms</div>
+            <div class="compare-filter-list" id="compareCloudA"></div>
+          </div>
         </div>
 
         <!-- Group B -->
@@ -2969,6 +2981,18 @@
           <div class="compare-filter-section">
             <div class="compare-filter-label">AI Champion</div>
             <div class="compare-filter-list" id="compareChampionB"></div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Account Type</div>
+            <div class="compare-filter-list" id="compareAccountTypeB"></div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Engagement Type</div>
+            <div class="compare-filter-list" id="compareEngagementB"></div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Cloud Platforms</div>
+            <div class="compare-filter-list" id="compareCloudB"></div>
           </div>
         </div>
       </div>
@@ -3408,8 +3432,8 @@
   let comparisonMode = false;
   const COMPARE_COLOR_A = '#6366f1'; // Indigo
   const COMPARE_COLOR_B = '#10b981'; // Emerald
-  let groupA = { name: 'Group A', filters: { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null } };
-  let groupB = { name: 'Group B', filters: { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null } };
+  let groupA = { name: 'Group A', filters: { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set() } };
+  let groupB = { name: 'Group B', filters: { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set() } };
 
   function setMaturityFilter(stage) {
     activeMaturityFilter = (activeMaturityFilter === stage) ? null : stage;
@@ -3796,6 +3820,24 @@
         `<label><input type="radio" name="compareChampion${side}" value="yes" ${g.filters.champion === 'yes' ? 'checked' : ''}> ✅ Yes</label>` +
         `<label><input type="radio" name="compareChampion${side}" value="no" ${g.filters.champion === 'no' ? 'checked' : ''}> ❌ No</label>`;
 
+      // Account Type checkboxes
+      const acctTypeEl = document.getElementById('compareAccountType' + side);
+      acctTypeEl.innerHTML = ACCOUNT_TYPES.map(t =>
+        `<label><input type="checkbox" value="${t.id}" ${g.filters.accountTypes.has(t.id) ? 'checked' : ''}> ${t.label}</label>`
+      ).join('');
+
+      // Engagement Type checkboxes
+      const engEl = document.getElementById('compareEngagement' + side);
+      engEl.innerHTML = ENGAGEMENT_TYPES.map(t =>
+        `<label><input type="checkbox" value="${t.id}" ${g.filters.engagementTypes.has(t.id) ? 'checked' : ''}> ${t.label}</label>`
+      ).join('');
+
+      // Cloud Platforms checkboxes
+      const cloudEl = document.getElementById('compareCloud' + side);
+      cloudEl.innerHTML = CLOUD_PLATFORM_ORDER.map(k =>
+        `<label><input type="checkbox" value="${k}" ${g.filters.cloudPlatforms.has(k) ? 'checked' : ''}> ${CLOUD_PLATFORM_LABELS[k]}</label>`
+      ).join('');
+
       // Restore name
       document.getElementById('compareGroup' + side + 'Name').value = g.name;
     });
@@ -3811,7 +3853,8 @@
     const filters = {
       maturity: null, accounts: new Set(), deliveryManagers: new Set(),
       limitingFactor: null, aiTool: null, aiChallenge: null,
-      wfmStage: null, champion: null
+      wfmStage: null, champion: null,
+      accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set()
     };
 
     // Accounts
@@ -3836,6 +3879,21 @@
     const champVal = document.querySelector(`input[name="compareChampion${side}"]:checked`)?.value;
     filters.champion = champVal || null;
 
+    // Account Types
+    document.querySelectorAll(`#compareAccountType${side} input[type="checkbox"]:checked`).forEach(cb => {
+      filters.accountTypes.add(cb.value);
+    });
+
+    // Engagement Types
+    document.querySelectorAll(`#compareEngagement${side} input[type="checkbox"]:checked`).forEach(cb => {
+      filters.engagementTypes.add(cb.value);
+    });
+
+    // Cloud Platforms
+    document.querySelectorAll(`#compareCloud${side} input[type="checkbox"]:checked`).forEach(cb => {
+      filters.cloudPlatforms.add(cb.value);
+    });
+
     return filters;
   }
 
@@ -3850,13 +3908,16 @@
     g.filters.aiChallenge = activeAiChallengeFilter;
     g.filters.wfmStage = activeWfmStageFilter;
     g.filters.champion = activeChampionFilter;
+    g.filters.accountTypes = new Set(getSelectedAccountTypes());
+    g.filters.engagementTypes = new Set(getSelectedEngagementTypes());
+    g.filters.cloudPlatforms = new Set(getSelectedCloudPlatforms());
     // Re-open modal to refresh checkboxes
     openCompareModal();
   }
 
   function clearCompareGroupFilters(side) {
     const g = side === 'A' ? groupA : groupB;
-    g.filters = { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null };
+    g.filters = { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set() };
     openCompareModal();
   }
 
@@ -3952,6 +4013,29 @@
         const val = s.data?.teamRoles?.aiChampion?.value;
         if (groupFilters.champion === 'yes') return val === 'yes';
         return val !== 'yes';
+      });
+    }
+
+    // Account Type filter
+    if (groupFilters.accountTypes && groupFilters.accountTypes.size > 0 && groupFilters.accountTypes.size < ACCOUNT_TYPES.length) {
+      surveys = surveys.filter(s => groupFilters.accountTypes.has(s.account_type || 'other'));
+    }
+
+    // Engagement Type filter
+    if (groupFilters.engagementTypes && groupFilters.engagementTypes.size > 0 && groupFilters.engagementTypes.size < ENGAGEMENT_TYPES.length) {
+      surveys = surveys.filter(s => {
+        const ownership = s.data?.engagement?.ownership;
+        if (!ownership) return false;
+        return [...groupFilters.engagementTypes].some(type => ownership[type]?.selected === true);
+      });
+    }
+
+    // Cloud Platform filter
+    if (groupFilters.cloudPlatforms && groupFilters.cloudPlatforms.size > 0 && groupFilters.cloudPlatforms.size < CLOUD_PLATFORM_ORDER.length) {
+      surveys = surveys.filter(s => {
+        const cloud = s.data?.toolsAndInfrastructure?.cloud;
+        if (!cloud) return false;
+        return [...groupFilters.cloudPlatforms].some(k => cloud[k]?.selected === true);
       });
     }
 
