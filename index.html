@@ -579,6 +579,214 @@
     }
 
     /* ═══════════════════════════════════════════
+       RESTORE SURVEY
+       ═══════════════════════════════════════════ */
+    .welcome-restore-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .welcome-restore-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.75rem;
+    }
+
+    .restore-buttons {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-restore {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #374151;
+    }
+
+    .btn-restore:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+    }
+
+    /* Restore Modal */
+    .restore-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .restore-modal-overlay.open {
+      display: flex;
+    }
+
+    .restore-modal {
+      background: #fff;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 560px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .restore-modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .restore-modal-header h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .restore-modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 0.25rem;
+      line-height: 1;
+    }
+
+    .restore-modal-close:hover {
+      color: #1f2937;
+    }
+
+    .restore-modal-body {
+      padding: 1.25rem 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .restore-survey-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .restore-survey-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      transition: all 0.15s;
+    }
+
+    .restore-survey-item:hover {
+      border-color: #818cf8;
+      background: #eef2ff;
+    }
+
+    .restore-survey-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .restore-survey-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #1f2937;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .restore-survey-date {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.15rem;
+    }
+
+    .restore-survey-actions {
+      display: flex;
+      gap: 0.4rem;
+      margin-left: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .restore-survey-actions button {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.78rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .btn-restore-load {
+      background: #4f46e5;
+      color: #fff;
+    }
+
+    .btn-restore-load:hover {
+      background: #4338ca;
+    }
+
+    .btn-restore-delete {
+      background: transparent;
+      color: #9ca3af;
+      border-color: #e5e7eb !important;
+    }
+
+    .btn-restore-delete:hover {
+      background: #fef2f2;
+      color: #ef4444;
+      border-color: #fca5a5 !important;
+    }
+
+    .btn-restore-download {
+      background: transparent;
+      color: #6b7280;
+      border-color: #e5e7eb !important;
+    }
+
+    .btn-restore-download:hover {
+      background: #f0fdf4;
+      color: #16a34a;
+      border-color: #86efac !important;
+    }
+
+    .restore-empty {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #9ca3af;
+      font-size: 0.9rem;
+    }
+
+    .restore-modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* ═══════════════════════════════════════════
        CARD BODY & FOOTER
        ═══════════════════════════════════════════ */
     .card-body {
@@ -2289,6 +2497,15 @@
             <input type="text" id="accountNameInput" class="account-name-input welcome-account-input" placeholder="Enter account or project name...">
           </div>
           <div class="validation-error" id="step0Error" role="alert"></div>
+
+          <div class="welcome-restore-section">
+            <h3>Restore a previous survey</h3>
+            <div class="restore-buttons">
+              <button class="btn-restore" id="restoreFromListBtn" type="button">📋 From Saved Surveys</button>
+              <button class="btn-restore" id="restoreFromFileBtn" type="button">📁 From ZIP File</button>
+              <input type="file" id="restoreFileInput" accept=".zip" style="display:none">
+            </div>
+          </div>
         </div>
         <div class="card-footer welcome-footer">
           <button class="btn btn-primary btn-large" id="startAssessment" disabled>Start Assessment →</button>
@@ -3015,6 +3232,10 @@
         </div>
         <div class="card-body">
           <div id="reviewContainer"></div>
+          <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e5e7eb;">
+            <label style="font-size:0.85rem;font-weight:600;color:#374151;display:block;margin-bottom:0.4rem;" for="downloadNameInput">Download file name (optional)</label>
+            <input type="text" id="downloadNameInput" placeholder="Leave blank for default name..." style="width:100%;max-width:500px;padding:0.55rem 0.85rem;border:1px solid #d1d5db;border-radius:8px;font-size:0.9rem;">
+          </div>
         </div>
         <div class="card-footer">
           <button class="btn btn-secondary" id="step8Back">← Back</button>
@@ -3023,6 +3244,22 @@
       </div>
     </div>
   </div>
+  <!-- Restore Survey Modal -->
+  <div class="restore-modal-overlay" id="restoreModalOverlay">
+    <div class="restore-modal">
+      <div class="restore-modal-header">
+        <h2>Saved Surveys</h2>
+        <button class="restore-modal-close" id="restoreModalClose">&times;</button>
+      </div>
+      <div class="restore-modal-body">
+        <div id="restoreSurveyList" class="restore-survey-list"></div>
+      </div>
+      <div class="restore-modal-footer">
+        <button class="btn btn-secondary" id="restoreModalDone">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Mobile sidebar overlay -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -3266,9 +3503,17 @@
     // Use case helpers
     function getUseCaseLabel(categoryId, itemId) {
       const cat = useCaseCategories.find(c => c.id === categoryId);
-      if (!cat) return itemId;
-      const item = cat.items.find(i => i.id === itemId);
-      return item ? item.label : itemId;
+      if (cat) {
+        const item = cat.items.find(i => i.id === itemId);
+        if (item) return item.label;
+      }
+      // Check custom items
+      const catData = useCaseData[categoryId];
+      if (catData && catData.custom) {
+        const custom = catData.custom.find(c => (typeof c === 'string' ? c : c.id) === itemId);
+        if (custom) return typeof custom === 'string' ? custom : custom.label;
+      }
+      return itemId;
     }
 
     // Reverse map for migrating old text-based use case data to IDs
@@ -3449,6 +3694,7 @@
     };
 
     const STORAGE_KEY = 'ai-adoption-assessment';
+    const SURVEYS_LIST_KEY = 'ai-adoption-surveys-list';
 
     // LocalStorage functions
     function updateSaveStatus(text, saving) {
@@ -3683,6 +3929,463 @@
       saveTimeout = setTimeout(saveToLocalStorage, 1000);
     }
 
+    // ═══════════════════════════════════════════
+    // Survey Library — save / list / restore / delete
+    // ═══════════════════════════════════════════
+
+    function getCompletedSurveys() {
+      try {
+        return JSON.parse(localStorage.getItem(SURVEYS_LIST_KEY) || '[]');
+      } catch { return []; }
+    }
+
+    function saveCompletedSurvey(name) {
+      const surveys = getCompletedSurveys();
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      surveys.push({
+        id: Date.now().toString(),
+        name: name || accountName || 'Unnamed Survey',
+        savedAt: new Date().toISOString(),
+        state: saved
+      });
+      localStorage.setItem(SURVEYS_LIST_KEY, JSON.stringify(surveys));
+    }
+
+    function deleteCompletedSurvey(id) {
+      const surveys = getCompletedSurveys().filter(s => s.id !== id);
+      localStorage.setItem(SURVEYS_LIST_KEY, JSON.stringify(surveys));
+    }
+
+    function restoreSurveyFromState(stateJson) {
+      try {
+        // Validate it parses
+        JSON.parse(stateJson);
+        localStorage.setItem(STORAGE_KEY, stateJson);
+        loadFromLocalStorage();
+        // Refresh UI
+        toolsRendered = false;
+        useCasesInitialized = false;
+        renderRoles();
+        updateRoleUI();
+        document.getElementById('accountNameInput').value = accountName;
+        restoreAllNotesUI();
+        goToStep(currentStep > 0 ? currentStep : 0);
+        updateSaveStatus('Survey restored', false);
+      } catch (e) {
+        console.error('Failed to restore survey:', e);
+        alert('Failed to restore survey. The data may be corrupted.');
+      }
+    }
+
+    async function restoreSurveyFromZip(file) {
+      try {
+        const zip = await JSZip.loadAsync(file);
+        // Find the JSON file inside the zip
+        let jsonFile = null;
+        zip.forEach((path, entry) => {
+          if (path.endsWith('.json') && !entry.dir) jsonFile = entry;
+        });
+        if (!jsonFile) {
+          alert('No JSON file found in the ZIP archive.');
+          return;
+        }
+        const jsonContent = await jsonFile.async('string');
+        const parsed = JSON.parse(jsonContent);
+
+        // The exported JSON is a report, not the raw state.
+        // We need to convert it back to a state object.
+        restoreSurveyFromExportedJSON(parsed);
+      } catch (e) {
+        console.error('Failed to restore from ZIP:', e);
+        alert('Failed to read ZIP file. Make sure it is a valid survey export.');
+      }
+    }
+
+    function restoreSurveyFromExportedJSON(data) {
+      // Build a state object from the exported JSON schema
+      const state = {
+        currentStep: 8, // go to review
+        accountName: data.accountName || '',
+        aiChampion: null,
+        aiChampions: [],
+        aiFutureChampions: [],
+        hasSuccessStories: null,
+        successStories: [],
+        selectedRoles: [],
+        selectedTools: {},
+        customTools: {},
+        selectedOwnership: [],
+        aiToolPayment: null,
+        selectedCompliance: [],
+        customCompliance: [],
+        selectedLimitingFactors: [],
+        limitingFactorsOrder: [],
+        limitingFactorOther: '',
+        clientAIMaturity: null,
+        clientAIUsage: [],
+        clientAIPriority: null,
+        clientAIGovernance: null,
+        selectedChallenges: [],
+        clientChallengeOrder: [],
+        clientApprovedTools: null,
+        selectedApprovedTools: [],
+        customApprovedTools: [],
+        roleToolMatrix: {},
+        workflowMaturity: {},
+        stepNotes: {},
+        useCaseData: {},
+        savedAt: new Date().toISOString()
+      };
+
+      // Engagement
+      if (data.engagement) {
+        const eng = data.engagement;
+        if (eng.ownership) {
+          state.selectedOwnership = Object.entries(eng.ownership)
+            .filter(([k,v]) => !k.startsWith('_') && v.selected)
+            .map(([k]) => k);
+        }
+        if (eng.aiToolPayment) {
+          state.aiToolPayment = Object.entries(eng.aiToolPayment)
+            .filter(([k,v]) => !k.startsWith('_') && v)
+            .map(([k]) => k)[0] || null;
+        }
+        if (eng.compliance) {
+          state.selectedCompliance = Object.entries(eng.compliance)
+            .filter(([k,v]) => !k.startsWith('_') && typeof v === 'object' && v.selected)
+            .map(([k]) => k);
+          if (eng.compliance.custom) {
+            state.customCompliance = eng.compliance.custom || [];
+          }
+        }
+        if (eng.aiChampion) {
+          state.aiChampion = eng.aiChampion.exists;
+          state.aiChampions = eng.aiChampion.names || [];
+          state.aiFutureChampions = eng.aiChampion.futureNames || [];
+        }
+        if (eng.successStories) {
+          state.hasSuccessStories = eng.successStories.exists;
+          state.successStories = eng.successStories.stories || [];
+        }
+      }
+
+      // Client AI Landscape
+      if (data.clientAILandscape) {
+        const cl = data.clientAILandscape;
+        if (cl.maturityLevel) {
+          state.clientAIMaturity = Object.entries(cl.maturityLevel)
+            .filter(([k,v]) => !k.startsWith('_') && v)
+            .map(([k]) => k)[0] || null;
+        }
+        if (cl.currentAIUsage) {
+          state.clientAIUsage = Object.entries(cl.currentAIUsage)
+            .filter(([k,v]) => !k.startsWith('_') && v)
+            .map(([k]) => k);
+        }
+        if (cl.strategicPriority) {
+          state.clientAIPriority = Object.entries(cl.strategicPriority)
+            .filter(([k,v]) => !k.startsWith('_') && v)
+            .map(([k]) => k)[0] || null;
+        }
+        if (cl.governance) {
+          state.clientAIGovernance = Object.entries(cl.governance)
+            .filter(([k,v]) => !k.startsWith('_') && v)
+            .map(([k]) => k)[0] || null;
+        }
+        if (cl.primaryChallenges) {
+          state.clientChallengeOrder = Object.entries(cl.primaryChallenges)
+            .filter(([k,v]) => !k.startsWith('_') && typeof v === 'object' && v.rank !== null)
+            .sort((a,b) => a[1].rank - b[1].rank)
+            .map(([k]) => k);
+          state.selectedChallenges = [...state.clientChallengeOrder];
+        }
+        if (cl.approvedTools) {
+          state.clientApprovedTools = cl.approvedTools.hasApprovedList;
+          if (cl.approvedTools.tools) {
+            state.selectedApprovedTools = Object.entries(cl.approvedTools.tools)
+              .filter(([k,v]) => !k.startsWith('_') && v)
+              .map(([k]) => k);
+            state.customApprovedTools = cl.approvedTools.custom || [];
+          }
+        }
+      }
+
+      // Team roles
+      if (data.teamRoles) {
+        state.selectedRoles = Object.entries(data.teamRoles)
+          .filter(([k,v]) => !k.startsWith('_') && typeof v === 'object' && v.selected)
+          .map(([k]) => k);
+      }
+
+      // Tools
+      if (data.toolsAndInfrastructure) {
+        const tools = data.toolsAndInfrastructure;
+        Object.entries(tools).forEach(([catId, catVal]) => {
+          if (catId.startsWith('_') || typeof catVal !== 'object') return;
+          const selected = [];
+          const customs = [];
+          Object.entries(catVal).forEach(([toolId, toolVal]) => {
+            if (toolId === '_meta' || toolId === 'custom') return;
+            if (toolId.startsWith('_')) return;
+            if (typeof toolVal === 'object' && toolVal.selected) {
+              selected.push(toolId);
+            }
+          });
+          if (catVal.custom) {
+            catVal.custom.forEach(c => {
+              const cId = typeof c === 'string' ? c : c.id;
+              selected.push(cId);
+              customs.push(typeof c === 'string' ? { id: c, label: c } : c);
+            });
+          }
+          if (selected.length > 0) {
+            state.selectedTools[catId] = selected;
+          }
+          if (customs.length > 0) {
+            state.customTools[catId] = customs;
+          }
+        });
+      }
+
+      // Role-Tool Matrix
+      if (data.roleToolMatrix && typeof data.roleToolMatrix === 'object') {
+        Object.entries(data.roleToolMatrix).forEach(([key, val]) => {
+          if (!key.startsWith('_') && typeof val === 'object' && val.level !== undefined) {
+            state.roleToolMatrix[key] = val;
+          }
+        });
+      }
+
+      // Use Cases
+      if (data.useCases) {
+        const uc = {};
+        Object.entries(data.useCases).forEach(([catId, catVal]) => {
+          if (catId === '_meta' || catId.startsWith('_')) return;
+          if (typeof catVal !== 'object') return;
+          const need = [];
+          const doing = [];
+          const custom = [];
+          Object.entries(catVal).forEach(([itemId, itemVal]) => {
+            if (itemId === '_meta' || itemId.startsWith('_') || itemId === 'custom') return;
+            if (typeof itemVal === 'object' && itemVal.status) {
+              if (itemVal.status === 'need') need.push(itemId);
+              else if (itemVal.status === 'doing') doing.push(itemId);
+            }
+          });
+          if (catVal.custom) {
+            catVal.custom.forEach(c => {
+              custom.push({ id: c.id, label: c.label });
+              if (c.status === 'need') need.push(c.id);
+              else if (c.status === 'doing') doing.push(c.id);
+            });
+          }
+          uc[catId] = { need, doing, custom };
+        });
+        state.useCaseData = uc;
+      }
+
+      // Workflow Maturity
+      if (data.workflowMaturity) {
+        Object.entries(data.workflowMaturity).forEach(([roleId, val]) => {
+          if (roleId === '_meta' || roleId.startsWith('_')) return;
+          if (typeof val === 'object' && val.stage !== null && val.stage !== undefined) {
+            state.workflowMaturity[roleId] = val.stage;
+          }
+        });
+      }
+
+      // Limiting Factors
+      if (data.limitingFactors) {
+        const ranked = [];
+        Object.entries(data.limitingFactors).forEach(([id, val]) => {
+          if (id === '_meta' || id.startsWith('_')) return;
+          if (typeof val === 'object' && val.rank !== null && val.rank !== undefined) {
+            ranked.push({ id, rank: val.rank });
+            if (id === 'other' && val.text) {
+              state.limitingFactorOther = val.text;
+            }
+          }
+        });
+        ranked.sort((a,b) => a.rank - b.rank);
+        state.limitingFactorsOrder = ranked.map(r => r.id);
+        state.selectedLimitingFactors = ranked.map(r => r.id);
+      }
+
+      // Notes
+      if (data.notes) {
+        const noteMap = {
+          engagement: '5', clientAILandscape: '6', teamRoles: '1',
+          tools: '2', roleToolMatrix: '4', useCases: '3',
+          workflowMaturity: '9', limitingFactors: '7'
+        };
+        Object.entries(data.notes).forEach(([key, val]) => {
+          if (key === '_meta' || key.startsWith('_')) return;
+          if (val && noteMap[key]) state.stepNotes[noteMap[key]] = val;
+        });
+      }
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      loadFromLocalStorage();
+      toolsRendered = false;
+      useCasesInitialized = false;
+      renderRoles();
+      updateRoleUI();
+      document.getElementById('accountNameInput').value = accountName;
+      restoreAllNotesUI();
+      goToStep(8); // Go to review
+      updateSaveStatus('Survey restored from file', false);
+    }
+
+    function openRestoreModal() {
+      const overlay = document.getElementById('restoreModalOverlay');
+      const list = document.getElementById('restoreSurveyList');
+      const surveys = getCompletedSurveys();
+
+      if (surveys.length === 0) {
+        list.innerHTML = '<div class="restore-empty">No saved surveys yet.<br>Surveys are saved when you download them.</div>';
+      } else {
+        list.innerHTML = surveys.map(s => {
+          const d = new Date(s.savedAt);
+          const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return `
+            <div class="restore-survey-item" data-survey-id="${s.id}">
+              <div class="restore-survey-info">
+                <div class="restore-survey-name">${s.name.replace(/</g, '&lt;')}</div>
+                <div class="restore-survey-date">${dateStr}</div>
+              </div>
+              <div class="restore-survey-actions">
+                <button class="btn-restore-load" data-action="load" data-id="${s.id}">Restore</button>
+                <button class="btn-restore-download" data-action="download" data-id="${s.id}" title="Download ZIP">📦</button>
+                <button class="btn-restore-delete" data-action="delete" data-id="${s.id}" title="Delete">🗑</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        list.querySelectorAll('button[data-action]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const action = btn.dataset.action;
+            const id = btn.dataset.id;
+            if (action === 'load') {
+              const survey = getCompletedSurveys().find(s => s.id === id);
+              if (survey) {
+                overlay.classList.remove('open');
+                restoreSurveyFromState(survey.state);
+              }
+            } else if (action === 'delete') {
+              if (confirm('Delete this saved survey?')) {
+                deleteCompletedSurvey(id);
+                openRestoreModal(); // refresh
+              }
+            } else if (action === 'download') {
+              const survey = getCompletedSurveys().find(s => s.id === id);
+              if (survey) downloadSurveyFromState(survey);
+            }
+          });
+        });
+      }
+      overlay.classList.add('open');
+    }
+
+    async function downloadSurveyFromState(survey) {
+      try {
+        const state = JSON.parse(survey.state);
+        // Temporarily swap state, generate, then restore
+        const backup = localStorage.getItem(STORAGE_KEY);
+        localStorage.setItem(STORAGE_KEY, survey.state);
+        const prevState = captureCurrentState();
+        loadFromLocalStorage();
+        const jsonContent = generateJSON();
+        const mdContent = generateMarkdown();
+        // Restore original state
+        if (backup) localStorage.setItem(STORAGE_KEY, backup);
+        restoreFromSnapshot(prevState);
+
+        const safeName = (survey.name || 'Survey').replace(/[^a-zA-Z0-9-_]/g, '_');
+        const now = new Date(survey.savedAt);
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const dateStr = `${yyyy}_${mm}_${dd}`;
+        const quarter = `Q${Math.ceil((now.getMonth() + 1) / 3)}`;
+        const fileBaseName = `${dateStr}_AI_Adoption_Assessment_${yyyy}_${quarter}_${safeName}`;
+
+        const zip = new JSZip();
+        zip.file(`${fileBaseName}.json`, jsonContent);
+        zip.file(`${fileBaseName}.md`, mdContent);
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${fileBaseName}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error('Error downloading saved survey:', e);
+        alert('Error generating download for this survey.');
+      }
+    }
+
+    function captureCurrentState() {
+      return {
+        currentStep, accountName, aiChampion, aiChampions, aiFutureChampions,
+        hasSuccessStories, successStories,
+        selectedRoles: new Set(selectedRoles),
+        selectedTools: Object.fromEntries(Object.entries(selectedTools).map(([k,v]) => [k, new Set(v)])),
+        customTools: JSON.parse(JSON.stringify(customTools)),
+        selectedOwnership: new Set(selectedOwnership),
+        aiToolPayment,
+        selectedCompliance: new Set(selectedCompliance),
+        customCompliance: [...customCompliance],
+        selectedLimitingFactors: new Set(selectedLimitingFactors),
+        limitingFactorsOrder: [...limitingFactorsOrder],
+        limitingFactorOther,
+        clientAIMaturity, clientAIUsage: new Set(clientAIUsage),
+        clientAIPriority, clientAIGovernance,
+        selectedChallenges: new Set(selectedChallenges),
+        clientChallengeOrder: [...clientChallengeOrder],
+        clientApprovedTools,
+        selectedApprovedTools: new Set(selectedApprovedTools),
+        customApprovedTools: [...customApprovedTools],
+        roleToolMatrix: JSON.parse(JSON.stringify(roleToolMatrix)),
+        workflowMaturity: JSON.parse(JSON.stringify(workflowMaturity)),
+        stepNotes: JSON.parse(JSON.stringify(stepNotes)),
+        useCaseData: Object.fromEntries(Object.entries(useCaseData).map(([k,v]) => [k, {
+          need: new Set(v.need), doing: new Set(v.doing), custom: [...(v.custom || [])]
+        }])),
+        useCasesInitialized, toolsRendered
+      };
+    }
+
+    function restoreFromSnapshot(s) {
+      currentStep = s.currentStep; accountName = s.accountName;
+      aiChampion = s.aiChampion; aiChampions = s.aiChampions;
+      aiFutureChampions = s.aiFutureChampions;
+      hasSuccessStories = s.hasSuccessStories; successStories = s.successStories;
+      selectedRoles = s.selectedRoles; selectedTools = s.selectedTools;
+      customTools = s.customTools; selectedOwnership = s.selectedOwnership;
+      aiToolPayment = s.aiToolPayment; selectedCompliance = s.selectedCompliance;
+      customCompliance = s.customCompliance;
+      selectedLimitingFactors = s.selectedLimitingFactors;
+      limitingFactorsOrder = s.limitingFactorsOrder;
+      limitingFactorOther = s.limitingFactorOther;
+      clientAIMaturity = s.clientAIMaturity; clientAIUsage = s.clientAIUsage;
+      clientAIPriority = s.clientAIPriority; clientAIGovernance = s.clientAIGovernance;
+      selectedChallenges = s.selectedChallenges;
+      clientChallengeOrder = s.clientChallengeOrder;
+      clientApprovedTools = s.clientApprovedTools;
+      selectedApprovedTools = s.selectedApprovedTools;
+      customApprovedTools = s.customApprovedTools;
+      roleToolMatrix = s.roleToolMatrix; workflowMaturity = s.workflowMaturity;
+      stepNotes = s.stepNotes; useCaseData = s.useCaseData;
+      useCasesInitialized = s.useCasesInitialized;
+      toolsRendered = s.toolsRendered;
+    }
+
     // Initialize
     function init() {
       const hasExistingData = loadFromLocalStorage();
@@ -3716,6 +4419,30 @@
       
       // Add clear progress handler
       document.getElementById('clearProgress').addEventListener('click', clearLocalStorage);
+
+      // Restore survey handlers
+      document.getElementById('restoreFromListBtn').addEventListener('click', openRestoreModal);
+      document.getElementById('restoreFromFileBtn').addEventListener('click', () => {
+        document.getElementById('restoreFileInput').click();
+      });
+      document.getElementById('restoreFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          if (confirm('This will replace your current survey progress. Continue?')) {
+            restoreSurveyFromZip(file);
+          }
+          e.target.value = ''; // reset so same file can be re-selected
+        }
+      });
+      document.getElementById('restoreModalClose').addEventListener('click', () => {
+        document.getElementById('restoreModalOverlay').classList.remove('open');
+      });
+      document.getElementById('restoreModalDone').addEventListener('click', () => {
+        document.getElementById('restoreModalOverlay').classList.remove('open');
+      });
+      document.getElementById('restoreModalOverlay').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+      });
 
       // Mobile sidebar toggle
       const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -6007,31 +6734,38 @@
       const originalText = btn.textContent;
       btn.textContent = '⏳ Generating...';
       btn.disabled = true;
-      
+
       try {
         // Generate content
         const jsonContent = generateJSON();
         const mdContent = generateMarkdown();
-        
-        // Create filename base
+
+        // Create filename base — use custom name if provided
+        const customName = (document.getElementById('downloadNameInput')?.value || '').trim();
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const dd = String(now.getDate()).padStart(2, '0');
         const dateStr = `${yyyy}_${mm}_${dd}`;
         const quarter = `Q${Math.ceil((now.getMonth() + 1) / 3)}`;
-        const safeAccountName = (accountName || 'Project').replace(/[^a-zA-Z0-9-_]/g, '_');
-        const fileBaseName = `${dateStr}_AI_Adoption_Assessment_${yyyy}_${quarter}_${safeAccountName}`;
-        
+
+        let fileBaseName;
+        if (customName) {
+          fileBaseName = customName.replace(/[^a-zA-Z0-9-_ ]/g, '_');
+        } else {
+          const safeAccountName = (accountName || 'Project').replace(/[^a-zA-Z0-9-_]/g, '_');
+          fileBaseName = `${dateStr}_AI_Adoption_Assessment_${yyyy}_${quarter}_${safeAccountName}`;
+        }
+
         // Create zip
         const zip = new JSZip();
         zip.file(`${fileBaseName}.json`, jsonContent);
         zip.file(`${fileBaseName}.md`, mdContent);
-        
+
         // Generate and download
         const blob = await zip.generateAsync({ type: 'blob' });
         const url = URL.createObjectURL(blob);
-        
+
         const a = document.createElement('a');
         a.href = url;
         a.download = `${fileBaseName}.zip`;
@@ -6039,6 +6773,10 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+
+        // Auto-save to survey library
+        saveToLocalStorage(); // ensure latest state is saved
+        saveCompletedSurvey(accountName || 'Unnamed Survey');
       } catch (error) {
         console.error('Error generating download:', error);
         alert('Error generating download. Please try again.');
