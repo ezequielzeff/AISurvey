@@ -4,6 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Adoption Assessment</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
   <style>
     * {
       margin: 0;
@@ -3694,7 +3695,6 @@
     };
 
     const STORAGE_KEY = 'ai-adoption-assessment';
-    const SURVEYS_LIST_KEY = 'ai-adoption-surveys-list';
 
     // LocalStorage functions
     function updateSaveStatus(text, saving) {
@@ -3930,51 +3930,66 @@
     }
 
     // ═══════════════════════════════════════════
-    // Survey Library — save / list / restore / delete
+    // Survey Library — reads from dashboard IndexedDB/SQLite
     // ═══════════════════════════════════════════
 
-    function getCompletedSurveys() {
-      try {
-        return JSON.parse(localStorage.getItem(SURVEYS_LIST_KEY) || '[]');
-      } catch { return []; }
-    }
+    const DASHBOARD_IDB_NAME = 'AISurveyDashboard';
+    const DASHBOARD_IDB_STORE = 'database';
+    const DASHBOARD_IDB_KEY = 'sqliteDb';
 
-    function saveCompletedSurvey(name) {
-      const surveys = getCompletedSurveys();
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return;
-      surveys.push({
-        id: Date.now().toString(),
-        name: name || accountName || 'Unnamed Survey',
-        savedAt: new Date().toISOString(),
-        state: saved
+    function openDashboardIDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DASHBOARD_IDB_NAME, 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(DASHBOARD_IDB_STORE)) {
+            db.createObjectStore(DASHBOARD_IDB_STORE);
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
       });
-      localStorage.setItem(SURVEYS_LIST_KEY, JSON.stringify(surveys));
     }
 
-    function deleteCompletedSurvey(id) {
-      const surveys = getCompletedSurveys().filter(s => s.id !== id);
-      localStorage.setItem(SURVEYS_LIST_KEY, JSON.stringify(surveys));
-    }
-
-    function restoreSurveyFromState(stateJson) {
+    async function loadDashboardDB() {
       try {
-        // Validate it parses
-        JSON.parse(stateJson);
-        localStorage.setItem(STORAGE_KEY, stateJson);
-        loadFromLocalStorage();
-        // Refresh UI
-        toolsRendered = false;
-        useCasesInitialized = false;
-        renderRoles();
-        updateRoleUI();
-        document.getElementById('accountNameInput').value = accountName;
-        restoreAllNotesUI();
-        goToStep(currentStep > 0 ? currentStep : 0);
-        updateSaveStatus('Survey restored', false);
+        const idb = await openDashboardIDB();
+        const data = await new Promise((resolve, reject) => {
+          const tx = idb.transaction(DASHBOARD_IDB_STORE, 'readonly');
+          const req = tx.objectStore(DASHBOARD_IDB_STORE).get(DASHBOARD_IDB_KEY);
+          req.onsuccess = () => resolve(req.result ? new Uint8Array(req.result) : null);
+          req.onerror = () => reject(req.error);
+        });
+        if (!data) return null;
+        const SQL = await initSqlJs({
+          locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+        });
+        return new SQL.Database(data);
       } catch (e) {
-        console.error('Failed to restore survey:', e);
-        alert('Failed to restore survey. The data may be corrupted.');
+        console.error('Failed to load dashboard database:', e);
+        return null;
+      }
+    }
+
+    async function getDashboardSurveys() {
+      const db = await loadDashboardDB();
+      if (!db) return [];
+      try {
+        const result = db.exec('SELECT id, account_name, exported_at, year, quarter, raw_json FROM surveys ORDER BY exported_at DESC');
+        if (!result.length) return [];
+        return result[0].values.map(row => ({
+          id: row[0],
+          account_name: row[1],
+          exported_at: row[2],
+          year: row[3],
+          quarter: row[4],
+          raw_json: row[5]
+        }));
+      } catch (e) {
+        console.error('Failed to query surveys:', e);
+        return [];
+      } finally {
+        db.close();
       }
     }
 
@@ -4237,153 +4252,51 @@
       updateSaveStatus('Survey restored from file', false);
     }
 
-    function openRestoreModal() {
+    async function openRestoreModal() {
       const overlay = document.getElementById('restoreModalOverlay');
       const list = document.getElementById('restoreSurveyList');
-      const surveys = getCompletedSurveys();
+      list.innerHTML = '<div class="restore-empty">Loading surveys from dashboard...</div>';
+      overlay.classList.add('open');
+
+      const surveys = await getDashboardSurveys();
 
       if (surveys.length === 0) {
-        list.innerHTML = '<div class="restore-empty">No saved surveys yet.<br>Surveys are saved when you download them.</div>';
+        list.innerHTML = '<div class="restore-empty">No surveys found.<br>Import surveys in the Dashboard first, or use "From ZIP File" to restore directly.</div>';
       } else {
         list.innerHTML = surveys.map(s => {
-          const d = new Date(s.savedAt);
+          const d = new Date(s.exported_at);
           const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           return `
             <div class="restore-survey-item" data-survey-id="${s.id}">
               <div class="restore-survey-info">
-                <div class="restore-survey-name">${s.name.replace(/</g, '&lt;')}</div>
-                <div class="restore-survey-date">${dateStr}</div>
+                <div class="restore-survey-name">${(s.account_name || 'Unnamed').replace(/</g, '&lt;')}</div>
+                <div class="restore-survey-date">${s.year} Q${s.quarter} &middot; ${dateStr}</div>
               </div>
               <div class="restore-survey-actions">
                 <button class="btn-restore-load" data-action="load" data-id="${s.id}">Restore</button>
-                <button class="btn-restore-download" data-action="download" data-id="${s.id}" title="Download ZIP">📦</button>
-                <button class="btn-restore-delete" data-action="delete" data-id="${s.id}" title="Delete">🗑</button>
               </div>
             </div>
           `;
         }).join('');
 
-        list.querySelectorAll('button[data-action]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
+        list.querySelectorAll('button[data-action="load"]').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            const action = btn.dataset.action;
-            const id = btn.dataset.id;
-            if (action === 'load') {
-              const survey = getCompletedSurveys().find(s => s.id === id);
-              if (survey) {
-                overlay.classList.remove('open');
-                restoreSurveyFromState(survey.state);
+            const id = parseInt(btn.dataset.id);
+            const survey = surveys.find(s => s.id === id);
+            if (survey) {
+              overlay.classList.remove('open');
+              try {
+                const data = JSON.parse(survey.raw_json);
+                restoreSurveyFromExportedJSON(data);
+              } catch (err) {
+                console.error('Failed to parse survey JSON:', err);
+                alert('Failed to restore this survey. The data may be corrupted.');
               }
-            } else if (action === 'delete') {
-              if (confirm('Delete this saved survey?')) {
-                deleteCompletedSurvey(id);
-                openRestoreModal(); // refresh
-              }
-            } else if (action === 'download') {
-              const survey = getCompletedSurveys().find(s => s.id === id);
-              if (survey) downloadSurveyFromState(survey);
             }
           });
         });
       }
-      overlay.classList.add('open');
-    }
-
-    async function downloadSurveyFromState(survey) {
-      try {
-        const state = JSON.parse(survey.state);
-        // Temporarily swap state, generate, then restore
-        const backup = localStorage.getItem(STORAGE_KEY);
-        localStorage.setItem(STORAGE_KEY, survey.state);
-        const prevState = captureCurrentState();
-        loadFromLocalStorage();
-        const jsonContent = generateJSON();
-        const mdContent = generateMarkdown();
-        // Restore original state
-        if (backup) localStorage.setItem(STORAGE_KEY, backup);
-        restoreFromSnapshot(prevState);
-
-        const safeName = (survey.name || 'Survey').replace(/[^a-zA-Z0-9-_]/g, '_');
-        const now = new Date(survey.savedAt);
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        const dateStr = `${yyyy}_${mm}_${dd}`;
-        const quarter = `Q${Math.ceil((now.getMonth() + 1) / 3)}`;
-        const fileBaseName = `${dateStr}_AI_Adoption_Assessment_${yyyy}_${quarter}_${safeName}`;
-
-        const zip = new JSZip();
-        zip.file(`${fileBaseName}.json`, jsonContent);
-        zip.file(`${fileBaseName}.md`, mdContent);
-        const blob = await zip.generateAsync({ type: 'blob' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${fileBaseName}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      } catch (e) {
-        console.error('Error downloading saved survey:', e);
-        alert('Error generating download for this survey.');
-      }
-    }
-
-    function captureCurrentState() {
-      return {
-        currentStep, accountName, aiChampion, aiChampions, aiFutureChampions,
-        hasSuccessStories, successStories,
-        selectedRoles: new Set(selectedRoles),
-        selectedTools: Object.fromEntries(Object.entries(selectedTools).map(([k,v]) => [k, new Set(v)])),
-        customTools: JSON.parse(JSON.stringify(customTools)),
-        selectedOwnership: new Set(selectedOwnership),
-        aiToolPayment,
-        selectedCompliance: new Set(selectedCompliance),
-        customCompliance: [...customCompliance],
-        selectedLimitingFactors: new Set(selectedLimitingFactors),
-        limitingFactorsOrder: [...limitingFactorsOrder],
-        limitingFactorOther,
-        clientAIMaturity, clientAIUsage: new Set(clientAIUsage),
-        clientAIPriority, clientAIGovernance,
-        selectedChallenges: new Set(selectedChallenges),
-        clientChallengeOrder: [...clientChallengeOrder],
-        clientApprovedTools,
-        selectedApprovedTools: new Set(selectedApprovedTools),
-        customApprovedTools: [...customApprovedTools],
-        roleToolMatrix: JSON.parse(JSON.stringify(roleToolMatrix)),
-        workflowMaturity: JSON.parse(JSON.stringify(workflowMaturity)),
-        stepNotes: JSON.parse(JSON.stringify(stepNotes)),
-        useCaseData: Object.fromEntries(Object.entries(useCaseData).map(([k,v]) => [k, {
-          need: new Set(v.need), doing: new Set(v.doing), custom: [...(v.custom || [])]
-        }])),
-        useCasesInitialized, toolsRendered
-      };
-    }
-
-    function restoreFromSnapshot(s) {
-      currentStep = s.currentStep; accountName = s.accountName;
-      aiChampion = s.aiChampion; aiChampions = s.aiChampions;
-      aiFutureChampions = s.aiFutureChampions;
-      hasSuccessStories = s.hasSuccessStories; successStories = s.successStories;
-      selectedRoles = s.selectedRoles; selectedTools = s.selectedTools;
-      customTools = s.customTools; selectedOwnership = s.selectedOwnership;
-      aiToolPayment = s.aiToolPayment; selectedCompliance = s.selectedCompliance;
-      customCompliance = s.customCompliance;
-      selectedLimitingFactors = s.selectedLimitingFactors;
-      limitingFactorsOrder = s.limitingFactorsOrder;
-      limitingFactorOther = s.limitingFactorOther;
-      clientAIMaturity = s.clientAIMaturity; clientAIUsage = s.clientAIUsage;
-      clientAIPriority = s.clientAIPriority; clientAIGovernance = s.clientAIGovernance;
-      selectedChallenges = s.selectedChallenges;
-      clientChallengeOrder = s.clientChallengeOrder;
-      clientApprovedTools = s.clientApprovedTools;
-      selectedApprovedTools = s.selectedApprovedTools;
-      customApprovedTools = s.customApprovedTools;
-      roleToolMatrix = s.roleToolMatrix; workflowMaturity = s.workflowMaturity;
-      stepNotes = s.stepNotes; useCaseData = s.useCaseData;
-      useCasesInitialized = s.useCasesInitialized;
-      toolsRendered = s.toolsRendered;
     }
 
     // Initialize
@@ -6774,9 +6687,8 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        // Auto-save to survey library
-        saveToLocalStorage(); // ensure latest state is saved
-        saveCompletedSurvey(accountName || 'Unnamed Survey');
+        // Ensure latest state is persisted
+        saveToLocalStorage();
       } catch (error) {
         console.error('Error generating download:', error);
         alert('Error generating download. Please try again.');
