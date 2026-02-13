@@ -7528,17 +7528,28 @@
   }
 
   function exportDashboardPDF() {
-    // 1. Expand all collapsed sections so chart containers become visible
+    // 1. Expand all collapsed sections
     const collapsedSections = [...document.querySelectorAll('.widget-section.collapsed')];
     collapsedSections.forEach(s => s.classList.remove('collapsed'));
 
-    // 2. Re-render all charts from scratch in now-visible containers.
-    //    Charts were originally created inside display:none sections with 0×0 dimensions.
-    //    resize()/update() can't recover broken internal state — must destroy & recreate.
+    // 2. Force synchronous reflow — reading offsetHeight after the DOM
+    //    mutation forces the browser to recalculate layout NOW, before
+    //    any further JS executes. Containers now have real dimensions.
+    document.getElementById('dashboardContent').offsetHeight;
+
+    // 3. Disable Chart.js animation so charts render final frame instantly
+    //    (default is 1000ms — capturing mid-animation produces blank images)
+    const savedDuration = Chart.defaults.animation.duration;
+    Chart.defaults.animation.duration = 0;
+
+    // 4. Re-render all charts from scratch with correct dimensions
     refreshDashboard();
 
-    // 3. Wait for browser layout + Chart.js render to complete, then capture
-    requestAnimationFrame(() => { setTimeout(() => {
+    // 5. Restore animation for normal dashboard use
+    Chart.defaults.animation.duration = savedDuration;
+
+    // 6. One rAF to let the browser paint the fully-rendered charts, then capture
+    requestAnimationFrame(() => {
       const canvasMap = [];
       Object.entries(charts).forEach(([id, chart]) => {
         if (!chart || !chart.canvas) return;
@@ -7556,16 +7567,16 @@
         }
       });
 
-      // 4. Trigger browser print (user picks "Save as PDF")
+      // 7. Trigger browser print (user picks "Save as PDF")
       window.print();
 
-      // 5. Restore after print dialog closes
+      // 8. Restore after print dialog closes
       canvasMap.forEach(({ canvas, img }) => {
         canvas.style.display = '';
         img.remove();
       });
       collapsedSections.forEach(s => s.classList.add('collapsed'));
-    }, 500); });
+    });
   }
 
   async function updateAccountType(id, newType) {
