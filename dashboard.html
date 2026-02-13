@@ -7528,37 +7528,44 @@
   }
 
   function exportDashboardPDF() {
-    // 1. Expand all collapsed sections temporarily
+    // 1. Expand all collapsed sections
     const collapsedSections = [...document.querySelectorAll('.widget-section.collapsed')];
     collapsedSections.forEach(s => s.classList.remove('collapsed'));
 
-    // 2. Convert each Chart.js canvas to a static <img> for print
-    const canvasMap = [];
-    Object.entries(charts).forEach(([id, chart]) => {
-      if (!chart || !chart.canvas) return;
-      const canvas = chart.canvas;
-      try {
-        const img = document.createElement('img');
-        img.src = chart.toBase64Image();
-        img.className = 'print-chart-img';
-        img.style.width = '100%';
-        canvas.style.display = 'none';
-        canvas.parentNode.insertBefore(img, canvas);
-        canvasMap.push({ canvas, img });
-      } catch (e) {
-        console.warn('Could not convert chart to image:', id, e);
-      }
+    // 2. Force all charts to resize to their now-visible containers
+    Object.values(charts).forEach(chart => {
+      if (chart && chart.canvas) chart.resize();
     });
 
-    // 3. Trigger browser print (user picks "Save as PDF")
-    window.print();
+    // 3. Wait for browser to lay out + paint the resized charts, then capture
+    requestAnimationFrame(() => { setTimeout(() => {
+      const canvasMap = [];
+      Object.entries(charts).forEach(([id, chart]) => {
+        if (!chart || !chart.canvas) return;
+        const canvas = chart.canvas;
+        try {
+          const img = document.createElement('img');
+          img.src = chart.toBase64Image();
+          img.className = 'print-chart-img';
+          img.style.width = '100%';
+          canvas.style.display = 'none';
+          canvas.parentNode.insertBefore(img, canvas);
+          canvasMap.push({ canvas, img });
+        } catch (e) {
+          console.warn('Could not convert chart to image:', id, e);
+        }
+      });
 
-    // 4. Restore after print dialog closes
-    canvasMap.forEach(({ canvas, img }) => {
-      canvas.style.display = '';
-      img.remove();
-    });
-    collapsedSections.forEach(s => s.classList.add('collapsed'));
+      // 4. Trigger browser print (user picks "Save as PDF")
+      window.print();
+
+      // 5. Restore after print dialog closes
+      canvasMap.forEach(({ canvas, img }) => {
+        canvas.style.display = '';
+        img.remove();
+      });
+      collapsedSections.forEach(s => s.classList.add('collapsed'));
+    }, 100); });  // 100ms delay ensures paint is complete
   }
 
   async function updateAccountType(id, newType) {
