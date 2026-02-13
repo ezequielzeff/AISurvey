@@ -7204,45 +7204,52 @@
     }
 
     // 1. Aggregate: count selected=true per role × tool across all surveys
+    //    Per-role denominator: only count accounts where that role uses ≥1 AI tool
     const roleToolCounts = {};
-    let surveysWithData = 0;
+    const roleActiveCount = {};  // accounts where this role uses at least one tool
 
     ROLE_ORDER.forEach(role => {
       roleToolCounts[role] = {};
+      roleActiveCount[role] = 0;
       AI_TOOL_ORDER.forEach(tool => { roleToolCounts[role][tool] = 0; });
     });
 
     surveys.forEach(s => {
       const matrix = s.data?.roleToolMatrix;
       if (!matrix) return;
-      surveysWithData++;
       ROLE_ORDER.forEach(role => {
+        let roleUsesAny = false;
         AI_TOOL_ORDER.forEach(tool => {
           if (matrix[`${role}:${tool}`]?.selected) {
             roleToolCounts[role][tool]++;
+            roleUsesAny = true;
           }
         });
+        if (roleUsesAny) roleActiveCount[role]++;
       });
     });
 
-    if (surveysWithData === 0) {
+    // Filter to roles that actually use AI tools
+    const activeRoles = ROLE_ORDER.filter(r => roleActiveCount[r] > 0);
+
+    if (activeRoles.length === 0) {
       container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;">No role-tool matrix data available</div>';
       return;
     }
 
-    // 2. Compute percentages
+    // 2. Compute percentages (per-role denominator)
     const roleToolPcts = {};
-    ROLE_ORDER.forEach(role => {
+    activeRoles.forEach(role => {
       roleToolPcts[role] = {};
       AI_TOOL_ORDER.forEach(tool => {
-        roleToolPcts[role][tool] = Math.round((roleToolCounts[role][tool] / surveysWithData) * 100);
+        roleToolPcts[role][tool] = Math.round((roleToolCounts[role][tool] / roleActiveCount[role]) * 100);
       });
     });
 
-    // 3. Filter tools: only include those with at least 1 usage, sorted by total descending
+    // 3. Filter tools: only include those with at least 1 usage among active roles, sorted by total descending
     const toolTotals = {};
     AI_TOOL_ORDER.forEach(tool => {
-      toolTotals[tool] = ROLE_ORDER.reduce((sum, role) => sum + roleToolCounts[role][tool], 0);
+      toolTotals[tool] = activeRoles.reduce((sum, role) => sum + roleToolCounts[role][tool], 0);
     });
     const activeTools = AI_TOOL_ORDER
       .filter(tool => toolTotals[tool] > 0)
@@ -7255,7 +7262,7 @@
 
     // 4. Find max percentage for heatmap intensity normalization
     let maxPct = 0;
-    ROLE_ORDER.forEach(role => {
+    activeRoles.forEach(role => {
       activeTools.forEach(tool => {
         if (roleToolPcts[role][tool] > maxPct) maxPct = roleToolPcts[role][tool];
       });
@@ -7268,9 +7275,9 @@
       headerHtml += `<th><span class="rh-stage-name" style="white-space:nowrap;">${escapeHtml(AI_TOOL_LABELS[tool] || tool)}</span></th>`;
     });
 
-    // 6. Build rows
+    // 6. Build rows (only roles that use AI tools)
     let bodyHtml = '';
-    ROLE_ORDER.forEach(role => {
+    activeRoles.forEach(role => {
       let rowHtml = `<td class="rh-role-header">
         <span class="rh-role-abbr">${escapeHtml(ROLE_FULL_NAMES[role])}</span>
       </td>`;
@@ -7304,33 +7311,39 @@
 
     function computeRoleToolData(surveys) {
       const roleToolCounts = {};
-      let surveysWithData = 0;
+      const roleActiveCount = {};
       ROLE_ORDER.forEach(role => {
         roleToolCounts[role] = {};
+        roleActiveCount[role] = 0;
         AI_TOOL_ORDER.forEach(tool => { roleToolCounts[role][tool] = 0; });
       });
       surveys.forEach(s => {
         const matrix = s.data?.roleToolMatrix;
         if (!matrix) return;
-        surveysWithData++;
         ROLE_ORDER.forEach(role => {
+          let roleUsesAny = false;
           AI_TOOL_ORDER.forEach(tool => {
-            if (matrix[`${role}:${tool}`]?.selected) roleToolCounts[role][tool]++;
+            if (matrix[`${role}:${tool}`]?.selected) {
+              roleToolCounts[role][tool]++;
+              roleUsesAny = true;
+            }
           });
+          if (roleUsesAny) roleActiveCount[role]++;
         });
       });
+      const activeRoles = ROLE_ORDER.filter(r => roleActiveCount[r] > 0);
       const pcts = {};
-      ROLE_ORDER.forEach(role => {
+      activeRoles.forEach(role => {
         pcts[role] = {};
         AI_TOOL_ORDER.forEach(tool => {
-          pcts[role][tool] = surveysWithData > 0 ? Math.round((roleToolCounts[role][tool] / surveysWithData) * 100) : 0;
+          pcts[role][tool] = Math.round((roleToolCounts[role][tool] / roleActiveCount[role]) * 100);
         });
       });
       const toolTotals = {};
       AI_TOOL_ORDER.forEach(tool => {
-        toolTotals[tool] = ROLE_ORDER.reduce((sum, role) => sum + roleToolCounts[role][tool], 0);
+        toolTotals[tool] = activeRoles.reduce((sum, role) => sum + roleToolCounts[role][tool], 0);
       });
-      return { pcts, toolTotals };
+      return { pcts, toolTotals, activeRoles };
     }
 
     const dataA = computeRoleToolData(surveysA);
@@ -7347,10 +7360,15 @@
       return;
     }
 
-    function renderHeatmapTable(pcts, groupName, color) {
+    // Union of active roles from both groups
+    const allActiveRoles = ROLE_ORDER.filter(r =>
+      (dataA.activeRoles || []).includes(r) || (dataB.activeRoles || []).includes(r)
+    );
+
+    function renderHeatmapTable(pcts, roles, groupName, color) {
       let maxPct = 0;
-      ROLE_ORDER.forEach(role => activeTools.forEach(tool => {
-        if (pcts[role][tool] > maxPct) maxPct = pcts[role][tool];
+      roles.forEach(role => activeTools.forEach(tool => {
+        if ((pcts[role]?.[tool] || 0) > maxPct) maxPct = pcts[role]?.[tool] || 0;
       }));
 
       let html = `<div style="margin-bottom:1rem;">
@@ -7360,10 +7378,10 @@
         html += `<th><span class="rh-stage-name">${escapeHtml(AI_TOOL_LABELS[tool] || tool)}</span></th>`;
       });
       html += '</tr></thead><tbody>';
-      ROLE_ORDER.forEach(role => {
+      roles.forEach(role => {
         html += `<tr><td class="rh-role-header">${escapeHtml(ROLE_FULL_NAMES[role])}</td>`;
         activeTools.forEach(tool => {
-          const pct = pcts[role][tool];
+          const pct = pcts[role]?.[tool] || 0;
           const intensity = maxPct > 0 ? pct / maxPct : 0;
           const alpha = Math.round(intensity * 200 + 20).toString(16).padStart(2, '0');
           const bg = pct > 0 ? (color + alpha) : '#f9fafb';
@@ -7376,8 +7394,8 @@
       return html;
     }
 
-    container.innerHTML = renderHeatmapTable(dataA.pcts, nameA, COMPARE_COLOR_A)
-                        + renderHeatmapTable(dataB.pcts, nameB, COMPARE_COLOR_B);
+    container.innerHTML = renderHeatmapTable(dataA.pcts, allActiveRoles, nameA, COMPARE_COLOR_A)
+                        + renderHeatmapTable(dataB.pcts, allActiveRoles, nameB, COMPARE_COLOR_B);
   }
 
   // ═══════════════════════════════════════════
