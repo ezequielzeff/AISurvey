@@ -7528,50 +7528,51 @@
   }
 
   function exportDashboardPDF() {
-    // 1. Expand all collapsed sections
+    // 1. Expand all collapsed sections so containers get real dimensions
     const collapsedSections = [...document.querySelectorAll('.widget-section.collapsed')];
     collapsedSections.forEach(s => s.classList.remove('collapsed'));
 
-    // 2. Force all charts to resize and re-render WITHOUT animation
-    //    Charts were created in collapsed (display:none) containers so they have 0×0 dimensions.
-    //    resize() recalculates dimensions, update('none') renders the final frame instantly
-    //    (skipping Chart.js default 1000ms animation that caused blank captures).
-    Object.values(charts).forEach(chart => {
-      if (chart && chart.canvas) {
-        chart.resize();
-        chart.update('none');
-      }
-    });
-
-    // 3. Wait one frame for the browser to paint the fully-rendered charts
-    requestAnimationFrame(() => { setTimeout(() => {
-      const canvasMap = [];
-      Object.entries(charts).forEach(([id, chart]) => {
-        if (!chart || !chart.canvas) return;
-        const canvas = chart.canvas;
-        try {
-          const img = document.createElement('img');
-          img.src = chart.toBase64Image();
-          img.className = 'print-chart-img';
-          img.style.width = '100%';
-          canvas.style.display = 'none';
-          canvas.parentNode.insertBefore(img, canvas);
-          canvasMap.push({ canvas, img });
-        } catch (e) {
-          console.warn('Could not convert chart to image:', id, e);
+    // 2. Wait for browser to recalculate layout (sections now visible),
+    //    THEN resize and re-render charts with correct container dimensions
+    requestAnimationFrame(() => {
+      // Now the browser has reflowed — containers have real width/height
+      Object.values(charts).forEach(chart => {
+        if (chart && chart.canvas) {
+          chart.resize();
+          chart.update('none');  // render final frame instantly, no animation
         }
       });
 
-      // 4. Trigger browser print (user picks "Save as PDF")
-      window.print();
+      // 3. Wait again for Chart.js to paint the resized canvases
+      requestAnimationFrame(() => { setTimeout(() => {
+        const canvasMap = [];
+        Object.entries(charts).forEach(([id, chart]) => {
+          if (!chart || !chart.canvas) return;
+          const canvas = chart.canvas;
+          try {
+            const img = document.createElement('img');
+            img.src = chart.toBase64Image();
+            img.className = 'print-chart-img';
+            img.style.width = '100%';
+            canvas.style.display = 'none';
+            canvas.parentNode.insertBefore(img, canvas);
+            canvasMap.push({ canvas, img });
+          } catch (e) {
+            console.warn('Could not convert chart to image:', id, e);
+          }
+        });
 
-      // 5. Restore after print dialog closes
-      canvasMap.forEach(({ canvas, img }) => {
-        canvas.style.display = '';
-        img.remove();
-      });
-      collapsedSections.forEach(s => s.classList.add('collapsed'));
-    }, 200); });
+        // 4. Trigger browser print (user picks "Save as PDF")
+        window.print();
+
+        // 5. Restore after print dialog closes
+        canvasMap.forEach(({ canvas, img }) => {
+          canvas.style.display = '';
+          img.remove();
+        });
+        collapsedSections.forEach(s => s.classList.add('collapsed'));
+      }, 300); });
+    });
   }
 
   async function updateAccountType(id, newType) {
