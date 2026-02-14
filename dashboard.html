@@ -4293,25 +4293,27 @@
   function toggleSection(titleEl) {
     const section = titleEl.closest('.widget-section');
     section.classList.toggle('collapsed');
-    // Chart.js canvases render as 0×0 inside display:none containers.
-    // When expanding a section, resize all charts so they pick up real dimensions.
+    // Chart.js with responsive:true renders canvases as 0×0 inside display:none
+    // containers and its ResizeObserver wipes them when collapsing. When expanding
+    // a section, we must destroy and re-create charts so they measure real dimensions.
     if (!section.classList.contains('collapsed')) {
-      section.querySelectorAll('canvas').forEach(c => {
-        const chart = Chart.getChart(c);
-        if (chart) chart.resize();
-      });
+      // Force reflow so containers have computed dimensions before Chart.js measures
+      section.offsetHeight;
+      refreshDashboard();
     }
   }
 
   function toggleWidget(headerEl) {
     const card = headerEl.closest('.widget-card');
     card.classList.toggle('widget-collapsed');
-    // Chart.js canvases need resize after being unhidden
+    // Chart.js with responsive:true renders canvases as 0×0 inside display:none.
+    // When expanding, re-render so charts measure real container dimensions.
     if (!card.classList.contains('widget-collapsed')) {
-      card.querySelectorAll('canvas').forEach(c => {
-        const chart = Chart.getChart(c);
-        if (chart) chart.resize();
-      });
+      const hasCharts = card.querySelector('canvas');
+      if (hasCharts) {
+        card.offsetHeight; // force reflow
+        refreshDashboard();
+      }
     }
   }
 
@@ -9421,20 +9423,7 @@ Instructions:
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('mainContent').style.display = 'block';
 
-      // Sections start collapsed (display:none), so Chart.js canvases get 0×0.
-      // Temporarily expand all sections, render charts, then collapse back.
-      const collapsedOnLoad = [...document.querySelectorAll('.widget-section.collapsed')];
-      collapsedOnLoad.forEach(s => s.classList.remove('collapsed'));
-      document.getElementById('dashboardContent').offsetHeight; // force reflow
       refreshDashboard();
-      // Give Chart.js one frame to measure real container dimensions and draw
-      requestAnimationFrame(() => {
-        Object.values(charts).forEach(chart => {
-          if (chart && chart.canvas) chart.resize();
-        });
-        // Restore collapsed state after charts have rendered
-        collapsedOnLoad.forEach(s => s.classList.add('collapsed'));
-      });
       initAiChat();
 
       // Listen for updates from the survey tool in another tab
