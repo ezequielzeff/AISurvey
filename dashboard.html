@@ -8365,55 +8365,79 @@
     // 2. Force reflow so expanded containers have real dimensions
     document.getElementById('dashboardContent').offsetHeight;
 
-    // 3. Disable animation so charts render final state instantly
+    // 3. Disable ALL animation so charts render final state synchronously
     const savedDuration = Chart.defaults.animation.duration;
+    const savedTransitions = Chart.defaults.transitions;
     Chart.defaults.animation.duration = 0;
+    Chart.defaults.animation = false;
 
-    // 4. Recreate all charts from scratch
+    // 4. Recreate all charts from scratch (with animation disabled)
     refreshDashboard();
 
-    // 5. Force second reflow for dynamic container heights set inside render functions
+    // 5. Force reflow for dynamic container heights set inside render functions
     document.getElementById('dashboardContent').offsetHeight;
 
-    // 6. Resize every chart to pick up final container dimensions
+    // 6. Force each chart to update synchronously with no animation
     Object.values(charts).forEach(chart => {
-      if (chart && chart.canvas) chart.resize();
+      if (chart && chart.canvas) {
+        chart.resize();
+        chart.update('none');  // 'none' mode = skip animation entirely
+      }
     });
 
-    // 7. Use setTimeout to yield to browser — lets paint + composite finish
-    //    before we capture canvas content (rAF fires BEFORE paint, not after)
-    setTimeout(() => {
-      const canvasMap = [];
-      Object.entries(charts).forEach(([id, chart]) => {
-        if (!chart || !chart.canvas) return;
-        const canvas = chart.canvas;
-        if (canvas.width === 0 || canvas.height === 0) {
-          console.warn('Skipping zero-dimension chart:', id);
-          return;
-        }
-        try {
-          const img = document.createElement('img');
-          img.src = chart.toBase64Image();
-          img.className = 'print-chart-img';
-          img.style.width = '100%';
-          canvas.style.display = 'none';
-          canvas.parentNode.insertBefore(img, canvas);
-          canvasMap.push({ canvas, img });
-        } catch (e) {
-          console.warn('Could not convert chart to image:', id, e);
+    // 7. Wait for multiple animation frames to ensure browser has painted all canvases
+    //    rAF fires before paint, so we need rAF -> rAF -> setTimeout to be after paint
+    function afterPaint(callback) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setTimeout(callback, 100);
+        });
+      });
+    }
+
+    afterPaint(() => {
+      // 8. Force one more resize + synchronous update to catch any lazy renders
+      Object.values(charts).forEach(chart => {
+        if (chart && chart.canvas) {
+          chart.resize();
+          chart.update('none');
         }
       });
 
-      window.print();
+      // 9. Wait again after the forced update
+      afterPaint(() => {
+        const canvasMap = [];
+        Object.entries(charts).forEach(([id, chart]) => {
+          if (!chart || !chart.canvas) return;
+          const canvas = chart.canvas;
+          if (canvas.width === 0 || canvas.height === 0) {
+            console.warn('PDF export: skipping zero-dimension chart:', id, canvas.width, canvas.height);
+            return;
+          }
+          try {
+            const img = document.createElement('img');
+            img.src = chart.toBase64Image();
+            img.className = 'print-chart-img';
+            img.style.width = '100%';
+            canvas.style.display = 'none';
+            canvas.parentNode.insertBefore(img, canvas);
+            canvasMap.push({ canvas, img });
+          } catch (e) {
+            console.warn('PDF export: could not convert chart to image:', id, e);
+          }
+        });
 
-      canvasMap.forEach(({ canvas, img }) => {
-        canvas.style.display = '';
-        img.remove();
+        window.print();
+
+        canvasMap.forEach(({ canvas, img }) => {
+          canvas.style.display = '';
+          img.remove();
+        });
+        collapsedSections.forEach(s => s.classList.add('collapsed'));
+        collapsedWidgets.forEach(w => w.classList.add('widget-collapsed'));
+        Chart.defaults.animation = { duration: savedDuration };
       });
-      collapsedSections.forEach(s => s.classList.add('collapsed'));
-      collapsedWidgets.forEach(w => w.classList.add('widget-collapsed'));
-      Chart.defaults.animation.duration = savedDuration;
-    }, 500);
+    });
   }
 
   async function updateAccountType(id, newType) {
