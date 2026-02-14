@@ -4309,16 +4309,38 @@
 
       refreshDashboard();
 
-      // Log chart state after render
+      // Log chart state after render (immediate)
       section.querySelectorAll('canvas').forEach(c => {
         const chart = Chart.getChart(c);
-        console.log('[toggleSection] after render - canvas:', c.id, 'w:', c.width, 'h:', c.height, 'chart exists:', !!chart);
+        console.log('[toggleSection] IMMEDIATE - canvas:', c.id, 'w:', c.width, 'h:', c.height, 'chart exists:', !!chart);
         if (chart) {
           const ctx = c.getContext('2d');
           const pixel = ctx.getImageData(Math.floor(c.width/2), Math.floor(c.height/2), 1, 1).data;
-          console.log('[toggleSection] center pixel:', Array.from(pixel), 'blank:', pixel[3] === 0);
+          console.log('[toggleSection] IMMEDIATE center pixel:', Array.from(pixel), 'blank:', pixel[3] === 0);
+          console.log('[toggleSection] chart data labels:', chart.data?.labels?.length, 'datasets:', chart.data?.datasets?.length, 'data points:', chart.data?.datasets?.[0]?.data);
         }
       });
+
+      // Check again after 2 seconds (after animation completes)
+      const canvasIds = [...section.querySelectorAll('canvas')].map(c => c.id);
+      setTimeout(() => {
+        console.log('[toggleSection] === DELAYED CHECK (2s) ===');
+        canvasIds.forEach(id => {
+          const c = document.getElementById(id);
+          if (!c) return;
+          const chart = Chart.getChart(c);
+          console.log('[toggleSection] DELAYED - canvas:', id, 'w:', c.width, 'h:', c.height, 'chart exists:', !!chart);
+          if (c.width > 0 && c.height > 0) {
+            const ctx = c.getContext('2d');
+            const pixel = ctx.getImageData(Math.floor(c.width/2), Math.floor(c.height/2), 1, 1).data;
+            console.log('[toggleSection] DELAYED center pixel:', Array.from(pixel), 'blank:', pixel[3] === 0);
+            // Also check a few more points
+            const p2 = ctx.getImageData(10, 10, 1, 1).data;
+            const p3 = ctx.getImageData(c.width - 10, c.height - 10, 1, 1).data;
+            console.log('[toggleSection] DELAYED top-left pixel:', Array.from(p2), 'bottom-right:', Array.from(p3));
+          }
+        });
+      }, 2000);
     }
   }
 
