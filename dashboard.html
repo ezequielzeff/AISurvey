@@ -2330,6 +2330,14 @@
           </div>
         </div>
       </div>
+      <div class="filter-group">
+        <span class="filter-label">AI Adoption:</span>
+        <select class="filter-select" id="filterAiAdoption" onchange="onAiAdoptionFilterChange()">
+          <option value="all">All</option>
+          <option value="using">Using AI Tools</option>
+          <option value="not-using">Not Using AI Tools</option>
+        </select>
+      </div>
       <button class="filter-clear-btn" onclick="clearAllFilters()" title="Clear all interactive filters" style="margin-left:0.5rem;">✕ Clear Filters</button>
       <button class="filter-clear-btn" onclick="openCompareModal()" title="Compare two groups of accounts" style="margin-left:0.5rem;">⚖ Compare</button>
 
@@ -2964,6 +2972,10 @@
             <div class="compare-filter-list" id="compareChampionA"></div>
           </div>
           <div class="compare-filter-section">
+            <div class="compare-filter-label">AI Tool Adoption</div>
+            <div class="compare-filter-list" id="compareAiAdoptionA"></div>
+          </div>
+          <div class="compare-filter-section">
             <div class="compare-filter-label">Account Type</div>
             <div class="compare-filter-list" id="compareAccountTypeA"></div>
           </div>
@@ -3010,6 +3022,10 @@
           <div class="compare-filter-section">
             <div class="compare-filter-label">AI Champion</div>
             <div class="compare-filter-list" id="compareChampionB"></div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">AI Tool Adoption</div>
+            <div class="compare-filter-list" id="compareAiAdoptionB"></div>
           </div>
           <div class="compare-filter-section">
             <div class="compare-filter-label">Account Type</div>
@@ -3422,6 +3438,7 @@
   let activeAiUsageFilter = null; // null = all, or a usage key like 'off-the-shelf'
   let activeCloudPlatformFilter = null; // null = all, or a platform key like 'aws'
   let activeWfmStageFilter = null; // null = all, or a stage number (0-5)
+  let activeAiAdoptionFilter = 'all'; // 'all', 'using', 'not-using'
   let currentMedianStage = null; // current median stage key for stage description modal
   let currentStagePosition = 0.5; // 0-1 position for adoption stage progress bar
   let currentWfmStage = null; // current WFM average stage number for description modal
@@ -3803,6 +3820,30 @@
     updateCloudPlatformsLabel();
   }
 
+  // ── AI Tool Adoption filter helpers ──
+  const AI_ADOPTION_EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
+
+  function surveyHasAiTools(s) {
+    const aiTools = s.data?.toolsAndInfrastructure?.ai;
+    if (!aiTools) return false;
+    const hasNamedTool = Object.keys(aiTools).some(key =>
+      !AI_ADOPTION_EXCLUDED_KEYS.includes(key) && aiTools[key]?.selected === true
+    );
+    const hasCustomTool = Array.isArray(aiTools.custom) && aiTools.custom.length > 0;
+    return hasNamedTool || hasCustomTool;
+  }
+
+  function onAiAdoptionFilterChange() {
+    activeAiAdoptionFilter = document.getElementById('filterAiAdoption').value;
+    refreshDashboard();
+  }
+
+  function clearAiAdoptionFilter() {
+    activeAiAdoptionFilter = 'all';
+    document.getElementById('filterAiAdoption').value = 'all';
+    refreshDashboard();
+  }
+
   function clearAllFilters() {
     if (comparisonMode) { exitComparison(); return; }
     activeMaturityFilter = null;
@@ -3815,6 +3856,8 @@
     activeCloudPlatformFilter = null;
     activeWfmStageFilter = null;
     activeChampionFilter = null;
+    activeAiAdoptionFilter = 'all';
+    document.getElementById('filterAiAdoption').value = 'all';
     resetCloudPlatformCheckboxes();
     refreshDashboard();
   }
@@ -3863,6 +3906,13 @@
         `<label><input type="radio" name="compareChampion${side}" value="yes" ${g.filters.champion === 'yes' ? 'checked' : ''}> ✅ Yes</label>` +
         `<label><input type="radio" name="compareChampion${side}" value="no" ${g.filters.champion === 'no' ? 'checked' : ''}> ❌ No</label>`;
 
+      // AI Adoption radio buttons
+      const aiAdoptEl = document.getElementById('compareAiAdoption' + side);
+      const aiAdoptVal = g.filters.aiAdoption || 'all';
+      aiAdoptEl.innerHTML = `<label><input type="radio" name="compareAiAdoption${side}" value="all" ${aiAdoptVal === 'all' ? 'checked' : ''}> All</label>` +
+        `<label><input type="radio" name="compareAiAdoption${side}" value="using" ${aiAdoptVal === 'using' ? 'checked' : ''}> ✅ Using AI Tools</label>` +
+        `<label><input type="radio" name="compareAiAdoption${side}" value="not-using" ${aiAdoptVal === 'not-using' ? 'checked' : ''}> ❌ Not Using AI Tools</label>`;
+
       // Account Type checkboxes
       const acctTypeEl = document.getElementById('compareAccountType' + side);
       acctTypeEl.innerHTML = ACCOUNT_TYPES.map(t =>
@@ -3896,7 +3946,7 @@
     const filters = {
       maturity: null, accounts: new Set(), deliveryManagers: new Set(),
       limitingFactor: null, aiTool: null, aiChallenge: null,
-      wfmStage: null, champion: null,
+      wfmStage: null, champion: null, aiAdoption: 'all',
       accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set()
     };
 
@@ -3921,6 +3971,10 @@
     // Champion
     const champVal = document.querySelector(`input[name="compareChampion${side}"]:checked`)?.value;
     filters.champion = champVal || null;
+
+    // AI Adoption
+    const aiAdoptVal = document.querySelector(`input[name="compareAiAdoption${side}"]:checked`)?.value;
+    filters.aiAdoption = aiAdoptVal || 'all';
 
     // Account Types
     document.querySelectorAll(`#compareAccountType${side} input[type="checkbox"]:checked`).forEach(cb => {
@@ -3951,6 +4005,7 @@
     g.filters.aiChallenge = activeAiChallengeFilter;
     g.filters.wfmStage = activeWfmStageFilter;
     g.filters.champion = activeChampionFilter;
+    g.filters.aiAdoption = activeAiAdoptionFilter;
     g.filters.accountTypes = new Set(getSelectedAccountTypes());
     g.filters.engagementTypes = new Set(getSelectedEngagementTypes());
     g.filters.cloudPlatforms = new Set(getSelectedCloudPlatforms());
@@ -3960,7 +4015,7 @@
 
   function clearCompareGroupFilters(side) {
     const g = side === 'A' ? groupA : groupB;
-    g.filters = { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set() };
+    g.filters = { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, aiAdoption: 'all', accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set() };
     openCompareModal();
   }
 
@@ -4079,6 +4134,14 @@
         const cloud = s.data?.toolsAndInfrastructure?.cloud;
         if (!cloud) return false;
         return [...groupFilters.cloudPlatforms].some(k => cloud[k]?.selected === true);
+      });
+    }
+
+    // AI Adoption filter
+    if (groupFilters.aiAdoption && groupFilters.aiAdoption !== 'all') {
+      surveys = surveys.filter(s => {
+        const hasAi = surveyHasAiTools(s);
+        return groupFilters.aiAdoption === 'using' ? hasAi : !hasAi;
       });
     }
 
@@ -4869,6 +4932,14 @@
       });
     }
 
+    // Apply AI adoption filter (top bar dropdown)
+    if (activeAiAdoptionFilter && activeAiAdoptionFilter !== 'all') {
+      surveys = surveys.filter(s => {
+        const hasAi = surveyHasAiTools(s);
+        return activeAiAdoptionFilter === 'using' ? hasAi : !hasAi;
+      });
+    }
+
     return surveys;
   }
 
@@ -5032,6 +5103,10 @@
     if (activeAiUsageFilter) {
       filterTags += ` <span class="filter-active-tag">Usage: ${AI_USAGE_LABELS[activeAiUsageFilter] || activeAiUsageFilter} <span class="filter-clear-x" onclick="clearAiUsageFilter()" title="Clear filter">&times;</span></span>`;
     }
+    if (activeAiAdoptionFilter && activeAiAdoptionFilter !== 'all') {
+      const adoptLabel = activeAiAdoptionFilter === 'using' ? 'Using AI Tools' : 'Not Using AI Tools';
+      filterTags += ` <span class="filter-active-tag">Adoption: ${adoptLabel} <span class="filter-clear-x" onclick="clearAiAdoptionFilter()" title="Clear filter">&times;</span></span>`;
+    }
     if (filterTags) {
       subtitleEl.innerHTML = `${subtitleText}${filterTags}`;
     } else {
@@ -5069,7 +5144,7 @@
     renderSdlcCoverageWidget(surveys);
     renderAiAdoptionByRoleWidget(surveys);
     renderAiChampionWidget(surveys);
-    renderAiAdoptionWidget(surveys);
+    renderAiAdoptionWidget(allSurveys);
 
     // Collapsed account section summary (must run after renderWorkflowMaturityWidget sets currentWfmStage)
     updateAccountSectionSummary(surveys);
@@ -5236,7 +5311,7 @@
     const footer = document.getElementById('widgetFooter');
     const _cpSelFooter = getSelectedCloudPlatforms();
     const _cpHasFilter = _cpSelFooter.length > 0 && _cpSelFooter.length < CLOUD_PLATFORM_ORDER.length;
-    const hasAnyFilter = activeMaturityFilter || selectedAccounts.size > 0 || selectedDeliveryManagers.size > 0 || activeLimitingFactorFilter || activeAiToolFilter || _cpHasFilter || activeAiChallengeFilter || activeAiUsageFilter || activeWfmStageFilter !== null;
+    const hasAnyFilter = activeMaturityFilter || selectedAccounts.size > 0 || selectedDeliveryManagers.size > 0 || activeLimitingFactorFilter || activeAiToolFilter || _cpHasFilter || activeAiChallengeFilter || activeAiUsageFilter || activeWfmStageFilter !== null || (activeAiAdoptionFilter && activeAiAdoptionFilter !== 'all');
     if (hasAnyFilter) {
       footer.style.display = 'flex';
       let tags = '';
@@ -5270,6 +5345,10 @@
       }
       if (activeAiUsageFilter) {
         tags += `<span class="filter-active-tag">Usage: ${AI_USAGE_LABELS[activeAiUsageFilter] || activeAiUsageFilter} <span class="filter-clear-x" onclick="clearAiUsageFilter()" title="Clear filter">&times;</span></span>`;
+      }
+      if (activeAiAdoptionFilter && activeAiAdoptionFilter !== 'all') {
+        const adoptLabel = activeAiAdoptionFilter === 'using' ? 'Using AI Tools' : 'Not Using AI Tools';
+        tags += `<span class="filter-active-tag">Adoption: ${adoptLabel} <span class="filter-clear-x" onclick="clearAiAdoptionFilter()" title="Clear filter">&times;</span></span>`;
       }
       document.getElementById('activeFilterTags').innerHTML = tags;
     } else {
@@ -7546,6 +7625,12 @@
     if (toggle) toggle.querySelector('.toggle-text').textContent = isExpanded ? 'Show accounts' : 'Hide accounts';
   }
 
+  function setAiAdoptionFilter(val) {
+    activeAiAdoptionFilter = activeAiAdoptionFilter === val ? 'all' : val;
+    document.getElementById('filterAiAdoption').value = activeAiAdoptionFilter;
+    refreshDashboard();
+  }
+
   function renderAiAdoptionWidget(surveys) {
     const container = document.getElementById('aiAdoptionContent');
     if (!container) return;
@@ -7555,23 +7640,13 @@
       return;
     }
 
-    const EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
     const atRisk = [];
     const usingAi = [];
 
     surveys.forEach(s => {
       const acctName = s.data?.accountName || s.account_name || 'Unknown';
       const revenue = s.forecasted_service_revenue || 0;
-      const aiTools = s.data?.toolsAndInfrastructure?.ai;
-      let hasAi = false;
-      if (aiTools) {
-        const hasNamedTool = Object.keys(aiTools).some(key =>
-          !EXCLUDED_KEYS.includes(key) && aiTools[key]?.selected === true
-        );
-        const hasCustomTool = Array.isArray(aiTools.custom) && aiTools.custom.length > 0;
-        hasAi = hasNamedTool || hasCustomTool;
-      }
-      if (hasAi) { usingAi.push({ name: acctName, revenue }); }
+      if (surveyHasAiTools(s)) { usingAi.push({ name: acctName, revenue }); }
       else { atRisk.push({ name: acctName, revenue }); }
     });
 
@@ -7584,16 +7659,20 @@
     const totalUsingAi = usingAi.reduce((sum, a) => sum + a.revenue, 0);
     const totalAtRisk = atRisk.reduce((sum, a) => sum + a.revenue, 0);
 
+    const usingActive = activeAiAdoptionFilter === 'using';
+    const notUsingActive = activeAiAdoptionFilter === 'not-using';
+    const anyFilter = activeAiAdoptionFilter !== 'all';
+
     container.innerHTML = `
       <div class="ai-adoption-cards">
-        <div class="ai-adoption-card-unified" style="border-left:4px solid #22c55e;">
+        <div class="ai-adoption-card-unified" onclick="setAiAdoptionFilter('using')" style="border-left:4px solid #22c55e;cursor:pointer;opacity:${anyFilter && !usingActive ? '0.4' : '1'};${usingActive ? 'box-shadow:0 0 0 2px #22c55e;' : ''}" title="Click to filter: Using AI Tools">
           <div class="ai-adoption-card-pct" style="color:#22c55e;">${yesPct}%</div>
           <div class="ai-adoption-card-title">Using AI Tools</div>
           <div class="ai-adoption-card-detail">${usingAi.length} of ${totalAccounts} accounts</div>
           <div class="ai-adoption-card-revenue" style="color:#22c55e;">${formatCurrency(totalUsingAi) || '$0'}</div>
           <div class="ai-adoption-card-revenue-label">Service Revenue</div>
         </div>
-        <div class="ai-adoption-card-unified" style="border-left:4px solid #f59e0b;">
+        <div class="ai-adoption-card-unified" onclick="setAiAdoptionFilter('not-using')" style="border-left:4px solid #f59e0b;cursor:pointer;opacity:${anyFilter && !notUsingActive ? '0.4' : '1'};${notUsingActive ? 'box-shadow:0 0 0 2px #f59e0b;' : ''}" title="Click to filter: Not Using AI Tools">
           <div class="ai-adoption-card-pct" style="color:#f59e0b;">${noPct}%</div>
           <div class="ai-adoption-card-title">Not Using AI Tools</div>
           <div class="ai-adoption-card-detail">${atRisk.length} of ${totalAccounts} accounts</div>
@@ -7629,19 +7708,11 @@
     const container = document.getElementById('aiAdoptionContent');
     if (!container) return;
 
-    const EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
-
     function classify(surveys) {
       let usingCount = 0, notUsingCount = 0, revUsing = 0, revAtRisk = 0;
       surveys.forEach(s => {
         const revenue = s.forecasted_service_revenue || 0;
-        const aiTools = s.data?.toolsAndInfrastructure?.ai;
-        let hasAi = false;
-        if (aiTools) {
-          hasAi = Object.keys(aiTools).some(k => !EXCLUDED_KEYS.includes(k) && aiTools[k]?.selected === true)
-            || (Array.isArray(aiTools.custom) && aiTools.custom.length > 0);
-        }
-        if (hasAi) { usingCount++; revUsing += revenue; }
+        if (surveyHasAiTools(s)) { usingCount++; revUsing += revenue; }
         else { notUsingCount++; revAtRisk += revenue; }
       });
       const total = surveys.length;
