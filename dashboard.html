@@ -8360,107 +8360,48 @@
   }
 
   function exportDashboardPDF() {
-    console.log('[PDF Export] Starting...');
-
     // 1. Expand all collapsed sections and widgets so containers have real dimensions
     const collapsedSections = [...document.querySelectorAll('.widget-section.collapsed')];
     collapsedSections.forEach(s => s.classList.remove('collapsed'));
     const collapsedWidgets = [...document.querySelectorAll('.widget-card.widget-collapsed')];
     collapsedWidgets.forEach(w => w.classList.remove('widget-collapsed'));
-    console.log('[PDF Export] Expanded', collapsedSections.length, 'sections,', collapsedWidgets.length, 'widgets');
 
     // 2. Force synchronous reflow — ensures ALL containers have computed dimensions
     document.getElementById('dashboardContent').offsetHeight;
 
-    // 3. Save and disable animation globally so new charts render synchronously
-    const savedAnimation = Chart.defaults.animation;
-    Chart.defaults.animation = false;
-
-    // 4. Destroy all existing charts and recreate from scratch
+    // 3. Recreate all charts with normal animation (DO NOT disable animation —
+    //    Chart.js v4 skips the initial draw entirely when animation=false)
     refreshDashboard();
-    console.log('[PDF Export] Charts after refresh:', Object.keys(charts));
 
-    // 5. Force reflow again (render functions may set dynamic container heights)
+    // 4. Force reflow for dynamic container heights set during render
     document.getElementById('dashboardContent').offsetHeight;
 
-    // 6. Log container dimensions to verify they're non-zero
-    Object.entries(charts).forEach(([id, chart]) => {
-      if (!chart || !chart.canvas) return;
-      const container = chart.canvas.parentElement;
-      const rect = container.getBoundingClientRect();
-      console.log(`[PDF Export] ${id}: canvas=${chart.canvas.width}x${chart.canvas.height}, container=${Math.round(rect.width)}x${Math.round(rect.height)}`);
+    // 5. Resize all charts to pick up final container dimensions
+    Object.values(charts).forEach(chart => {
+      if (chart && chart.canvas) chart.resize();
     });
 
-    // 7. Force each chart to resize and draw synchronously
-    Object.entries(charts).forEach(([id, chart]) => {
-      if (!chart || !chart.canvas) return;
-      chart.resize();
-      chart.update('none');  // Full update cycle with no animation
-      chart.render();        // Force synchronous draw
-    });
-
-    // 8. Log canvas state after render
-    Object.entries(charts).forEach(([id, chart]) => {
-      if (!chart || !chart.canvas) return;
-      const ctx = chart.canvas.getContext('2d');
-      // Sample a few pixels to see if canvas has content
-      const w = chart.canvas.width, h = chart.canvas.height;
-      if (w > 0 && h > 0) {
-        const pixel = ctx.getImageData(Math.floor(w/2), Math.floor(h/2), 1, 1).data;
-        const isBlank = pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0 && pixel[3] === 0;
-        console.log(`[PDF Export] ${id}: center pixel=[${pixel}], blank=${isBlank}`);
-      }
-    });
-
-    // 9. Wait for browser to composite canvas pixels, then capture
-    requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
+    // 6. Wait for chart animations to fully complete (~1s default),
+    //    then convert canvases to images and trigger print
     setTimeout(() => {
-      // Final forced draw
-      Object.entries(charts).forEach(([id, chart]) => {
-        if (!chart || !chart.canvas) return;
-        chart.render();
-      });
-
-      // Check canvas state one more time
-      console.log('[PDF Export] Final canvas check before capture:');
-      Object.entries(charts).forEach(([id, chart]) => {
-        if (!chart || !chart.canvas) return;
-        const ctx = chart.canvas.getContext('2d');
-        const w = chart.canvas.width, h = chart.canvas.height;
-        if (w > 0 && h > 0) {
-          const pixel = ctx.getImageData(Math.floor(w/2), Math.floor(h/2), 1, 1).data;
-          const isBlank = pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0 && pixel[3] === 0;
-          console.log(`  ${id}: ${w}x${h}, center pixel=[${pixel}], blank=${isBlank}`);
-        } else {
-          console.log(`  ${id}: ZERO dimensions ${w}x${h}`);
-        }
-      });
-
       const canvasMap = [];
       Object.entries(charts).forEach(([id, chart]) => {
         if (!chart || !chart.canvas) return;
         const canvas = chart.canvas;
-        if (canvas.width === 0 || canvas.height === 0) {
-          console.warn('[PDF Export] SKIP zero-dim:', id);
-          return;
-        }
+        if (canvas.width === 0 || canvas.height === 0) return;
         try {
-          const dataUrl = canvas.toDataURL('image/png');
-          console.log(`[PDF Export] ${id}: dataUrl length=${dataUrl.length}`);
           const img = document.createElement('img');
-          img.src = dataUrl;
+          img.src = canvas.toDataURL('image/png');
           img.className = 'print-chart-img';
           img.style.width = '100%';
           canvas.style.display = 'none';
           canvas.parentNode.insertBefore(img, canvas);
           canvasMap.push({ canvas, img });
         } catch (e) {
-          console.warn('[PDF Export] FAIL:', id, e);
+          console.warn('PDF export: failed to capture chart:', id, e);
         }
       });
 
-      console.log('[PDF Export] Captured', canvasMap.length, 'charts. Calling window.print()...');
       window.print();
 
       // Restore everything
@@ -8470,13 +8411,7 @@
       });
       collapsedSections.forEach(s => s.classList.add('collapsed'));
       collapsedWidgets.forEach(w => w.classList.add('widget-collapsed'));
-      Chart.defaults.animation = savedAnimation;
-      // Re-render with animation restored
-      refreshDashboard();
-      console.log('[PDF Export] Done, state restored.');
-    }, 300);
-    });
-    });
+    }, 1500);
   }
 
   async function updateAccountType(id, newType) {
