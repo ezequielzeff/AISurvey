@@ -8682,27 +8682,184 @@
     const champPct = surveys.length > 0 ? Math.round((champYes / surveys.length) * 100) : 0;
     ctx += `## AI Champion\n${champYes} of ${surveys.length} accounts have a designated AI champion (${champPct}%)\n\n`;
 
-    // 9. Per-account detail (only if manageable)
-    if (surveys.length > 0 && surveys.length <= 30) {
+    // 9. Per-account detail — comprehensive
+    if (surveys.length > 0 && surveys.length <= 50) {
       ctx += '## Per-Account Detail\n';
       surveys.forEach(s => {
-        const maturity = s.data?.clientAILandscape?.maturity?.value || 'unknown';
-        const wfm = s.data?.workflowMaturity;
-        const wfmStages = [];
-        ROLE_ORDER.forEach(role => {
-          const st = wfm?.[role]?.stage;
-          if (typeof st === 'number') wfmStages.push(st);
-        });
-        const avgWfm = wfmStages.length > 0 ? (wfmStages.reduce((a, b) => a + b, 0) / wfmStages.length).toFixed(1) : 'N/A';
-        const champion = s.data?.teamRoles?.aiChampion?.value === 'yes' ? 'Yes' : 'No';
-        const type = ACCOUNT_TYPE_LABELS[s.account_type] || s.account_type;
-        ctx += `- ${s.account_name} | Type: ${type} | Maturity: ${MATURITY_LABELS[maturity] || maturity} | WFM avg: ${avgWfm} | Champion: ${champion}`;
-        if (s.delivery_manager) ctx += ` | DM: ${s.delivery_manager}`;
+        const name = s.account_name || s.data?.accountName || 'Unknown';
+        const type = ACCOUNT_TYPE_LABELS[s.account_type] || s.account_type || '-';
+        const dm = s.delivery_manager || '-';
+        ctx += `\n### ${name}\n`;
+        ctx += `Type: ${type} | DM: ${dm}\n`;
+
+        // Client AI Landscape
+        const landscape = s.data?.clientAILandscape || {};
+        const maturity = landscape.maturity?.value;
+        const priority = landscape.priority?.value;
+        const governance = landscape.governance?.value;
+        ctx += `Maturity: ${MATURITY_LABELS[maturity] || maturity || '-'}`;
+        const PRIORITY_MAP = { 'not-priority': 'Not a Priority', low: 'Low', medium: 'Medium', high: 'High', 'dont-know': "Don't Know" };
+        ctx += ` | Priority: ${PRIORITY_MAP[priority] || priority || '-'}`;
+        ctx += ` | Governance: ${GOVERNANCE_LABELS[governance] || governance || '-'}\n`;
+
+        // Client AI Usage
+        const usage = landscape.usage;
+        if (usage) {
+          const usageItems = [];
+          AI_USAGE_ORDER.forEach(k => { if (usage[k]?.selected === true) usageItems.push(AI_USAGE_LABELS[k]); });
+          if (usageItems.length > 0) ctx += `Client AI Usage: ${usageItems.join(', ')}\n`;
+        }
+
+        // Client Challenges (ranked)
+        const challenges = landscape.challenges;
+        if (challenges) {
+          const ranked = [];
+          Object.entries(challenges).forEach(([k, v]) => {
+            if (!k.startsWith('_') && v?.rank) ranked.push({ label: AI_CHALLENGE_LABELS[k] || k, rank: v.rank });
+          });
+          ranked.sort((a, b) => a.rank - b.rank);
+          if (ranked.length > 0) ctx += `Client Challenges: ${ranked.map(r => `#${r.rank} ${r.label}`).join(', ')}\n`;
+        }
+
+        // Client Approved Tools
+        const approvedTools = landscape.approvedTools;
+        if (approvedTools) {
+          const APPROVED_TOOL_MAP = { 'github-copilot': 'GitHub Copilot', chatgpt: 'ChatGPT', claude: 'Claude', gemini: 'Gemini', cursor: 'Cursor', 'amazon-q-kiro': 'Amazon Q/Kiro', 'ms-copilot': 'MS Copilot', 'atlassian-rovo': 'Rovo' };
+          const items = [];
+          Object.entries(approvedTools).forEach(([k, v]) => {
+            if (!k.startsWith('_') && v?.selected === true) items.push(APPROVED_TOOL_MAP[k] || k);
+          });
+          if (items.length > 0) ctx += `Client Approved Tools: ${items.join(', ')}\n`;
+        }
+
+        // Engagement
+        const engagement = s.data?.engagement || {};
+        const ownership = engagement.ownership;
+        if (ownership) {
+          const ownershipItems = [];
+          ENGAGEMENT_TYPES.forEach(t => { if (ownership[t.id]?.selected === true) ownershipItems.push(t.label); });
+          if (ownershipItems.length > 0) ctx += `Engagement: ${ownershipItems.join(', ')}`;
+          const payment = engagement.aiToolPayment?.value;
+          const PAYMENT_MAP = { us: 'We Pay', customer: 'Customer Pays', mix: 'Mix', tbd: 'TBD' };
+          if (payment) ctx += ` | Tool Payment: ${PAYMENT_MAP[payment] || payment}`;
+          ctx += '\n';
+        }
+
+        // Compliance
+        const compliance = engagement.compliance;
+        if (compliance) {
+          const items = [];
+          Object.entries(compliance).forEach(([k, v]) => {
+            if (!k.startsWith('_') && v?.selected === true) {
+              const seed = SCHEMA_SEED.find(ss => ss.section === 'engagement' && ss.subsection === 'compliance' && ss.option_id === k);
+              items.push(seed ? seed.option_label : k.toUpperCase());
+            }
+          });
+          if (items.length > 0) ctx += `Compliance: ${items.join(', ')}\n`;
+        }
+
+        // Team Roles
+        const teamRoles = s.data?.teamRoles;
+        if (teamRoles) {
+          const roles = [];
+          ROLE_ORDER.forEach(r => { if (teamRoles.roles?.[r]?.selected === true) roles.push(ROLE_FULL_NAMES[r] || r); });
+          if (roles.length > 0) ctx += `Team Roles: ${roles.join(', ')}\n`;
+        }
+
+        // AI Champion
+        const champion = teamRoles?.aiChampion;
+        const champVal = champion?.value === 'yes' ? 'Yes' : 'No';
+        ctx += `AI Champion: ${champVal}`;
+        const champNames = champion?.champions || [];
+        if (champNames.length > 0) ctx += ` (${champNames.join(', ')})`;
+        const futureChamps = champion?.futureChampions || [];
+        if (futureChamps.length > 0) ctx += ` | Future Champions: ${futureChamps.join(', ')}`;
         ctx += '\n';
+
+        // AI Tools
+        const aiTools = s.data?.toolsAndInfrastructure?.ai;
+        if (aiTools) {
+          const items = [];
+          AI_TOOL_ORDER.forEach(k => { if (aiTools[k]?.selected === true) items.push(AI_TOOL_LABELS[k]); });
+          if (Array.isArray(aiTools.custom)) aiTools.custom.forEach(c => { if (c) items.push(c); });
+          if (items.length > 0) ctx += `AI Tools: ${items.join(', ')}\n`;
+        }
+
+        // Cloud Platforms
+        const cloud = s.data?.toolsAndInfrastructure?.cloud;
+        if (cloud) {
+          const items = [];
+          CLOUD_PLATFORM_ORDER.forEach(k => { if (cloud[k]?.selected === true) items.push(CLOUD_PLATFORM_LABELS[k]); });
+          if (items.length > 0) ctx += `Cloud: ${items.join(', ')}\n`;
+        }
+
+        // Workflow Maturity per role
+        const wfm = s.data?.workflowMaturity;
+        if (wfm) {
+          const wfmParts = [];
+          const wfmStages = [];
+          ROLE_ORDER.forEach(role => {
+            const st = wfm[role]?.stage;
+            if (typeof st === 'number') {
+              wfmParts.push(`${ROLE_LABELS[role]}=${st}`);
+              wfmStages.push(st);
+            }
+          });
+          const avgWfm = wfmStages.length > 0 ? (wfmStages.reduce((a, b) => a + b, 0) / wfmStages.length).toFixed(1) : 'N/A';
+          if (wfmParts.length > 0) ctx += `WFM (0-5): ${wfmParts.join(', ')} | Avg: ${avgWfm}\n`;
+        }
+
+        // Limiting Factors (ranked)
+        const lf = s.data?.limitingFactors;
+        if (lf) {
+          const ranked = [];
+          Object.entries(lf).forEach(([k, v]) => {
+            if (!k.startsWith('_') && v?.rank) ranked.push({ label: LIMITING_FACTOR_LABELS[k] || k, rank: v.rank });
+          });
+          ranked.sort((a, b) => a.rank - b.rank);
+          if (ranked.length > 0) ctx += `Limiting Factors: ${ranked.map(r => `#${r.rank} ${r.label}`).join(', ')}\n`;
+        }
+
+        // SDLC AI Coverage
+        const sdlcUsage = s.data?.sdlcAiUsage;
+        if (sdlcUsage) {
+          const items = [];
+          SDLC_PHASES.forEach(ph => {
+            const val = sdlcUsage[ph.key]?.value;
+            if (val === 'yes') items.push(ph.label);
+          });
+          if (items.length > 0) ctx += `SDLC AI Coverage: ${items.join(', ')}\n`;
+        }
+
+        // Use Cases summary (doing vs need counts per SDLC phase)
+        const useCases = s.data?.useCases;
+        if (useCases) {
+          const doingPhases = [];
+          const needPhases = [];
+          SDLC_PHASES.forEach(phase => {
+            const section = useCases[phase.key];
+            if (!section) return;
+            let doing = 0, need = 0;
+            Object.values(section).forEach(item => {
+              if (item?.status === 'doing') doing++;
+              else if (item?.status === 'need') need++;
+            });
+            if (doing > 0) doingPhases.push(`${phase.label}(${doing})`);
+            if (need > 0) needPhases.push(`${phase.label}(${need})`);
+          });
+          if (doingPhases.length > 0) ctx += `Use Cases Already Doing: ${doingPhases.join(', ')}\n`;
+          if (needPhases.length > 0) ctx += `Use Cases Needed: ${needPhases.join(', ')}\n`;
+        }
+
+        // Success Stories
+        const successStories = s.data?.teamRoles?.successStories;
+        if (successStories?.hasSuccessStories === 'yes' && Array.isArray(successStories?.stories) && successStories.stories.length > 0) {
+          ctx += `Success Stories: ${successStories.stories.join('; ')}\n`;
+        }
       });
       ctx += '\n';
-    } else if (surveys.length > 30) {
-      ctx += `## Per-Account Detail\n(${surveys.length} accounts — showing summary only. Ask about specific accounts for detail.)\n\n`;
+    } else if (surveys.length > 50) {
+      ctx += `## Per-Account Detail\n(${surveys.length} accounts — too many for inline detail. Apply filters to narrow down, or ask about specific accounts.)\n\n`;
     }
 
     return ctx;
@@ -8714,18 +8871,34 @@
 
 You are embedded in the "AI Adoption Dashboard" — a tool used by delivery managers and AI practice leads to track AI adoption progress across their client portfolio. Each survey represents one client account's AI adoption assessment.
 
-Data dimensions available:
+Data is provided at two levels:
+1. **Aggregate summaries** — portfolio-wide distributions and percentages
+2. **Per-account detail** — full breakdown for each individual account (up to 50 accounts)
+
+Data dimensions available per account:
 - AI Adoption Stage: Not Started, Exploring, Piloting, Scaling, Optimizing
-- Workflow Maturity (WFM): Stages 0-5 per role (No AI → Individual AI → Standardized AI → Workflow AI → Integrated AI → Semi-Agentic AI)
+- Client AI Priority: Not a Priority, Low, Medium, High
+- Client AI Governance: No Governance, Informal, Developing, Established
+- Client AI Usage: Not Using, Off-the-Shelf Tools, AI in Business Apps, Custom Solutions, Process Automation, Customer-Facing AI
+- Client Challenges (ranked #1/#2): Unclear ROI, Skills Gap, Data Issues, Security/Compliance, Budget/Buy-in, Infrastructure
+- Client Approved Tools: which AI tools the client has officially approved
+- Engagement Model: Staff Augmentation, Project Ownership, Program Ownership, Business Outcome
+- AI Tool Payment: who pays for AI tools (us, customer, mix, TBD)
+- Compliance Requirements: HIPAA, GDPR, SOX, PCI-DSS, FedRAMP, SOC 2, CCPA, ISO 27001
 - Team Roles: Project Manager, Business Analyst, Solutions Architect, Developer, QA Manual, QA Automation, Data Engineer, DevOps, UI/UX Designer
-- AI Tools: GitHub Copilot, ChatGPT, Claude, Claude Code, Cursor, Windsurf, Gemini, Amazon Q/Kiro, Microsoft Copilot, IntelliJ AI, Rovo, v0, Bolt, Lovable, Perplexity
-- Limiting Factors: Lack of Time, Lack of Knowledge, Unclear Value, Client Not Ready, Lack of Access, Other
-- AI Challenges: Unclear ROI, Skills Gap, Data Issues, Security/Compliance, Budget/Buy-in, Infrastructure, Don't Know
-- SDLC Coverage: Requirements, Development, Documentation, PM, Design & UX, Data & Analytics
-- AI Champion: Whether the account has a designated AI champion (yes/no)
+- AI Tools in use: GitHub Copilot, ChatGPT, Claude, Claude Code, Cursor, Windsurf, Gemini, Amazon Q/Kiro, Microsoft Copilot, IntelliJ AI, Rovo, v0, Bolt, Lovable, Perplexity (plus custom tools)
+- Cloud Platforms: AWS, GCP, Azure, On-Premises
+- Workflow Maturity (WFM): Stages 0-5 per role (No AI → Individual AI → Team Practices → AI-Chained → Event-Triggered → Semi-Agentic)
+- Limiting Factors (ranked #1/#2): Lack of Time, Lack of Knowledge, Unclear Value, Client Not Ready, Lack of Access, Other
+- SDLC AI Coverage: Requirements, Development, Documentation, PM, Design & UX, Data & Analytics
+- Use Cases: per SDLC phase, count of use cases "already doing" vs "needed"
+- AI Champion: whether the account has a designated AI champion, with champion names
+- Success Stories: notable AI wins reported by the account
 
 Instructions:
 - Provide specific, data-driven answers. Reference account names, percentages, and distributions.
+- When asked about a specific account, use the per-account detail section to give a complete picture.
+- When asked about tool usage, limiting factors, challenges, etc., break down by individual account — not just aggregate totals.
 - When asked for recommendations, be practical and actionable.
 - Highlight patterns, outliers, and potential risks.
 - If the data is limited or ambiguous, say so.
