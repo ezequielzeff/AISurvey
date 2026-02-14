@@ -838,6 +838,63 @@
       font-weight: 500;
       border-color: transparent;
     }
+    .role-heatmap tbody td.rh-clickable {
+      cursor: pointer;
+    }
+    .role-heatmap tbody td.rh-clickable:hover {
+      filter: brightness(0.88);
+    }
+
+    /* Cell accounts popup */
+    .rh-cell-popup {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      padding: 0;
+      min-width: 200px;
+      max-width: 320px;
+      max-height: 340px;
+      overflow: hidden;
+    }
+    .rh-cell-popup.open { display: block; }
+    .rh-cell-popup-header {
+      background: #1e3a5f;
+      color: #fff;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .rh-cell-popup-close {
+      background: none; border: none; color: #fff; font-size: 1.1rem;
+      cursor: pointer; opacity: 0.7; line-height: 1;
+    }
+    .rh-cell-popup-close:hover { opacity: 1; }
+    .rh-cell-popup-body {
+      padding: 0.4rem 0;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .rh-cell-popup-item {
+      padding: 0.3rem 0.75rem;
+      font-size: 0.8rem;
+      color: #374151;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .rh-cell-popup-item:last-child { border-bottom: none; }
+    .rh-cell-popup-empty {
+      padding: 0.75rem;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      text-align: center;
+      font-style: italic;
+    }
 
     .champion-details-toggle {
       display: flex;
@@ -7178,6 +7235,50 @@
   // ═══════════════════════════════════════════
   // AI ADOPTION BY ROLE HEATMAP WIDGET
   // ═══════════════════════════════════════════
+  // Store role-stage account lists for popup
+  let rhCellAccounts = {};
+
+  function showRhCellPopup(role, stage, evt) {
+    const popup = document.getElementById('rhCellPopup');
+    const title = document.getElementById('rhCellPopupTitle');
+    const body = document.getElementById('rhCellPopupBody');
+
+    const roleName = ROLE_FULL_NAMES[role] || role;
+    const stageName = WFM_LABELS[stage] || `Stage ${stage}`;
+    const key = `${role}_${stage}`;
+    const accounts = rhCellAccounts[key] || [];
+
+    title.textContent = `${roleName} — Stage ${stage}: ${stageName} (${accounts.length})`;
+
+    if (accounts.length === 0) {
+      body.innerHTML = '<div class="rh-cell-popup-empty">No accounts at this stage</div>';
+    } else {
+      body.innerHTML = accounts.map(a =>
+        `<div class="rh-cell-popup-item">${escapeHtml(a)}</div>`
+      ).join('');
+    }
+
+    // Position near the click
+    popup.classList.add('open');
+    const rect = evt.currentTarget.getBoundingClientRect();
+    let top = rect.bottom + 6;
+    let left = rect.left + rect.width / 2 - 110;
+
+    // Keep within viewport
+    const popupW = 240;
+    const popupH = popup.offsetHeight || 200;
+    if (left + popupW > window.innerWidth - 12) left = window.innerWidth - popupW - 12;
+    if (left < 12) left = 12;
+    if (top + popupH > window.innerHeight - 12) top = rect.top - popupH - 6;
+
+    popup.style.top = `${top}px`;
+    popup.style.left = `${left}px`;
+  }
+
+  function closeRhCellPopup() {
+    document.getElementById('rhCellPopup')?.classList.remove('open');
+  }
+
   function renderAiAdoptionByRoleWidget(surveys) {
     const container = document.getElementById('aiAdoptionByRoleContent');
     if (!container) return;
@@ -7187,24 +7288,36 @@
       return;
     }
 
-    // Count per-role per-stage
+    // Count per-role per-stage + track account names
     const roleStageCounts = {};
+    const roleStageAccounts = {};
     const roleTotals = {};
     ROLE_ORDER.forEach(role => {
       roleStageCounts[role] = {};
-      WFM_STAGES.forEach(s => { roleStageCounts[role][s] = 0; });
+      roleStageAccounts[role] = {};
+      WFM_STAGES.forEach(s => { roleStageCounts[role][s] = 0; roleStageAccounts[role][s] = []; });
       roleTotals[role] = 0;
     });
 
     surveys.forEach(s => {
       const wfm = s.data?.workflowMaturity;
       if (!wfm) return;
+      const acctName = s.data?.accountName || s.account_name || 'Unknown';
       ROLE_ORDER.forEach(role => {
         const st = wfm[role]?.stage;
         if (st !== null && st !== undefined && typeof st === 'number' && st >= 0 && st <= 5) {
           roleStageCounts[role][st]++;
+          roleStageAccounts[role][st].push(acctName);
           roleTotals[role]++;
         }
+      });
+    });
+
+    // Store globally for popup access
+    rhCellAccounts = {};
+    ROLE_ORDER.forEach(role => {
+      WFM_STAGES.forEach(stage => {
+        rhCellAccounts[`${role}_${stage}`] = roleStageAccounts[role][stage].sort();
       });
     });
 
@@ -7284,7 +7397,12 @@
         }
 
         const pctClass = pct === 0 ? 'rh-pct-circle rh-pct-zero' : 'rh-pct-circle';
-        rowHtml += `<td style="${bgStyle}"><span class="${pctClass}">${pct}%</span></td>`;
+        const count = roleStageCounts[role][stage];
+        const clickable = count > 0;
+        const tdClass = clickable ? 'rh-clickable' : '';
+        const clickAttr = clickable ? `onclick="showRhCellPopup('${role}', ${stage}, event)"` : '';
+        const titleAttr = clickable ? `title="${count} account${count !== 1 ? 's' : ''} — click to see"` : '';
+        rowHtml += `<td class="${tdClass}" style="${bgStyle}" ${clickAttr} ${titleAttr}><span class="${pctClass}">${pct}%</span></td>`;
       });
 
       bodyHtml += `<tr>${rowHtml}</tr>`;
@@ -8309,6 +8427,14 @@
       });
     });
 
+    // Close role-heatmap cell popup when clicking outside
+    document.addEventListener('click', e => {
+      const popup = document.getElementById('rhCellPopup');
+      if (popup && popup.classList.contains('open') && !popup.contains(e.target) && !e.target.closest('.rh-clickable')) {
+        popup.classList.remove('open');
+      }
+    });
+
     // Database export/import/clear
     document.getElementById('exportDbBtn').addEventListener('click', exportDatabase);
     document.getElementById('exportSurveysBtn').addEventListener('click', exportAllSurveys);
@@ -8888,5 +9014,12 @@ Instructions:
 
   init();
 </script>
+<div class="rh-cell-popup" id="rhCellPopup">
+  <div class="rh-cell-popup-header">
+    <span id="rhCellPopupTitle"></span>
+    <button class="rh-cell-popup-close" onclick="closeRhCellPopup()">&times;</button>
+  </div>
+  <div class="rh-cell-popup-body" id="rhCellPopupBody"></div>
+</div>
 </body>
 </html>
