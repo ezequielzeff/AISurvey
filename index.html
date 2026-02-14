@@ -3241,8 +3241,7 @@
         <div class="card-footer">
           <button class="btn btn-secondary" id="step8Back">← Back</button>
           <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-            <button class="btn btn-secondary" id="saveToDashboardNew" style="display:none;">💾 Save New to Dashboard</button>
-            <button class="btn btn-secondary" id="updateDashboardSurvey" style="display:none;">🔄 Update in Dashboard</button>
+            <button class="btn btn-primary" id="updateDashboardSurvey" style="display:none;">🔄 Update in Dashboard</button>
             <button class="btn btn-primary" id="downloadAssessmentReview">📦 Download Assessment</button>
           </div>
         </div>
@@ -4013,9 +4012,12 @@
       }
     }
 
-    async function saveToDashboardDB(mode) {
-      // mode: 'update' | 'new'
+    async function saveToDashboardDB() {
       try {
+        if (!dashboardSource) {
+          return { success: false, message: 'This survey was not restored from the dashboard.' };
+        }
+
         const jsonContent = generateJSON();
         const jsonData = JSON.parse(jsonContent);
 
@@ -4033,57 +4035,28 @@
           const year = exportDate.getFullYear();
           const quarter = Math.ceil((exportDate.getMonth() + 1) / 3);
 
-          if (mode === 'update' && dashboardSource) {
-            // Check if source row still exists
-            const check = dashDb.exec('SELECT id FROM surveys WHERE id = ?', [dashboardSource.id]);
-            if (check.length && check[0].values.length) {
-              // Update in place — preserve account_type, delivery_manager, forecasted_service_revenue
-              dashDb.run(
-                'UPDATE surveys SET account_name = ?, exported_at = ?, year = ?, quarter = ?, schema_version = ?, raw_json = ? WHERE id = ?',
-                [jsonData.accountName, jsonData.exportedAt, year, quarter, jsonData.schemaVersion, jsonContent, dashboardSource.id]
-              );
-            } else {
-              // Source was deleted — insert as new
-              dashDb.run(
-                'INSERT INTO surveys (account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [jsonData.accountName, jsonData.exportedAt, year, quarter, jsonData.schemaVersion, jsonContent,
-                 dashboardSource.account_type || 'other', dashboardSource.delivery_manager || '', dashboardSource.forecasted_service_revenue || 0]
-              );
-              const newIdResult = dashDb.exec('SELECT last_insert_rowid()');
-              dashboardSource.id = newIdResult[0].values[0][0];
-            }
-            dashboardSource.exported_at = jsonData.exportedAt;
-            dashboardSource.account_name = jsonData.accountName;
-            dashboardSource.year = year;
-            dashboardSource.quarter = quarter;
-
-          } else {
-            // Insert as new — handle potential UNIQUE conflict
-            const conflict = dashDb.exec(
-              'SELECT id FROM surveys WHERE account_name = ? AND exported_at = ?',
-              [jsonData.accountName, jsonData.exportedAt]
+          // Check if source row still exists
+          const check = dashDb.exec('SELECT id FROM surveys WHERE id = ?', [dashboardSource.id]);
+          if (check.length && check[0].values.length) {
+            // Update in place — preserve account_type, delivery_manager, forecasted_service_revenue
+            dashDb.run(
+              'UPDATE surveys SET account_name = ?, exported_at = ?, year = ?, quarter = ?, schema_version = ?, raw_json = ? WHERE id = ?',
+              [jsonData.accountName, jsonData.exportedAt, year, quarter, jsonData.schemaVersion, jsonContent, dashboardSource.id]
             );
-            if (conflict.length && conflict[0].values.length) {
-              dashDb.run('DELETE FROM surveys WHERE account_name = ? AND exported_at = ?',
-                [jsonData.accountName, jsonData.exportedAt]);
-            }
-
+          } else {
+            // Source row was deleted — re-insert with original metadata
             dashDb.run(
               'INSERT INTO surveys (account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-              [jsonData.accountName, jsonData.exportedAt, year, quarter, jsonData.schemaVersion, jsonContent, 'other', '', 0]
+              [jsonData.accountName, jsonData.exportedAt, year, quarter, jsonData.schemaVersion, jsonContent,
+               dashboardSource.account_type || 'other', dashboardSource.delivery_manager || '', dashboardSource.forecasted_service_revenue || 0]
             );
-
             const newIdResult = dashDb.exec('SELECT last_insert_rowid()');
-            dashboardSource = {
-              id: newIdResult[0].values[0][0],
-              account_name: jsonData.accountName,
-              exported_at: jsonData.exportedAt,
-              year, quarter,
-              account_type: 'other',
-              delivery_manager: '',
-              forecasted_service_revenue: 0
-            };
+            dashboardSource.id = newIdResult[0].values[0][0];
           }
+          dashboardSource.exported_at = jsonData.exportedAt;
+          dashboardSource.account_name = jsonData.accountName;
+          dashboardSource.year = year;
+          dashboardSource.quarter = quarter;
 
           // Write modified DB back to IndexedDB
           const exportedData = dashDb.export();
@@ -4105,8 +4078,7 @@
 
           saveToLocalStorage(); // persist updated dashboardSource
 
-          const actionWord = mode === 'update' ? 'Updated' : 'Saved';
-          return { success: true, message: `${actionWord} "${jsonData.accountName}" in dashboard.` };
+          return { success: true, message: `Updated "${jsonData.accountName}" in dashboard.` };
 
         } finally {
           dashDb.close();
@@ -4119,9 +4091,7 @@
 
     function updateDashboardButtons() {
       const updateBtn = document.getElementById('updateDashboardSurvey');
-      const saveNewBtn = document.getElementById('saveToDashboardNew');
       if (updateBtn) updateBtn.style.display = dashboardSource ? '' : 'none';
-      if (saveNewBtn) saveNewBtn.style.display = '';
     }
 
     async function restoreSurveyFromZip(file) {
@@ -6334,7 +6304,7 @@
         const btn = document.getElementById('updateDashboardSurvey');
         btn.disabled = true;
         btn.textContent = '⏳ Updating...';
-        const result = await saveToDashboardDB('update');
+        const result = await saveToDashboardDB();
         btn.textContent = '🔄 Update in Dashboard';
         btn.disabled = false;
         if (result.success) {
@@ -6345,20 +6315,6 @@
         }
       });
 
-      document.getElementById('saveToDashboardNew').addEventListener('click', async () => {
-        const btn = document.getElementById('saveToDashboardNew');
-        btn.disabled = true;
-        btn.textContent = '⏳ Saving...';
-        const result = await saveToDashboardDB('new');
-        btn.textContent = '💾 Save New to Dashboard';
-        btn.disabled = false;
-        if (result.success) {
-          updateSaveStatus(result.message, false);
-          updateDashboardButtons();
-        } else {
-          alert(result.message);
-        }
-      });
     }
 
     function generateJSON() {
