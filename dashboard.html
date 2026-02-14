@@ -5371,6 +5371,18 @@
     }
   }
 
+  // Returns true if canvas is inside a collapsed (hidden) section or widget.
+  // Charts must NOT be created in hidden containers — they render as 0×0.
+  function isCanvasHidden(canvasId) {
+    const el = document.getElementById(canvasId);
+    if (!el) return true;
+    const section = el.closest('.widget-section');
+    if (section && section.classList.contains('collapsed')) return true;
+    const widget = el.closest('.widget-card');
+    if (widget && widget.classList.contains('widget-collapsed')) return true;
+    return false;
+  }
+
   // ═══════════════════════════════════════════
   // ADOPTION STAGE WIDGET
   // ═══════════════════════════════════════════
@@ -5651,6 +5663,7 @@
 
   function renderLimitingFactorsWidget(surveys) {
     destroyChart('chartLimitingFactors');
+    if (isCanvasHidden('chartLimitingFactors')) return;
 
     // Count how many times each factor is selected (rank 1 or rank 2)
     const counts = {};
@@ -6079,6 +6092,7 @@
   // ═══════════════════════════════════════════
   function renderAiChallengesWidget(surveys) {
     destroyChart('chartAiChallenges');
+    if (isCanvasHidden('chartAiChallenges')) return;
 
     // Count how many times each challenge is selected (rank 1 or rank 2)
     const counts = {};
@@ -6207,6 +6221,7 @@
 
   function renderAiUsageWidget(surveys) {
     destroyChart('chartAiUsage');
+    if (isCanvasHidden('chartAiUsage')) return;
 
     const counts = {};
     AI_USAGE_ORDER.forEach(k => counts[k] = 0);
@@ -6337,6 +6352,7 @@
   // ═══════════════════════════════════════════
   function renderAiToolsWidget(surveys) {
     destroyChart('chartAiTools');
+    if (isCanvasHidden('chartAiTools')) return;
 
     const totalSurveys = surveys.length;
     const EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
@@ -6486,6 +6502,7 @@
   // ═══════════════════════════════════════════
   function renderCloudPlatformsWidget(surveys) {
     destroyChart('chartCloudPlatforms');
+    if (isCanvasHidden('chartCloudPlatforms')) return;
 
     const totalSurveys = surveys.length;
 
@@ -6709,6 +6726,7 @@
 
   function renderLimitingFactorsComparison(surveysA, surveysB, nameA, nameB) {
     destroyChart('chartLimitingFactors');
+    if (isCanvasHidden('chartLimitingFactors')) return;
     const countsA = countLimitingFactors(surveysA);
     const countsB = countLimitingFactors(surveysB);
     const totalA = surveysA.length, totalB = surveysB.length;
@@ -6754,6 +6772,7 @@
 
   function renderAiChallengesComparison(surveysA, surveysB, nameA, nameB) {
     destroyChart('chartAiChallenges');
+    if (isCanvasHidden('chartAiChallenges')) return;
     const countsA = countAiChallenges(surveysA);
     const countsB = countAiChallenges(surveysB);
     const totalA = surveysA.length, totalB = surveysB.length;
@@ -6798,6 +6817,7 @@
 
   function renderAiUsageComparison(surveysA, surveysB, nameA, nameB) {
     destroyChart('chartAiUsage');
+    if (isCanvasHidden('chartAiUsage')) return;
     const countsA = countAiUsage(surveysA);
     const countsB = countAiUsage(surveysB);
     const totalA = surveysA.length, totalB = surveysB.length;
@@ -6842,6 +6862,7 @@
 
   function renderAiToolsComparison(surveysA, surveysB, nameA, nameB) {
     destroyChart('chartAiTools');
+    if (isCanvasHidden('chartAiTools')) return;
     const totalA = surveysA.length, totalB = surveysB.length;
     const tA = countAiTools(surveysA), tB = countAiTools(surveysB);
 
@@ -6894,6 +6915,7 @@
   // --- Cloud Platforms Comparison ---
   function renderCloudPlatformsComparison(surveysA, surveysB, nameA, nameB) {
     destroyChart('chartCloudPlatforms');
+    if (isCanvasHidden('chartCloudPlatforms')) return;
     const totalA = surveysA.length, totalB = surveysB.length;
     const cpA = countCloudPlatforms(surveysA), cpB = countCloudPlatforms(surveysB);
 
