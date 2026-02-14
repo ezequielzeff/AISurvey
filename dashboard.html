@@ -5363,11 +5363,6 @@
     if (canvas) {
       const existing = Chart.getChart(canvas);
       if (existing) existing.destroy();
-      // Replace canvas element with a fresh one to clear any residual state
-      // from previous renders (e.g. 0×0 initialization in hidden containers)
-      const fresh = document.createElement('canvas');
-      fresh.id = id;
-      canvas.parentNode.replaceChild(fresh, canvas);
     }
   }
 
