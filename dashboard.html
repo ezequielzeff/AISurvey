@@ -2027,6 +2027,10 @@
       .widget-card .widget-body { display: block !important; }
       .widget-header { cursor: default; pointer-events: none; }
 
+      /* Stack 2-column grid layouts for print */
+      .landscape-chart-row { display: block !important; }
+      .landscape-chart-row .widget-card { margin-bottom: 1rem; }
+
       /* Page layout */
       body, html { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .dashboard-content { max-width: 100%; padding: 0; }
@@ -8356,87 +8360,79 @@
   }
 
   function exportDashboardPDF() {
-    // 1. Expand all collapsed sections and widgets
+    // 1. Expand all collapsed sections and widgets so containers have real dimensions
     const collapsedSections = [...document.querySelectorAll('.widget-section.collapsed')];
     collapsedSections.forEach(s => s.classList.remove('collapsed'));
     const collapsedWidgets = [...document.querySelectorAll('.widget-card.widget-collapsed')];
     collapsedWidgets.forEach(w => w.classList.remove('widget-collapsed'));
 
-    // 2. Force reflow so expanded containers have real dimensions
+    // 2. Force synchronous reflow — ensures ALL containers have computed dimensions
     document.getElementById('dashboardContent').offsetHeight;
 
-    // 3. Disable ALL animation so charts render final state synchronously
-    const savedDuration = Chart.defaults.animation.duration;
-    const savedTransitions = Chart.defaults.transitions;
-    Chart.defaults.animation.duration = 0;
+    // 3. Save and disable animation globally so new charts render synchronously
+    const savedAnimation = Chart.defaults.animation;
     Chart.defaults.animation = false;
 
-    // 4. Recreate all charts from scratch (with animation disabled)
+    // 4. Destroy all existing charts and recreate from scratch
     refreshDashboard();
 
-    // 5. Force reflow for dynamic container heights set inside render functions
+    // 5. Force reflow again (render functions may set dynamic container heights)
     document.getElementById('dashboardContent').offsetHeight;
 
-    // 6. Force each chart to update synchronously with no animation
+    // 6. Force each chart to draw synchronously right now
     Object.values(charts).forEach(chart => {
-      if (chart && chart.canvas) {
-        chart.resize();
-        chart.update('none');  // 'none' mode = skip animation entirely
-      }
+      if (!chart || !chart.canvas) return;
+      chart.resize();
+      chart.render();   // Synchronous draw to canvas (bypasses rAF queue)
     });
 
-    // 7. Wait for multiple animation frames to ensure browser has painted all canvases
-    //    rAF fires before paint, so we need rAF -> rAF -> setTimeout to be after paint
-    function afterPaint(callback) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setTimeout(callback, 100);
-        });
-      });
-    }
-
-    afterPaint(() => {
-      // 8. Force one more resize + synchronous update to catch any lazy renders
+    // 7. Convert canvases to images and print
+    //    Use rAF → rAF → setTimeout to ensure browser has composited canvas pixels
+    requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+    setTimeout(() => {
+      // One final forced draw to be safe
       Object.values(charts).forEach(chart => {
-        if (chart && chart.canvas) {
-          chart.resize();
-          chart.update('none');
+        if (!chart || !chart.canvas) return;
+        chart.render();
+      });
+
+      const canvasMap = [];
+      Object.entries(charts).forEach(([id, chart]) => {
+        if (!chart || !chart.canvas) return;
+        const canvas = chart.canvas;
+        if (canvas.width === 0 || canvas.height === 0) {
+          console.warn('PDF export: zero-dimension chart:', id, canvas.width, 'x', canvas.height);
+          return;
+        }
+        try {
+          const dataUrl = canvas.toDataURL('image/png');
+          const img = document.createElement('img');
+          img.src = dataUrl;
+          img.className = 'print-chart-img';
+          img.style.width = '100%';
+          canvas.style.display = 'none';
+          canvas.parentNode.insertBefore(img, canvas);
+          canvasMap.push({ canvas, img });
+        } catch (e) {
+          console.warn('PDF export: failed to capture chart:', id, e);
         }
       });
 
-      // 9. Wait again after the forced update
-      afterPaint(() => {
-        const canvasMap = [];
-        Object.entries(charts).forEach(([id, chart]) => {
-          if (!chart || !chart.canvas) return;
-          const canvas = chart.canvas;
-          if (canvas.width === 0 || canvas.height === 0) {
-            console.warn('PDF export: skipping zero-dimension chart:', id, canvas.width, canvas.height);
-            return;
-          }
-          try {
-            const img = document.createElement('img');
-            img.src = chart.toBase64Image();
-            img.className = 'print-chart-img';
-            img.style.width = '100%';
-            canvas.style.display = 'none';
-            canvas.parentNode.insertBefore(img, canvas);
-            canvasMap.push({ canvas, img });
-          } catch (e) {
-            console.warn('PDF export: could not convert chart to image:', id, e);
-          }
-        });
+      window.print();
 
-        window.print();
-
-        canvasMap.forEach(({ canvas, img }) => {
-          canvas.style.display = '';
-          img.remove();
-        });
-        collapsedSections.forEach(s => s.classList.add('collapsed'));
-        collapsedWidgets.forEach(w => w.classList.add('widget-collapsed'));
-        Chart.defaults.animation = { duration: savedDuration };
+      // Restore everything
+      canvasMap.forEach(({ canvas, img }) => {
+        canvas.style.display = '';
+        img.remove();
       });
+      collapsedSections.forEach(s => s.classList.add('collapsed'));
+      collapsedWidgets.forEach(w => w.classList.add('widget-collapsed'));
+      Chart.defaults.animation = savedAnimation;
+      // Re-render with animation restored
+      refreshDashboard();
+    }, 200);
+    });
     });
   }
 
