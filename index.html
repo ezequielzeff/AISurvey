@@ -4025,7 +4025,7 @@
     }
 
     function restoreSurveyFromExportedJSON(data) {
-      // Build a state object from the exported JSON schema
+      // Build a state object from the exported JSON schema (supports 2.0.0 and 2.1.0)
       const state = {
         currentStep: 8, // go to review
         accountName: data.accountName || '',
@@ -4060,87 +4060,99 @@
         savedAt: new Date().toISOString()
       };
 
-      // Engagement
+      // ── Engagement (Step 5) ──
       if (data.engagement) {
         const eng = data.engagement;
         if (eng.ownership) {
           state.selectedOwnership = Object.entries(eng.ownership)
-            .filter(([k,v]) => !k.startsWith('_') && v.selected)
+            .filter(([k,v]) => !k.startsWith('_') && typeof v === 'object' && v.selected)
             .map(([k]) => k);
         }
         if (eng.aiToolPayment) {
-          state.aiToolPayment = Object.entries(eng.aiToolPayment)
-            .filter(([k,v]) => !k.startsWith('_') && v)
-            .map(([k]) => k)[0] || null;
+          // { value: "mix" } format
+          state.aiToolPayment = eng.aiToolPayment.value || null;
         }
         if (eng.compliance) {
           state.selectedCompliance = Object.entries(eng.compliance)
-            .filter(([k,v]) => !k.startsWith('_') && typeof v === 'object' && v.selected)
+            .filter(([k,v]) => !k.startsWith('_') && k !== 'custom' && typeof v === 'object' && v.selected)
             .map(([k]) => k);
           if (eng.compliance.custom) {
             state.customCompliance = eng.compliance.custom || [];
           }
         }
-        if (eng.aiChampion) {
-          state.aiChampion = eng.aiChampion.exists;
-          state.aiChampions = eng.aiChampion.names || [];
-          state.aiFutureChampions = eng.aiChampion.futureNames || [];
+      }
+
+      // ── Team Roles (Step 1) — includes AI Champion & Success Stories ──
+      if (data.teamRoles) {
+        const tr = data.teamRoles;
+        // Roles are nested under teamRoles.roles
+        if (tr.roles) {
+          state.selectedRoles = Object.entries(tr.roles)
+            .filter(([k,v]) => !k.startsWith('_') && typeof v === 'object' && v.selected)
+            .map(([k]) => k);
         }
-        if (eng.successStories) {
-          state.hasSuccessStories = eng.successStories.exists;
-          state.successStories = eng.successStories.stories || [];
+        // AI Champion
+        if (tr.aiChampion) {
+          state.aiChampion = tr.aiChampion.value || null; // "yes" or "no"
+          state.aiChampions = tr.aiChampion.champions || [];
+          state.aiFutureChampions = tr.aiChampion.futureChampions || [];
+        }
+        // Success Stories
+        if (tr.successStories) {
+          state.hasSuccessStories = tr.successStories.value || null; // "yes" or "no"
+          state.successStories = tr.successStories.stories || [];
         }
       }
 
-      // Client AI Landscape
+      // ── Client AI Landscape (Step 6) ──
       if (data.clientAILandscape) {
         const cl = data.clientAILandscape;
-        if (cl.maturityLevel) {
-          state.clientAIMaturity = Object.entries(cl.maturityLevel)
-            .filter(([k,v]) => !k.startsWith('_') && v)
-            .map(([k]) => k)[0] || null;
+        // Maturity: { value: "piloting" }
+        if (cl.maturity && cl.maturity.value) {
+          state.clientAIMaturity = cl.maturity.value;
         }
-        if (cl.currentAIUsage) {
-          state.clientAIUsage = Object.entries(cl.currentAIUsage)
-            .filter(([k,v]) => !k.startsWith('_') && v)
+        // Usage: multi-select { "off-the-shelf": { selected: true }, ... }
+        if (cl.usage) {
+          state.clientAIUsage = Object.entries(cl.usage)
+            .filter(([k,v]) => !k.startsWith('_') && typeof v === 'object' && v.selected)
             .map(([k]) => k);
         }
-        if (cl.strategicPriority) {
-          state.clientAIPriority = Object.entries(cl.strategicPriority)
-            .filter(([k,v]) => !k.startsWith('_') && v)
-            .map(([k]) => k)[0] || null;
+        // Priority: { value: "high" }
+        if (cl.priority && cl.priority.value) {
+          state.clientAIPriority = cl.priority.value;
         }
-        if (cl.governance) {
-          state.clientAIGovernance = Object.entries(cl.governance)
-            .filter(([k,v]) => !k.startsWith('_') && v)
-            .map(([k]) => k)[0] || null;
+        // Governance: { value: "developing" }
+        if (cl.governance && cl.governance.value) {
+          state.clientAIGovernance = cl.governance.value;
         }
-        if (cl.primaryChallenges) {
-          state.clientChallengeOrder = Object.entries(cl.primaryChallenges)
-            .filter(([k,v]) => !k.startsWith('_') && typeof v === 'object' && v.rank !== null)
-            .sort((a,b) => a[1].rank - b[1].rank)
-            .map(([k]) => k);
+        // Challenges: ranked { "data": { rank: 1 }, "unclear-roi": { rank: 2 }, ... }
+        if (cl.challenges) {
+          const ranked = [];
+          Object.entries(cl.challenges).forEach(([id, val]) => {
+            if (id.startsWith('_')) return;
+            if (typeof val === 'object' && val.rank !== null && val.rank !== undefined) {
+              ranked.push({ id, rank: val.rank });
+            }
+          });
+          ranked.sort((a,b) => a.rank - b.rank);
+          state.clientChallengeOrder = ranked.map(r => r.id);
           state.selectedChallenges = [...state.clientChallengeOrder];
         }
-        if (cl.approvedTools) {
-          state.clientApprovedTools = cl.approvedTools.hasApprovedList;
-          if (cl.approvedTools.tools) {
-            state.selectedApprovedTools = Object.entries(cl.approvedTools.tools)
-              .filter(([k,v]) => !k.startsWith('_') && v)
+        // Approved Tools List
+        if (cl.approvedToolsList) {
+          state.clientApprovedTools = cl.approvedToolsList.value || null; // "yes", "no", "dont-know"
+          if (cl.approvedToolsList.tools) {
+            state.selectedApprovedTools = Object.entries(cl.approvedToolsList.tools)
+              .filter(([k,v]) => !k.startsWith('_') && k !== 'custom' && typeof v === 'object' && v.selected)
               .map(([k]) => k);
-            state.customApprovedTools = cl.approvedTools.custom || [];
+            if (cl.approvedToolsList.tools.custom) {
+              state.customApprovedTools = cl.approvedToolsList.tools.custom || [];
+            }
           }
         }
       }
 
-      // Team roles
-      if (data.teamRoles) {
-        state.selectedRoles = Object.entries(data.teamRoles)
-          .filter(([k,v]) => !k.startsWith('_') && typeof v === 'object' && v.selected)
-          .map(([k]) => k);
-      }
-
-      // Tools
+      // ── Tools & Infrastructure (Step 2) ──
       if (data.toolsAndInfrastructure) {
         const tools = data.toolsAndInfrastructure;
         Object.entries(tools).forEach(([catId, catVal]) => {
@@ -4148,7 +4160,7 @@
           const selected = [];
           const customs = [];
           Object.entries(catVal).forEach(([toolId, toolVal]) => {
-            if (toolId === '_meta' || toolId === 'custom') return;
+            if (toolId === '_meta' || toolId === 'custom' || toolId === 'visible') return;
             if (toolId.startsWith('_')) return;
             if (typeof toolVal === 'object' && toolVal.selected) {
               selected.push(toolId);
@@ -4156,9 +4168,13 @@
           });
           if (catVal.custom) {
             catVal.custom.forEach(c => {
-              const cId = typeof c === 'string' ? c : c.id;
-              selected.push(cId);
-              customs.push(typeof c === 'string' ? { id: c, label: c } : c);
+              if (typeof c === 'string') {
+                customs.push({ id: c, name: c });
+                selected.push(c);
+              } else {
+                customs.push({ id: c.id, name: c.name || c.label || c.id });
+                if (c.selected) selected.push(c.id);
+              }
             });
           }
           if (selected.length > 0) {
@@ -4170,16 +4186,21 @@
         });
       }
 
-      // Role-Tool Matrix
+      // ── Role-Tool Matrix (Step 4) ──
+      // Schema 2.0.0: { "ba:copilot": true/false }
+      // Schema 2.1.0: { "ba:copilot": { selected: true, _role, _tool } }
       if (data.roleToolMatrix && typeof data.roleToolMatrix === 'object') {
         Object.entries(data.roleToolMatrix).forEach(([key, val]) => {
-          if (!key.startsWith('_') && typeof val === 'object' && val.level !== undefined) {
-            state.roleToolMatrix[key] = val;
+          if (key.startsWith('_')) return;
+          if (val === true) {
+            state.roleToolMatrix[key] = true;
+          } else if (typeof val === 'object' && val.selected) {
+            state.roleToolMatrix[key] = true;
           }
         });
       }
 
-      // Use Cases
+      // ── Use Cases (Step 3) ──
       if (data.useCases) {
         const uc = {};
         Object.entries(data.useCases).forEach(([catId, catVal]) => {
@@ -4197,7 +4218,7 @@
           });
           if (catVal.custom) {
             catVal.custom.forEach(c => {
-              custom.push({ id: c.id, label: c.label });
+              custom.push({ id: c.id, label: c.label || c.name || c.id });
               if (c.status === 'need') need.push(c.id);
               else if (c.status === 'doing') doing.push(c.id);
             });
@@ -4207,7 +4228,7 @@
         state.useCaseData = uc;
       }
 
-      // Workflow Maturity
+      // ── Workflow Maturity (Step 9) ──
       if (data.workflowMaturity) {
         Object.entries(data.workflowMaturity).forEach(([roleId, val]) => {
           if (roleId === '_meta' || roleId.startsWith('_')) return;
@@ -4217,7 +4238,7 @@
         });
       }
 
-      // Limiting Factors
+      // ── Limiting Factors (Step 7) ──
       if (data.limitingFactors) {
         const ranked = [];
         Object.entries(data.limitingFactors).forEach(([id, val]) => {
@@ -4234,7 +4255,7 @@
         state.selectedLimitingFactors = ranked.map(r => r.id);
       }
 
-      // Notes
+      // ── Step Notes ──
       if (data.notes) {
         const noteMap = {
           engagement: '5', clientAILandscape: '6', teamRoles: '1',
@@ -4256,7 +4277,7 @@
       document.getElementById('accountNameInput').value = accountName;
       restoreAllNotesUI();
       goToStep(8); // Go to review
-      updateSaveStatus('Survey restored from file', false);
+      updateSaveStatus('Survey restored', false);
     }
 
     async function openRestoreModal() {
