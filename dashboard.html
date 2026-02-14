@@ -558,7 +558,10 @@
     }
     .widget-header {
       margin-bottom: 1.25rem;
+      cursor: pointer;
+      user-select: none;
     }
+    .widget-header:hover .widget-title { color: #4f46e5; }
     .widget-title {
       font-size: 1.15rem;
       font-weight: 700;
@@ -566,12 +569,47 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      transition: color 0.15s ease;
     }
     .widget-subtitle {
       font-size: 0.85rem;
       color: #6b7280;
       margin-top: 0.2rem;
     }
+    /* Widget-level collapse/expand */
+    .widget-chevron {
+      font-size: 0.85rem;
+      transition: transform 0.2s ease, background 0.2s ease;
+      color: #4f46e5;
+      background: rgba(79, 70, 229, 0.1);
+      width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 5px;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .widget-header:hover .widget-chevron { background: rgba(79, 70, 229, 0.2); }
+    .widget-card.widget-collapsed .widget-chevron { transform: rotate(-90deg); }
+    .widget-card.widget-collapsed .widget-body { display: none; }
+    .widget-card.widget-collapsed .widget-question { display: none; }
+    .widget-card.widget-collapsed .widget-header { margin-bottom: 0; }
+    .widget-summary {
+      display: none;
+      padding: 0.4rem 0 0;
+      font-size: 0.82rem;
+      color: #374151;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .widget-card.widget-collapsed .widget-summary { display: flex; }
+    .widget-summary-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .widget-summary-value { font-weight: 700; color: #1e3a5f; }
     .widget-question {
       font-size: 0.9rem;
       color: #4b5563;
@@ -1971,7 +2009,9 @@
       .ai-chat-panel,
       .widget-footer,
       .section-chevron,
+      .widget-chevron,
       .widget-section-summary,
+      .widget-summary,
       .more-info-link,
       .filter-active-tag,
       .filter-clear-btn,
@@ -1981,9 +2021,11 @@
       #emptyState,
       #loadingState { display: none !important; }
 
-      /* Expand all collapsed sections */
+      /* Expand all collapsed sections and widgets */
       .widget-section .widget-section-content { display: block !important; }
       .widget-section-title { cursor: default; pointer-events: none; }
+      .widget-card .widget-body { display: block !important; }
+      .widget-header { cursor: default; pointer-events: none; }
 
       /* Page layout */
       body, html { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -2586,11 +2628,13 @@
 
       <!-- Widget: Clients AI Adoption Stage -->
       <div class="widget-card" id="adoptionStageWidget">
-        <div class="widget-header">
-          <div class="widget-title">Clients AI Adoption Stage <span class="stage-badge" id="stageCalloutValue" onclick="openStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">--</span></div>
+        <div class="widget-header" onclick="toggleWidget(this)">
+          <div class="widget-title">Clients AI Adoption Stage <span class="stage-badge" id="stageCalloutValue" onclick="event.stopPropagation();openStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">--</span> <span class="widget-chevron">&#9662;</span></div>
           <div class="widget-subtitle">Portfolio-wide adoption maturity</div>
-          <div class="widget-question">At what stage are clients in their AI adoption journey? <a href="#" class="more-info-link" onclick="event.preventDefault();openMaturityInfoModal();">More info</a></div>
+          <div class="widget-summary" id="adoptionStageSummary"></div>
+          <div class="widget-question">At what stage are clients in their AI adoption journey? <a href="#" class="more-info-link" onclick="event.stopPropagation();event.preventDefault();openMaturityInfoModal();">More info</a></div>
         </div>
+        <div class="widget-body">
 
         <!-- Stage Pipeline -->
         <div class="stage-pipeline" id="stagePipeline">
@@ -2618,34 +2662,41 @@
           <div id="activeFilterTags" style="display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
           <button class="filter-clear-btn" onclick="clearAllFilters()">Clear All Filters</button>
         </div>
+        </div>
       </div>
 
       <!-- 2-column row: AI Usage (left) + AI Challenges (right) -->
       <div class="landscape-chart-row">
         <!-- Widget: AI Usage -->
         <div class="widget-card" id="aiUsageWidget">
-          <div class="widget-header">
-            <div class="widget-title">Current AI Usage</div>
+          <div class="widget-header" onclick="toggleWidget(this)">
+            <div class="widget-title">Current AI Usage <span class="widget-chevron">&#9662;</span></div>
             <div class="widget-subtitle">How clients are currently using AI</div>
-            <div class="widget-question">How is the client currently using AI? <a href="#" class="more-info-link" onclick="event.preventDefault();openAiUsageInfoModal();">More info</a></div>
+            <div class="widget-summary" id="aiUsageSummary"></div>
+            <div class="widget-question">How is the client currently using AI? <a href="#" class="more-info-link" onclick="event.stopPropagation();event.preventDefault();openAiUsageInfoModal();">More info</a></div>
           </div>
+          <div class="widget-body">
           <div class="ai-usage-chart-container">
             <canvas id="chartAiUsage"></canvas>
           </div>
           <div class="widget-legend" id="aiUsageLegend"></div>
+          </div>
         </div>
 
         <!-- Widget: AI Challenges -->
         <div class="widget-card" id="aiChallengesWidget">
-          <div class="widget-header">
-            <div class="widget-title">AI Challenges</div>
+          <div class="widget-header" onclick="toggleWidget(this)">
+            <div class="widget-title">AI Challenges <span class="widget-chevron">&#9662;</span></div>
             <div class="widget-subtitle">Top challenges clients face in AI adoption</div>
+            <div class="widget-summary" id="aiChallengesSummary"></div>
             <div class="widget-question">What are the biggest AI challenges reported by clients?</div>
           </div>
+          <div class="widget-body">
           <div class="ai-challenges-chart-container">
             <canvas id="chartAiChallenges"></canvas>
           </div>
           <div class="widget-legend" id="aiChallengesLegend"></div>
+          </div>
         </div>
       </div>
 
@@ -2665,19 +2716,24 @@
 
       <!-- Unified AI Tool Adoption Widget -->
       <div class="widget-card" id="aiAdoptionWidget">
-        <div class="widget-header">
-          <div class="widget-title">AI Tool Adoption</div>
+        <div class="widget-header" onclick="toggleWidget(this)">
+          <div class="widget-title">AI Tool Adoption <span class="widget-chevron">&#9662;</span></div>
           <div class="widget-subtitle">Account AI tool adoption with associated service revenue</div>
+          <div class="widget-summary" id="aiAdoptionSummary"></div>
         </div>
+        <div class="widget-body">
         <div id="aiAdoptionContent"><!-- Populated by JS --></div>
+        </div>
       </div>
 
       <!-- Widget: Account AI Agentic Workflow -->
       <div class="widget-card" id="workflowMaturityWidget">
-        <div class="widget-header">
-          <div class="widget-title">Account AI Agentic Workflow <span class="stage-badge" id="wfmAvgValue" onclick="openWfmStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">--</span> <a href="#" class="more-info-link" onclick="event.preventDefault();openAccountComparisonModal();" style="font-size:0.8rem;margin-left:0.5rem;">See accounts comparison</a></div>
+        <div class="widget-header" onclick="toggleWidget(this)">
+          <div class="widget-title">Account AI Agentic Workflow <span class="stage-badge" id="wfmAvgValue" onclick="event.stopPropagation();openWfmStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">--</span> <a href="#" class="more-info-link" onclick="event.stopPropagation();event.preventDefault();openAccountComparisonModal();" style="font-size:0.8rem;margin-left:0.5rem;">See accounts comparison</a> <span class="widget-chevron">&#9662;</span></div>
           <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
+          <div class="widget-summary" id="workflowMaturitySummary"></div>
         </div>
+        <div class="widget-body">
 
         <div class="wfm-section-title">Maturity Journey Distribution</div>
 
@@ -2696,38 +2752,47 @@
             <span>Maturity Goal →</span>
           </div>
         </div>
+        </div>
       </div>
 
       <!-- Widget: AI Adoption by Role -->
       <div class="widget-card" id="aiAdoptionByRoleWidget">
-        <div class="widget-header">
-          <div class="widget-title">AI Adoption by Role</div>
+        <div class="widget-header" onclick="toggleWidget(this)">
+          <div class="widget-title">AI Adoption by Role <span class="widget-chevron">&#9662;</span></div>
           <div class="widget-subtitle">Distribution of workflow maturity stages across roles</div>
+          <div class="widget-summary" id="aiAdoptionByRoleSummary"></div>
         </div>
+        <div class="widget-body">
         <div class="role-heatmap-wrapper">
           <div id="aiAdoptionByRoleContent"><!-- Populated by JS --></div>
+        </div>
         </div>
       </div>
 
       <!-- Widget: AI Tools by Role -->
       <div class="widget-card" id="roleToolMatrixWidget">
-        <div class="widget-header">
-          <div class="widget-title">AI Tools by Role</div>
+        <div class="widget-header" onclick="toggleWidget(this)">
+          <div class="widget-title">AI Tools by Role <span class="widget-chevron">&#9662;</span></div>
           <div class="widget-subtitle">AI Tools utilization per roles that are working with AI</div>
+          <div class="widget-summary" id="roleToolMatrixSummary"></div>
           <div class="widget-question">Who uses which AI tools?</div>
         </div>
+        <div class="widget-body">
         <div class="role-heatmap-wrapper">
           <div id="roleToolMatrixContent"><!-- Populated by JS --></div>
+        </div>
         </div>
       </div>
 
       <!-- Widget: SDLC AI Coverage Map -->
       <div class="widget-card" id="sdlcCoverageWidget">
-        <div class="widget-header">
-          <div class="widget-title">SDLC AI Coverage Map</div>
+        <div class="widget-header" onclick="toggleWidget(this)">
+          <div class="widget-title">SDLC AI Coverage Map <span class="widget-chevron">&#9662;</span></div>
           <div class="widget-subtitle">AI adoption across software delivery lifecycle phases</div>
+          <div class="widget-summary" id="sdlcCoverageSummary"></div>
           <div class="widget-question">Click on each phase to see detailed use case breakdown</div>
         </div>
+        <div class="widget-body">
         <div id="sdlcCoverageContent">
           <!-- Populated by JS -->
         </div>
@@ -2737,46 +2802,56 @@
           <span class="sdlc-legend-item"><span class="sdlc-legend-dot" style="background:#e5e7eb;"></span> Not Using</span>
         </div>
         <div class="sdlc-key-insight" id="sdlcKeyInsight"></div>
+        </div>
       </div>
 
       <!-- Widget: Limiting Factors -->
       <div class="widget-card" id="limitingFactorsWidget">
-        <div class="widget-header">
-          <div class="widget-title">Limiting Factors</div>
+        <div class="widget-header" onclick="toggleWidget(this)">
+          <div class="widget-title">Limiting Factors <span class="widget-chevron">&#9662;</span></div>
           <div class="widget-subtitle">What holds teams back from adopting AI</div>
+          <div class="widget-summary" id="limitingFactorsSummary"></div>
           <div class="widget-question">Which factors are most frequently limiting AI adoption across the portfolio?</div>
         </div>
+        <div class="widget-body">
         <div class="lf-chart-container">
           <canvas id="chartLimitingFactors"></canvas>
         </div>
         <div class="widget-legend" id="lfLegend"></div>
+        </div>
       </div>
 
       <!-- 2-column row: AI Tools Usage (left) + Cloud Platforms (right) -->
       <div class="landscape-chart-row">
         <!-- Widget: AI Tools Usage -->
         <div class="widget-card" id="aiToolsWidget">
-          <div class="widget-header">
-            <div class="widget-title">AI Tools Usage</div>
+          <div class="widget-header" onclick="toggleWidget(this)">
+            <div class="widget-title">AI Tools Usage <span class="widget-chevron">&#9662;</span></div>
             <div class="widget-subtitle">Which AI tools are teams using across the portfolio</div>
+            <div class="widget-summary" id="aiToolsSummary"></div>
             <div class="widget-question">What AI tools are being used by delivery teams?</div>
           </div>
+          <div class="widget-body">
           <div class="ai-tools-chart-container">
             <canvas id="chartAiTools"></canvas>
           </div>
           <div class="widget-legend" id="aiToolsLegend"></div>
+          </div>
         </div>
 
         <!-- Widget: Cloud Platforms -->
         <div class="widget-card" id="cloudPlatformsWidget">
-          <div class="widget-header">
-            <div class="widget-title">Cloud Platforms</div>
+          <div class="widget-header" onclick="toggleWidget(this)">
+            <div class="widget-title">Cloud Platforms <span class="widget-chevron">&#9662;</span></div>
             <div class="widget-subtitle">Cloud infrastructure used across the portfolio</div>
+            <div class="widget-summary" id="cloudPlatformsSummary"></div>
           </div>
+          <div class="widget-body">
           <div class="cloud-platforms-chart-container">
             <canvas id="chartCloudPlatforms"></canvas>
           </div>
           <div class="widget-legend" id="cloudPlatformsLegend"></div>
+          </div>
         </div>
       </div>
 
@@ -2785,12 +2860,15 @@
 
       <!-- Widget: AI Champion Coverage -->
       <div class="widget-card" id="aiChampionWidget">
-        <div class="widget-header">
-          <div class="widget-title">AI Champion Coverage</div>
+        <div class="widget-header" onclick="toggleWidget(this)">
+          <div class="widget-title">AI Champion Coverage <span class="widget-chevron">&#9662;</span></div>
           <div class="widget-subtitle">Accounts with a designated AI adoption champion</div>
+          <div class="widget-summary" id="aiChampionSummary"></div>
         </div>
+        <div class="widget-body">
         <div id="aiChampionContent">
           <!-- Populated by JS -->
+        </div>
         </div>
       </div>
 
@@ -4213,6 +4291,18 @@
     section.classList.toggle('collapsed');
   }
 
+  function toggleWidget(headerEl) {
+    const card = headerEl.closest('.widget-card');
+    card.classList.toggle('widget-collapsed');
+    // Chart.js canvases need resize after being unhidden
+    if (!card.classList.contains('widget-collapsed')) {
+      card.querySelectorAll('canvas').forEach(c => {
+        const chart = Chart.getChart(c);
+        if (chart) chart.resize();
+      });
+    }
+  }
+
   // ═══════════════════════════════════════════
   // ACCOUNT TYPE MULTI-SELECT
   // ═══════════════════════════════════════════
@@ -5411,6 +5501,16 @@
     } else {
       footer.style.display = 'none';
     }
+
+    // Widget summary
+    const adoptionStageSummary = document.getElementById('adoptionStageSummary');
+    if (adoptionStageSummary) {
+      if (avgStage) {
+        adoptionStageSummary.innerHTML = `<span class="widget-summary-label">Median:</span> <span class="widget-summary-value">${MATURITY_LABELS[avgStage]} (${pcts[avgStage]}%)</span>`;
+      } else {
+        adoptionStageSummary.innerHTML = '<span style="color:#9ca3af;">No data</span>';
+      }
+    }
   }
 
   function renderWorkflowMaturityWidget(filteredSurveys, allSurveys) {
@@ -5514,6 +5614,16 @@
       if (targetWfmIdx >= 0 && targetWfmIdx < total) {
         const pct = Math.max(2, Math.min(98, ((targetWfmIdx + 0.5) / total) * 100));
         wfmMarker.style.left = pct + '%';
+      }
+    }
+
+    // Widget summary
+    const wfmSummary = document.getElementById('workflowMaturitySummary');
+    if (wfmSummary) {
+      if (filteredTotal > 0) {
+        wfmSummary.innerHTML = `<span class="widget-summary-label">Avg Stage:</span> <span class="widget-summary-value">${WFM_LABELS[roundedStage]} (${pcts[roundedStage]}%)</span>`;
+      } else {
+        wfmSummary.innerHTML = '<span style="color:#9ca3af;">No data</span>';
       }
     }
   }
@@ -5634,6 +5744,17 @@
         <div class="legend-dot" style="background:${LF_COLORS.primary};"></div>
         <span>% of accounts reporting this factor</span>
       </div>`;
+
+    // Widget summary
+    const lfSummary = document.getElementById('limitingFactorsSummary');
+    if (lfSummary) {
+      const topKey = sorted[0];
+      if (topKey && pcts[topKey] > 0) {
+        lfSummary.innerHTML = `<span class="widget-summary-label">Top Factor:</span> <span class="widget-summary-value">${LIMITING_FACTOR_LABELS[topKey] || topKey} (${pcts[topKey]}%)</span>`;
+      } else {
+        lfSummary.innerHTML = '<span style="color:#9ca3af;">No data</span>';
+      }
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -6048,6 +6169,17 @@
         <div class="legend-dot" style="background:${AI_CHALLENGE_COLORS.primary};"></div>
         <span>% of accounts reporting this challenge</span>
       </div>`;
+
+    // Widget summary
+    const chSummary = document.getElementById('aiChallengesSummary');
+    if (chSummary) {
+      const topKey = sorted[0];
+      if (topKey && pcts[topKey] > 0) {
+        chSummary.innerHTML = `<span class="widget-summary-label">Top:</span> <span class="widget-summary-value">${AI_CHALLENGE_LABELS[topKey] || topKey} (${pcts[topKey]}%)</span>`;
+      } else {
+        chSummary.innerHTML = '<span style="color:#9ca3af;">No data</span>';
+      }
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -6153,6 +6285,17 @@
         <div class="legend-dot" style="background:${AI_USAGE_COLOR};"></div>
         <span>% of accounts using this approach</span>
       </div>`;
+
+    // Widget summary
+    const usageSummary = document.getElementById('aiUsageSummary');
+    if (usageSummary) {
+      const topKey = sorted[0];
+      if (topKey && pcts[topKey] > 0) {
+        usageSummary.innerHTML = `<span class="widget-summary-label">Top:</span> <span class="widget-summary-value">${AI_USAGE_LABELS[topKey] || topKey} (${pcts[topKey]}%)</span>`;
+      } else {
+        usageSummary.innerHTML = '<span style="color:#9ca3af;">No data</span>';
+      }
+    }
   }
 
   // Helper: count AI usage from a survey set
@@ -6303,6 +6446,18 @@
         <div class="legend-dot" style="background:${AI_TOOL_COLOR};"></div>
         <span>% of accounts using this tool</span>
       </div>`;
+
+    // Widget summary
+    const toolsSummary = document.getElementById('aiToolsSummary');
+    if (toolsSummary) {
+      const topKey = toolKeys[0];
+      if (topKey && pcts[topKey] > 0) {
+        const topLabel = topKey === '_custom' ? 'Other / Custom' : (AI_TOOL_LABELS[topKey] || topKey);
+        toolsSummary.innerHTML = `<span class="widget-summary-label">Most Used:</span> <span class="widget-summary-value">${topLabel} (${pcts[topKey]}%)</span>`;
+      } else {
+        toolsSummary.innerHTML = '<span style="color:#9ca3af;">No data</span>';
+      }
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -6435,6 +6590,17 @@
         <div class="legend-dot" style="background:${CLOUD_PLATFORM_COLOR};"></div>
         <span>% of accounts using this platform</span>
       </div>`;
+
+    // Widget summary
+    const cpSummary = document.getElementById('cloudPlatformsSummary');
+    if (cpSummary) {
+      const topKey = platformKeys[0];
+      if (topKey && pcts[topKey] > 0) {
+        cpSummary.innerHTML = `<span class="widget-summary-label">Primary:</span> <span class="widget-summary-value">${CLOUD_PLATFORM_LABELS[topKey] || topKey} (${pcts[topKey]}%)</span>`;
+      } else {
+        cpSummary.innerHTML = '<span style="color:#9ca3af;">No data</span>';
+      }
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -7242,6 +7408,22 @@
     } else {
       insightEl.style.display = 'none';
     }
+
+    // Widget summary
+    const sdlcSummary = document.getElementById('sdlcCoverageSummary');
+    if (sdlcSummary) {
+      const insightText = insightEl.textContent;
+      if (insightText) {
+        sdlcSummary.innerHTML = `<span class="widget-summary-value">${insightEl.innerHTML}</span>`;
+      } else {
+        const topDoing = [...phaseData].sort((a, b) => b.doingPct - a.doingPct)[0];
+        if (topDoing && topDoing.doingPct > 0) {
+          sdlcSummary.innerHTML = `<span class="widget-summary-label">Highest Doing:</span> <span class="widget-summary-value">${escapeHtml(topDoing.label)} (${topDoing.doingPct}%)</span>`;
+        } else {
+          sdlcSummary.innerHTML = '<span style="color:#9ca3af;">No data</span>';
+        }
+      }
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -7451,6 +7633,25 @@
         <tbody>${bodyHtml}</tbody>
       </table>
     `;
+
+    // Widget summary
+    const abrSummary = document.getElementById('aiAdoptionByRoleSummary');
+    if (abrSummary) {
+      const activeRoles = ROLE_ORDER.filter(r => roleTotals[r] > 0);
+      if (activeRoles.length > 0) {
+        // Find role with highest stage
+        let bestRole = null, bestStage = -1;
+        activeRoles.forEach(role => {
+          for (let s = 5; s >= 0; s--) {
+            if (roleStagePcts[role][s] > 0 && s > bestStage) { bestStage = s; bestRole = role; break; }
+          }
+        });
+        const roleLabel = ROLE_LABELS[bestRole] || bestRole;
+        abrSummary.innerHTML = `<span class="widget-summary-label">Roles:</span> <span class="widget-summary-value">${activeRoles.length} tracked</span> <span style="margin:0 0.3rem;color:#d1d5db;">|</span> <span class="widget-summary-label">Highest:</span> <span class="widget-summary-value">${roleLabel} at Stage ${bestStage}</span>`;
+      } else {
+        abrSummary.innerHTML = '<span style="color:#9ca3af;">No data</span>';
+      }
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -7565,6 +7766,16 @@
         <tbody>${bodyHtml}</tbody>
       </table>
     `;
+
+    // Widget summary
+    const rtmSummary = document.getElementById('roleToolMatrixSummary');
+    if (rtmSummary) {
+      if (activeTools.length > 0 && activeRoles.length > 0) {
+        rtmSummary.innerHTML = `<span class="widget-summary-label">Coverage:</span> <span class="widget-summary-value">${activeTools.length} tools across ${activeRoles.length} roles</span>`;
+      } else {
+        rtmSummary.innerHTML = '<span style="color:#9ca3af;">No data</span>';
+      }
+    }
   }
 
   function renderRoleToolMatrixComparison(surveysA, surveysB, nameA, nameB) {
@@ -7766,6 +7977,12 @@
     `;
 
     container.innerHTML = html;
+
+    // Widget summary
+    const champSummary = document.getElementById('aiChampionSummary');
+    if (champSummary) {
+      champSummary.innerHTML = `<span class="widget-summary-label">Coverage:</span> <span class="widget-summary-value">${yesPct}% (${withChampion.length} of ${total} accounts)</span>`;
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -7857,6 +8074,12 @@
         </div>
       </div>
     `;
+
+    // Widget summary
+    const adoptSummary = document.getElementById('aiAdoptionSummary');
+    if (adoptSummary) {
+      adoptSummary.innerHTML = `<span class="widget-summary-label">AI Adoption:</span> <span class="widget-summary-value">${yesPct}% using AI (${usingAi.length} of ${totalAccounts} accounts)</span>`;
+    }
   }
 
   function renderAiAdoptionWidgetComparison(surveysA, surveysB, nameA, nameB) {
@@ -8133,9 +8356,11 @@
   }
 
   function exportDashboardPDF() {
-    // 1. Expand all collapsed sections
+    // 1. Expand all collapsed sections and widgets
     const collapsedSections = [...document.querySelectorAll('.widget-section.collapsed')];
     collapsedSections.forEach(s => s.classList.remove('collapsed'));
+    const collapsedWidgets = [...document.querySelectorAll('.widget-card.widget-collapsed')];
+    collapsedWidgets.forEach(w => w.classList.remove('widget-collapsed'));
 
     // 2. Force reflow so expanded containers have real dimensions
     document.getElementById('dashboardContent').offsetHeight;
@@ -8186,6 +8411,7 @@
         img.remove();
       });
       collapsedSections.forEach(s => s.classList.add('collapsed'));
+      collapsedWidgets.forEach(w => w.classList.add('widget-collapsed'));
       Chart.defaults.animation.duration = savedDuration;
     }, 500);
   }
