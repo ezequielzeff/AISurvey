@@ -8784,6 +8784,26 @@ Instructions:
 
       refreshDashboard();
       initAiChat();
+
+      // Listen for updates from the survey tool in another tab
+      try {
+        const bc = new BroadcastChannel('ai-survey-dashboard-sync');
+        bc.onmessage = async (event) => {
+          if (event.data?.type === 'db-updated') {
+            console.log('Dashboard DB updated by survey tool — reloading...');
+            const savedData = await loadFromIndexedDB();
+            if (savedData) {
+              if (db) db.close();
+              const SQL = await initSqlJs({
+                locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${f}`
+              });
+              db = new SQL.Database(savedData);
+              populateFilters();
+              refreshDashboard();
+            }
+          }
+        };
+      } catch (e) { /* BroadcastChannel not supported */ }
     } catch (e) {
       document.getElementById('loadingState').innerHTML = `
         <div style="color:#ef4444;text-align:center;padding:2rem;">
