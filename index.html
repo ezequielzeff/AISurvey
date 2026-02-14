@@ -4415,7 +4415,9 @@
             if (survey) {
               overlay.classList.remove('open');
               try {
-                // Track the dashboard source for update-back capability
+                const data = JSON.parse(survey.raw_json);
+                restoreSurveyFromExportedJSON(data);
+                // Set dashboard source AFTER restore (which calls loadFromLocalStorage and resets it)
                 dashboardSource = {
                   id: survey.id,
                   account_name: survey.account_name,
@@ -4426,8 +4428,8 @@
                   delivery_manager: survey.delivery_manager,
                   forecasted_service_revenue: survey.forecasted_service_revenue
                 };
-                const data = JSON.parse(survey.raw_json);
-                restoreSurveyFromExportedJSON(data);
+                saveToLocalStorage(); // persist dashboardSource
+                updateDashboardButtons(); // show the Update button
               } catch (err) {
                 console.error('Failed to parse survey JSON:', err);
                 alert('Failed to restore this survey. The data may be corrupted.');
