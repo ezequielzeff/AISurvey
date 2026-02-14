@@ -4293,13 +4293,32 @@
   function toggleSection(titleEl) {
     const section = titleEl.closest('.widget-section');
     section.classList.toggle('collapsed');
-    // Chart.js with responsive:true renders canvases as 0×0 inside display:none
-    // containers and its ResizeObserver wipes them when collapsing. When expanding
-    // a section, we must destroy and re-create charts so they measure real dimensions.
-    if (!section.classList.contains('collapsed')) {
+    const isExpanding = !section.classList.contains('collapsed');
+    console.log('[toggleSection]', isExpanding ? 'EXPANDING' : 'COLLAPSING', section.querySelector('.widget-section-title span')?.textContent);
+
+    if (isExpanding) {
       // Force reflow so containers have computed dimensions before Chart.js measures
       section.offsetHeight;
+
+      // Log container dimensions for chart canvases
+      section.querySelectorAll('canvas').forEach(c => {
+        const container = c.parentElement;
+        const rect = container.getBoundingClientRect();
+        console.log('[toggleSection] canvas:', c.id, 'container:', container.className, 'rect:', rect.width, 'x', rect.height, 'display:', getComputedStyle(container).display);
+      });
+
       refreshDashboard();
+
+      // Log chart state after render
+      section.querySelectorAll('canvas').forEach(c => {
+        const chart = Chart.getChart(c);
+        console.log('[toggleSection] after render - canvas:', c.id, 'w:', c.width, 'h:', c.height, 'chart exists:', !!chart);
+        if (chart) {
+          const ctx = c.getContext('2d');
+          const pixel = ctx.getImageData(Math.floor(c.width/2), Math.floor(c.height/2), 1, 1).data;
+          console.log('[toggleSection] center pixel:', Array.from(pixel), 'blank:', pixel[3] === 0);
+        }
+      });
     }
   }
 
