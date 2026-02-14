@@ -4294,45 +4294,51 @@
     const section = titleEl.closest('.widget-section');
     section.classList.toggle('collapsed');
     const isExpanding = !section.classList.contains('collapsed');
-    console.log('[toggleSection]', isExpanding ? 'EXPANDING' : 'COLLAPSING');
 
     if (isExpanding) {
-      // Force reflow so containers have computed dimensions
-      section.offsetHeight;
+      section.offsetHeight; // force reflow
       refreshDashboard();
 
-      // Log + force draw for each chart in this section
-      section.querySelectorAll('canvas').forEach(c => {
-        const chart = Chart.getChart(c);
-        if (!chart) return;
-        const container = c.parentElement;
-        const rect = container.getBoundingClientRect();
-        console.log('[toggleSection] canvas:', c.id,
-          'container:', rect.width.toFixed(0), 'x', rect.height.toFixed(0),
-          'canvas:', c.width, 'x', c.height,
-          'labels:', chart.data?.labels?.length,
-          'data:', chart.data?.datasets?.[0]?.data);
-        // Force synchronous draw
-        chart.draw();
-        const ctx = c.getContext('2d');
-        const px = ctx.getImageData(Math.floor(c.width/2), Math.floor(c.height/2), 1, 1).data;
-        console.log('[toggleSection] after draw() pixel:', Array.from(px), 'blank:', px[3] === 0);
-      });
+      // === DIAGNOSTIC: Create a test chart on the first chart canvas ===
+      const testCanvas = section.querySelector('canvas');
+      if (testCanvas) {
+        // Destroy whatever chart is on it
+        const existing = Chart.getChart(testCanvas);
+        if (existing) existing.destroy();
 
-      // Delayed check — after animation
-      setTimeout(() => {
-        console.log('[toggleSection] === 2s DELAYED ===');
-        section.querySelectorAll('canvas').forEach(c => {
-          const chart = Chart.getChart(c);
-          if (!chart || c.width === 0) return;
-          // Force update + draw
-          chart.update();
-          chart.draw();
-          const ctx = c.getContext('2d');
-          const px = ctx.getImageData(Math.floor(c.width/2), Math.floor(c.height/2), 1, 1).data;
-          console.log('[toggleSection] DELAYED', c.id, 'pixel:', Array.from(px), 'blank:', px[3] === 0, 'w:', c.width, 'h:', c.height);
+        console.log('[TEST] Chart.js version:', Chart.version);
+        console.log('[TEST] Canvas:', testCanvas.id, 'parent rect:', testCanvas.parentElement.getBoundingClientRect());
+
+        // Try drawing directly on the canvas context FIRST
+        const ctx = testCanvas.getContext('2d');
+        testCanvas.width = testCanvas.parentElement.clientWidth;
+        testCanvas.height = testCanvas.parentElement.clientHeight;
+        ctx.fillStyle = 'red';
+        ctx.fillRect(0, 0, 200, 200);
+        const px1 = ctx.getImageData(100, 100, 1, 1).data;
+        console.log('[TEST] Raw canvas fillRect pixel:', Array.from(px1));
+
+        // Clear and try Chart.js
+        ctx.clearRect(0, 0, testCanvas.width, testCanvas.height);
+        const testChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['A', 'B', 'C'],
+            datasets: [{ label: 'Test', data: [10, 20, 30], backgroundColor: ['red', 'green', 'blue'] }]
+          },
+          options: {
+            responsive: false,
+            animation: false
+          }
         });
-      }, 2000);
+        console.log('[TEST] Test chart created, canvas:', testCanvas.width, 'x', testCanvas.height);
+        const px2 = ctx.getImageData(Math.floor(testCanvas.width/2), Math.floor(testCanvas.height/2), 1, 1).data;
+        console.log('[TEST] After Chart.js (animation:false, responsive:false) pixel:', Array.from(px2), 'blank:', px2[3] === 0);
+
+        // Clean up test chart, re-render real charts
+        testChart.destroy();
+        refreshDashboard();
+      }
     }
   }
 
