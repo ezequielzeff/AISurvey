@@ -4293,52 +4293,11 @@
   function toggleSection(titleEl) {
     const section = titleEl.closest('.widget-section');
     section.classList.toggle('collapsed');
-    const isExpanding = !section.classList.contains('collapsed');
-
-    if (isExpanding) {
+    // Charts use animation:false so they draw synchronously.
+    // Re-render on expand so charts in previously-hidden containers get real dimensions.
+    if (!section.classList.contains('collapsed')) {
       section.offsetHeight; // force reflow
       refreshDashboard();
-
-      // === DIAGNOSTIC: Create a test chart on the first chart canvas ===
-      const testCanvas = section.querySelector('canvas');
-      if (testCanvas) {
-        // Destroy whatever chart is on it
-        const existing = Chart.getChart(testCanvas);
-        if (existing) existing.destroy();
-
-        console.log('[TEST] Chart.js version:', Chart.version);
-        console.log('[TEST] Canvas:', testCanvas.id, 'parent rect:', testCanvas.parentElement.getBoundingClientRect());
-
-        // Try drawing directly on the canvas context FIRST
-        const ctx = testCanvas.getContext('2d');
-        testCanvas.width = testCanvas.parentElement.clientWidth;
-        testCanvas.height = testCanvas.parentElement.clientHeight;
-        ctx.fillStyle = 'red';
-        ctx.fillRect(0, 0, 200, 200);
-        const px1 = ctx.getImageData(100, 100, 1, 1).data;
-        console.log('[TEST] Raw canvas fillRect pixel:', Array.from(px1));
-
-        // Clear and try Chart.js
-        ctx.clearRect(0, 0, testCanvas.width, testCanvas.height);
-        const testChart = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: ['A', 'B', 'C'],
-            datasets: [{ label: 'Test', data: [10, 20, 30], backgroundColor: ['red', 'green', 'blue'] }]
-          },
-          options: {
-            responsive: false,
-            animation: false
-          }
-        });
-        console.log('[TEST] Test chart created, canvas:', testCanvas.width, 'x', testCanvas.height);
-        const px2 = ctx.getImageData(Math.floor(testCanvas.width/2), Math.floor(testCanvas.height/2), 1, 1).data;
-        console.log('[TEST] After Chart.js (animation:false, responsive:false) pixel:', Array.from(px2), 'blank:', px2[3] === 0);
-
-        // Clean up test chart, re-render real charts
-        testChart.destroy();
-        refreshDashboard();
-      }
     }
   }
 
@@ -5748,6 +5707,7 @@
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -6173,6 +6133,7 @@
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -6294,6 +6255,7 @@
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -6449,6 +6411,7 @@
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -6593,6 +6556,7 @@
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -6771,7 +6735,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -6815,7 +6779,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -6859,7 +6823,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -6910,7 +6874,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -6955,7 +6919,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -8420,52 +8384,40 @@
     const collapsedWidgets = [...document.querySelectorAll('.widget-card.widget-collapsed')];
     collapsedWidgets.forEach(w => w.classList.remove('widget-collapsed'));
 
-    // 2. Force synchronous reflow — ensures ALL containers have computed dimensions
+    // 2. Force reflow so containers have computed dimensions
     document.getElementById('dashboardContent').offsetHeight;
 
-    // 3. Recreate all charts with normal animation (DO NOT disable animation —
-    //    Chart.js v4 skips the initial draw entirely when animation=false)
+    // 3. Re-render all charts — animation:false ensures synchronous drawing
     refreshDashboard();
 
-    // 4. Force reflow for dynamic container heights set during render
-    document.getElementById('dashboardContent').offsetHeight;
-
-    // 5. Resize all charts to pick up final container dimensions
-    Object.values(charts).forEach(chart => {
-      if (chart && chart.canvas) chart.resize();
+    // 4. Convert chart canvases to static images for reliable printing
+    const canvasMap = [];
+    Object.entries(charts).forEach(([id, chart]) => {
+      if (!chart || !chart.canvas) return;
+      const canvas = chart.canvas;
+      if (canvas.width === 0 || canvas.height === 0) return;
+      try {
+        const img = document.createElement('img');
+        img.src = canvas.toDataURL('image/png');
+        img.className = 'print-chart-img';
+        img.style.width = '100%';
+        canvas.style.display = 'none';
+        canvas.parentNode.insertBefore(img, canvas);
+        canvasMap.push({ canvas, img });
+      } catch (e) {
+        console.warn('PDF export: failed to capture chart:', id, e);
+      }
     });
 
-    // 6. Wait for chart animations to fully complete (~1s default),
-    //    then convert canvases to images and trigger print
-    setTimeout(() => {
-      const canvasMap = [];
-      Object.entries(charts).forEach(([id, chart]) => {
-        if (!chart || !chart.canvas) return;
-        const canvas = chart.canvas;
-        if (canvas.width === 0 || canvas.height === 0) return;
-        try {
-          const img = document.createElement('img');
-          img.src = canvas.toDataURL('image/png');
-          img.className = 'print-chart-img';
-          img.style.width = '100%';
-          canvas.style.display = 'none';
-          canvas.parentNode.insertBefore(img, canvas);
-          canvasMap.push({ canvas, img });
-        } catch (e) {
-          console.warn('PDF export: failed to capture chart:', id, e);
-        }
-      });
+    window.print();
 
-      window.print();
-
-      // Restore everything
-      canvasMap.forEach(({ canvas, img }) => {
-        canvas.style.display = '';
-        img.remove();
-      });
-      collapsedSections.forEach(s => s.classList.add('collapsed'));
-      collapsedWidgets.forEach(w => w.classList.add('widget-collapsed'));
-    }, 1500);
+    // Restore everything
+    canvasMap.forEach(({ canvas, img }) => {
+      canvas.style.display = '';
+      img.remove();
+    });
+    collapsedSections.forEach(s => s.classList.add('collapsed'));
+    collapsedWidgets.forEach(w => w.classList.add('widget-collapsed'));
   }
 
   async function updateAccountType(id, newType) {
