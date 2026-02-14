@@ -6930,13 +6930,25 @@
     const container = document.getElementById('aiAdoptionByRoleContent');
     if (!container) return;
 
-    function computeRoleData(surveys) {
+    function computeRoleData(surveys, toolFilter) {
       const roleStageCounts = {};
       ROLE_ORDER.forEach(role => { roleStageCounts[role] = {}; WFM_STAGES.forEach(s => roleStageCounts[role][s] = 0); });
       surveys.forEach(s => {
         const wfm = s.data?.workflowMaturity;
         if (!wfm) return;
+        const matrix = s.data?.roleToolMatrix;
         ROLE_ORDER.forEach(role => {
+          // When an AI tool filter is active, only count this role if it actually uses the filtered tool
+          if (toolFilter) {
+            if (toolFilter === '_custom') {
+              const hasCustom = matrix && Object.keys(matrix).some(k =>
+                k.startsWith(role + ':custom-') && matrix[k]?.selected
+              );
+              if (!hasCustom) return;
+            } else {
+              if (!matrix || !matrix[`${role}:${toolFilter}`]?.selected) return;
+            }
+          }
           const st = wfm[role]?.stage;
           if (st !== null && st !== undefined && typeof st === 'number' && roleStageCounts[role][st] !== undefined) {
             roleStageCounts[role][st]++;
@@ -6952,8 +6964,8 @@
       return rolePcts;
     }
 
-    const pctsA = computeRoleData(surveysA);
-    const pctsB = computeRoleData(surveysB);
+    const pctsA = computeRoleData(surveysA, groupA.filters?.aiTool);
+    const pctsB = computeRoleData(surveysB, groupB.filters?.aiTool);
 
     function renderHeatmapTable(pcts, groupName, color) {
       let maxPct = 0;
@@ -7303,7 +7315,20 @@
       const wfm = s.data?.workflowMaturity;
       if (!wfm) return;
       const acctName = s.data?.accountName || s.account_name || 'Unknown';
+      const matrix = s.data?.roleToolMatrix;
       ROLE_ORDER.forEach(role => {
+        // When an AI tool filter is active, only count this role if it actually uses the filtered tool
+        if (activeAiToolFilter) {
+          if (activeAiToolFilter === '_custom') {
+            // Check if role uses any custom tool
+            const hasCustom = matrix && Object.keys(matrix).some(k =>
+              k.startsWith(role + ':custom-') && matrix[k]?.selected
+            );
+            if (!hasCustom) return;
+          } else {
+            if (!matrix || !matrix[`${role}:${activeAiToolFilter}`]?.selected) return;
+          }
+        }
         const st = wfm[role]?.stage;
         if (st !== null && st !== undefined && typeof st === 'number' && st >= 0 && st <= 5) {
           roleStageCounts[role][st]++;
@@ -7343,12 +7368,24 @@
     if (maxPct === 0) maxPct = 1;
 
     // Compute overall per-account stage distribution (matches Maturity Journey widget)
+    // When a tool filter is active, only include roles that actually use the filtered tool
     const accountStages = [];
     surveys.forEach(s => {
       const wfm = s.data?.workflowMaturity;
       if (!wfm) return;
+      const matrix = s.data?.roleToolMatrix;
       const roleStages = [];
       ROLE_ORDER.forEach(role => {
+        if (activeAiToolFilter) {
+          if (activeAiToolFilter === '_custom') {
+            const hasCustom = matrix && Object.keys(matrix).some(k =>
+              k.startsWith(role + ':custom-') && matrix[k]?.selected
+            );
+            if (!hasCustom) return;
+          } else {
+            if (!matrix || !matrix[`${role}:${activeAiToolFilter}`]?.selected) return;
+          }
+        }
         const st = wfm[role]?.stage;
         if (st !== null && st !== undefined && typeof st === 'number') roleStages.push(st);
       });
