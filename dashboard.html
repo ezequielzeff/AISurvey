@@ -1997,78 +1997,6 @@
     }
 
     /* ═══════════════════════════════════════════
-       PRINT / PDF EXPORT STYLES
-       ═══════════════════════════════════════════ */
-    @media print {
-      /* Hide interactive UI chrome */
-      .dashboard-header .header-controls,
-      .filter-bar,
-      .actions-wrapper,
-      .ai-chat-fab,
-      .ai-chat-overlay,
-      .ai-chat-panel,
-      .widget-footer,
-      .section-chevron,
-      .widget-chevron,
-      .widget-section-summary,
-      .widget-summary,
-      .more-info-link,
-      .filter-active-tag,
-      .filter-clear-btn,
-      .surveys-table .actions,
-      .info-modal-overlay,
-      #comparisonBanner,
-      #emptyState,
-      #loadingState { display: none !important; }
-
-      /* Expand all collapsed sections and widgets */
-      .widget-section .widget-section-content { display: block !important; }
-      .widget-section-title { cursor: default; pointer-events: none; }
-      .widget-card .widget-body { display: block !important; }
-      .widget-header { cursor: default; pointer-events: none; }
-
-      /* Stack 2-column grid layouts for print */
-      .landscape-chart-row { display: block !important; }
-      .landscape-chart-row .widget-card { margin-bottom: 1rem; }
-
-      /* Page layout */
-      body, html { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .dashboard-content { max-width: 100%; padding: 0; }
-      .dashboard-header { box-shadow: none; border-bottom: 2px solid #e5e7eb; padding: 0.75rem 1rem; }
-
-      /* Widget cards */
-      .widget-card {
-        break-inside: avoid;
-        box-shadow: none !important;
-        border: 1px solid #e5e7eb;
-        margin-bottom: 1rem;
-        page-break-inside: avoid;
-      }
-
-      /* Section breaks */
-      .widget-section { break-before: auto; margin-bottom: 0; }
-      .widget-section + .widget-section { break-before: page; }
-
-      /* Pipeline cards — keep colors */
-      .stage-card, .wfm-card { cursor: default; }
-      .stage-card:hover, .wfm-card:hover { transform: none !important; box-shadow: none !important; }
-      .progress-gradient-bar, .wfm-gradient-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
-      /* Chart images (inserted by exportDashboardPDF) */
-      .print-chart-img { max-width: 100%; height: auto; break-inside: avoid; page-break-inside: avoid; }
-
-      /* Table */
-      .surveys-table { font-size: 9pt; }
-      .surveys-table th, .surveys-table td { padding: 4px 8px; }
-      .surveys-table tr { page-break-inside: avoid; }
-      .surveys-table .row-dimmed { opacity: 1 !important; }
-
-      /* Ensure text is readable */
-      * { color-adjust: exact; }
-      a { text-decoration: none !important; color: inherit !important; }
-    }
-
-    /* ═══════════════════════════════════════════
        AI CHAT PANEL
        ═══════════════════════════════════════════ */
     .ai-chat-overlay {
@@ -2456,9 +2384,6 @@
           <button class="actions-menu-item" id="exportSurveysBtn" type="button">
             <span class="item-icon">&#128196;</span> Export Surveys
           </button>
-          <button class="actions-menu-item" id="exportPdfBtn" type="button">
-            <span class="item-icon">&#128248;</span> Export as PDF
-          </button>
           <div class="actions-menu-divider"></div>
           <button class="actions-menu-item" id="exportDbBtn" type="button">
             <span class="item-icon">&#128190;</span> Backup Database
@@ -2620,7 +2545,7 @@
       </div>
 
       <!-- Section: Client AI Landscape -->
-      <div class="widget-section collapsed">
+      <div class="widget-section">
         <div class="widget-section-title" onclick="toggleSection(this)">
           <span>Client AI Landscape</span>
           <span class="section-chevron">&#9662;</span>
@@ -2708,7 +2633,7 @@
       </div> <!-- end Client AI Landscape section -->
 
       <!-- Section: Account AI Landscape -->
-      <div class="widget-section collapsed">
+      <div class="widget-section">
         <div class="widget-section-title" onclick="toggleSection(this)">
           <span>Account AI Landscape</span>
           <span class="section-chevron">&#9662;</span>
@@ -2880,7 +2805,7 @@
       </div> <!-- end Account AI Landscape section -->
 
       <!-- Section: Surveys -->
-      <div class="widget-section collapsed">
+      <div class="widget-section">
         <div class="widget-section-title" onclick="toggleSection(this)">
           <span>Surveys</span>
           <span class="section-chevron">&#9662;</span>
@@ -4293,32 +4218,26 @@
   function toggleSection(titleEl) {
     const section = titleEl.closest('.widget-section');
     section.classList.toggle('collapsed');
+    // When expanding, resize any Chart.js canvases inside
     if (!section.classList.contains('collapsed')) {
-      section.offsetHeight; // force reflow
-      refreshDashboard();
+      section.querySelectorAll('canvas').forEach(c => {
+        const chart = Chart.getChart(c);
+        if (chart) chart.resize();
+      });
     }
   }
 
   function toggleWidget(headerEl) {
     const card = headerEl.closest('.widget-card');
     card.classList.toggle('widget-collapsed');
-    // Chart.js with responsive:true renders canvases as 0×0 inside display:none.
-    // When expanding, re-render so charts measure real container dimensions.
+    // When expanding, resize any Chart.js canvases inside
     if (!card.classList.contains('widget-collapsed')) {
-      const hasCharts = card.querySelector('canvas');
-      if (hasCharts) {
-        card.offsetHeight; // force reflow
-        refreshDashboard();
-      }
+      card.querySelectorAll('canvas').forEach(c => {
+        const chart = Chart.getChart(c);
+        if (chart) chart.resize();
+      });
     }
   }
-
-  // Re-render charts on window resize (since responsive:false)
-  let _resizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(_resizeTimer);
-    _resizeTimer = setTimeout(() => { if (typeof refreshDashboard === 'function') refreshDashboard(); }, 300);
-  });
 
   // ═══════════════════════════════════════════
   // ACCOUNT TYPE MULTI-SELECT
@@ -5363,39 +5282,10 @@
 
   function destroyChart(id) {
     if (charts[id]) { charts[id].destroy(); delete charts[id]; }
-    // Also check if Chart.js has a chart on this canvas (safety net)
     const canvas = document.getElementById(id);
     if (canvas) {
       const existing = Chart.getChart(canvas);
       if (existing) existing.destroy();
-    }
-  }
-
-  // Returns true if canvas is inside a collapsed (hidden) section or widget.
-  // Charts must NOT be created in hidden containers — they render as 0×0.
-  function isCanvasHidden(canvasId) {
-    const el = document.getElementById(canvasId);
-    if (!el) return true;
-    const section = el.closest('.widget-section');
-    if (section && section.classList.contains('collapsed')) return true;
-    const widget = el.closest('.widget-card');
-    if (widget && widget.classList.contains('widget-collapsed')) return true;
-    return false;
-  }
-
-  // Size canvas to fill its container. Used with responsive:false so
-  // Chart.js renders at the correct dimensions without async resizing.
-  function prepareCanvas(canvasId) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-    const container = canvas.parentElement;
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      canvas.style.width = '100%';
-      canvas.style.height = '100%';
-      canvas.width = Math.round(rect.width);
-      canvas.height = Math.round(rect.height);
     }
   }
 
@@ -5679,7 +5569,7 @@
 
   function renderLimitingFactorsWidget(surveys) {
     destroyChart('chartLimitingFactors');
-    if (isCanvasHidden('chartLimitingFactors')) return;
+
 
     // Count how many times each factor is selected (rank 1 or rank 2)
     const counts = {};
@@ -5718,7 +5608,6 @@
       return '#374151';
     });
 
-    prepareCanvas('chartLimitingFactors');
     const ctx = document.getElementById('chartLimitingFactors').getContext('2d');
     charts['chartLimitingFactors'] = new Chart(ctx, {
       type: 'bar',
@@ -5735,8 +5624,8 @@
       },
       options: {
         indexAxis: 'y',
-        responsive: false,
-        animation: false,
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -6108,7 +5997,7 @@
   // ═══════════════════════════════════════════
   function renderAiChallengesWidget(surveys) {
     destroyChart('chartAiChallenges');
-    if (isCanvasHidden('chartAiChallenges')) return;
+
 
     // Count how many times each challenge is selected (rank 1 or rank 2)
     const counts = {};
@@ -6145,7 +6034,6 @@
       return '#374151';
     });
 
-    prepareCanvas('chartAiChallenges');
     const ctx = document.getElementById('chartAiChallenges').getContext('2d');
     charts['chartAiChallenges'] = new Chart(ctx, {
       type: 'bar',
@@ -6162,8 +6050,8 @@
       },
       options: {
         indexAxis: 'y',
-        responsive: false,
-        animation: false,
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -6237,7 +6125,7 @@
 
   function renderAiUsageWidget(surveys) {
     destroyChart('chartAiUsage');
-    if (isCanvasHidden('chartAiUsage')) return;
+
 
     const counts = {};
     AI_USAGE_ORDER.forEach(k => counts[k] = 0);
@@ -6268,7 +6156,6 @@
       return '#374151';
     });
 
-    prepareCanvas('chartAiUsage');
     const ctx = document.getElementById('chartAiUsage').getContext('2d');
     charts['chartAiUsage'] = new Chart(ctx, {
       type: 'bar',
@@ -6285,8 +6172,8 @@
       },
       options: {
         indexAxis: 'y',
-        responsive: false,
-        animation: false,
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -6368,7 +6255,7 @@
   // ═══════════════════════════════════════════
   function renderAiToolsWidget(surveys) {
     destroyChart('chartAiTools');
-    if (isCanvasHidden('chartAiTools')) return;
+
 
     const totalSurveys = surveys.length;
     const EXCLUDED_KEYS = ['dont-know', 'not-applicable', 'custom', '_meta'];
@@ -6425,7 +6312,6 @@
     const barCount = toolKeys.length || 1;
     chartContainer.style.height = Math.max(180, barCount * 32 + 40) + 'px';
 
-    prepareCanvas('chartAiTools');
     const ctx = document.getElementById('chartAiTools').getContext('2d');
     charts['chartAiTools'] = new Chart(ctx, {
       type: 'bar',
@@ -6442,8 +6328,8 @@
       },
       options: {
         indexAxis: 'y',
-        responsive: false,
-        animation: false,
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -6518,7 +6404,7 @@
   // ═══════════════════════════════════════════
   function renderCloudPlatformsWidget(surveys) {
     destroyChart('chartCloudPlatforms');
-    if (isCanvasHidden('chartCloudPlatforms')) return;
+
 
     const totalSurveys = surveys.length;
 
@@ -6571,7 +6457,6 @@
     const barCount = platformKeys.length || 1;
     chartContainer.style.height = Math.max(100, barCount * 32 + 40) + 'px';
 
-    prepareCanvas('chartCloudPlatforms');
     const ctx = document.getElementById('chartCloudPlatforms').getContext('2d');
     charts['chartCloudPlatforms'] = new Chart(ctx, {
       type: 'bar',
@@ -6588,8 +6473,8 @@
       },
       options: {
         indexAxis: 'y',
-        responsive: false,
-        animation: false,
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -6742,7 +6627,7 @@
 
   function renderLimitingFactorsComparison(surveysA, surveysB, nameA, nameB) {
     destroyChart('chartLimitingFactors');
-    if (isCanvasHidden('chartLimitingFactors')) return;
+
     const countsA = countLimitingFactors(surveysA);
     const countsB = countLimitingFactors(surveysB);
     const totalA = surveysA.length, totalB = surveysB.length;
@@ -6758,7 +6643,6 @@
     const pctsA = sorted.map(k => totalA > 0 ? Math.round((countsA[k] / totalA) * 100) : 0);
     const pctsB = sorted.map(k => totalB > 0 ? Math.round((countsB[k] / totalB) * 100) : 0);
 
-    prepareCanvas('chartLimitingFactors');
     const ctx = document.getElementById('chartLimitingFactors').getContext('2d');
     charts['chartLimitingFactors'] = new Chart(ctx, {
       type: 'bar',
@@ -6770,7 +6654,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: false, animation: false,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -6789,7 +6673,7 @@
 
   function renderAiChallengesComparison(surveysA, surveysB, nameA, nameB) {
     destroyChart('chartAiChallenges');
-    if (isCanvasHidden('chartAiChallenges')) return;
+
     const countsA = countAiChallenges(surveysA);
     const countsB = countAiChallenges(surveysB);
     const totalA = surveysA.length, totalB = surveysB.length;
@@ -6804,7 +6688,6 @@
     const pctsA = sorted.map(k => totalA > 0 ? Math.round((countsA[k] / totalA) * 100) : 0);
     const pctsB = sorted.map(k => totalB > 0 ? Math.round((countsB[k] / totalB) * 100) : 0);
 
-    prepareCanvas('chartAiChallenges');
     const ctx = document.getElementById('chartAiChallenges').getContext('2d');
     charts['chartAiChallenges'] = new Chart(ctx, {
       type: 'bar',
@@ -6816,7 +6699,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: false, animation: false,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -6835,7 +6718,7 @@
 
   function renderAiUsageComparison(surveysA, surveysB, nameA, nameB) {
     destroyChart('chartAiUsage');
-    if (isCanvasHidden('chartAiUsage')) return;
+
     const countsA = countAiUsage(surveysA);
     const countsB = countAiUsage(surveysB);
     const totalA = surveysA.length, totalB = surveysB.length;
@@ -6850,7 +6733,6 @@
     const pctsA = sorted.map(k => totalA > 0 ? Math.round((countsA[k] / totalA) * 100) : 0);
     const pctsB = sorted.map(k => totalB > 0 ? Math.round((countsB[k] / totalB) * 100) : 0);
 
-    prepareCanvas('chartAiUsage');
     const ctx = document.getElementById('chartAiUsage').getContext('2d');
     charts['chartAiUsage'] = new Chart(ctx, {
       type: 'bar',
@@ -6862,7 +6744,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: false, animation: false,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -6881,7 +6763,7 @@
 
   function renderAiToolsComparison(surveysA, surveysB, nameA, nameB) {
     destroyChart('chartAiTools');
-    if (isCanvasHidden('chartAiTools')) return;
+
     const totalA = surveysA.length, totalB = surveysB.length;
     const tA = countAiTools(surveysA), tB = countAiTools(surveysB);
 
@@ -6903,7 +6785,6 @@
     const barCount = allKeys.length || 1;
     chartContainer.style.height = Math.max(180, barCount * 36 + 40) + 'px';
 
-    prepareCanvas('chartAiTools');
     const ctx = document.getElementById('chartAiTools').getContext('2d');
     charts['chartAiTools'] = new Chart(ctx, {
       type: 'bar',
@@ -6915,7 +6796,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: false, animation: false,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -6935,7 +6816,7 @@
   // --- Cloud Platforms Comparison ---
   function renderCloudPlatformsComparison(surveysA, surveysB, nameA, nameB) {
     destroyChart('chartCloudPlatforms');
-    if (isCanvasHidden('chartCloudPlatforms')) return;
+
     const totalA = surveysA.length, totalB = surveysB.length;
     const cpA = countCloudPlatforms(surveysA), cpB = countCloudPlatforms(surveysB);
 
@@ -6950,7 +6831,6 @@
     const barCount = allKeys.length || 1;
     chartContainer.style.height = Math.max(100, barCount * 36 + 40) + 'px';
 
-    prepareCanvas('chartCloudPlatforms');
     const ctx = document.getElementById('chartCloudPlatforms').getContext('2d');
     charts['chartCloudPlatforms'] = new Chart(ctx, {
       type: 'bar',
@@ -6962,7 +6842,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: false, animation: false,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -8420,49 +8300,6 @@
     URL.revokeObjectURL(url);
   }
 
-  function exportDashboardPDF() {
-    // 1. Expand all collapsed sections and widgets so containers have real dimensions
-    const collapsedSections = [...document.querySelectorAll('.widget-section.collapsed')];
-    collapsedSections.forEach(s => s.classList.remove('collapsed'));
-    const collapsedWidgets = [...document.querySelectorAll('.widget-card.widget-collapsed')];
-    collapsedWidgets.forEach(w => w.classList.remove('widget-collapsed'));
-
-    // 2. Force reflow so containers have computed dimensions
-    document.getElementById('dashboardContent').offsetHeight;
-
-    // 3. Re-render all charts — animation:false ensures synchronous drawing
-    refreshDashboard();
-
-    // 4. Convert chart canvases to static images for reliable printing
-    const canvasMap = [];
-    Object.entries(charts).forEach(([id, chart]) => {
-      if (!chart || !chart.canvas) return;
-      const canvas = chart.canvas;
-      if (canvas.width === 0 || canvas.height === 0) return;
-      try {
-        const img = document.createElement('img');
-        img.src = canvas.toDataURL('image/png');
-        img.className = 'print-chart-img';
-        img.style.width = '100%';
-        canvas.style.display = 'none';
-        canvas.parentNode.insertBefore(img, canvas);
-        canvasMap.push({ canvas, img });
-      } catch (e) {
-        console.warn('PDF export: failed to capture chart:', id, e);
-      }
-    });
-
-    window.print();
-
-    // Restore everything
-    canvasMap.forEach(({ canvas, img }) => {
-      canvas.style.display = '';
-      img.remove();
-    });
-    collapsedSections.forEach(s => s.classList.add('collapsed'));
-    collapsedWidgets.forEach(w => w.classList.add('widget-collapsed'));
-  }
-
   async function updateAccountType(id, newType) {
     db.run('UPDATE surveys SET account_type = ? WHERE id = ?', [newType, id]);
     await saveToIndexedDB();
@@ -8748,7 +8585,6 @@
     // Database export/import/clear
     document.getElementById('exportDbBtn').addEventListener('click', exportDatabase);
     document.getElementById('exportSurveysBtn').addEventListener('click', exportAllSurveys);
-    document.getElementById('exportPdfBtn').addEventListener('click', exportDashboardPDF);
     document.getElementById('importDbInput').addEventListener('change', e => {
       if (e.target.files.length > 0) importDatabase(e.target.files[0]);
       e.target.value = '';
