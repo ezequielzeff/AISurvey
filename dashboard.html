@@ -9351,6 +9351,28 @@
         if (successStories?.hasSuccessStories === 'yes' && Array.isArray(successStories?.stories) && successStories.stories.length > 0) {
           ctx += `Success Stories: ${successStories.stories.join('; ')}\n`;
         }
+
+        // Additional Notes (per step)
+        const notes = s.data?.notes;
+        if (notes) {
+          const NOTE_LABELS = {
+            engagement: 'Engagement',
+            clientAILandscape: 'Client AI Landscape',
+            teamRoles: 'Team Roles',
+            tools: 'Tools & Infrastructure',
+            roleToolMatrix: 'Role-Tool Assignments',
+            useCases: 'Use Cases',
+            workflowMaturity: 'Workflow Maturity',
+            limitingFactors: 'Limiting Factors'
+          };
+          const noteEntries = Object.entries(notes)
+            .filter(([k, v]) => k !== '_meta' && v && v.trim())
+            .map(([k, v]) => `${NOTE_LABELS[k] || k}: ${v.trim()}`);
+          if (noteEntries.length > 0) {
+            ctx += `Additional Notes:\n`;
+            noteEntries.forEach(n => { ctx += `- ${n}\n`; });
+          }
+        }
       });
       ctx += '\n';
     } else if (surveys.length > 50) {
@@ -9389,6 +9411,7 @@ Data dimensions available per account:
 - Use Cases per account: individual use case names tagged with their SDLC phase and status (Doing vs Needed)
 - AI Champion: whether the account has a designated AI champion, with champion names
 - Success Stories: notable AI wins reported by the account
+- Additional Notes: free-text notes added by the respondent for each survey step (engagement, client AI landscape, team roles, tools, role-tool assignments, use cases, workflow maturity, limiting factors)
 
 Instructions:
 - Provide specific, data-driven answers. Reference account names, percentages, and distributions.
