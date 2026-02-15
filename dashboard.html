@@ -7327,9 +7327,17 @@
       SDLC_PHASES.forEach(ph => {
         let using = 0, notUsing = 0;
         surveys.forEach(s => {
-          const val = s.data?.sdlcAiUsage?.[ph.key]?.value;
-          if (val === 'yes') using++;
-          else if (val === 'no') notUsing++;
+          const section = s.data?.useCases?.[ph.key];
+          if (!section) return;
+          let hasDoing = false;
+          Object.entries(section).forEach(([k, v]) => {
+            if (k === '_meta' || k === 'custom') return;
+            if (v?.status === 'doing') hasDoing = true;
+          });
+          if (!hasDoing && Array.isArray(section.custom)) {
+            section.custom.forEach(c => { if (c?.status === 'doing') hasDoing = true; });
+          }
+          if (hasDoing) using++; else notUsing++;
         });
         const total = using + notUsing;
         data[ph.key] = { using, notUsing, total, pct: total > 0 ? Math.round((using / total) * 100) : 0 };
@@ -8189,7 +8197,7 @@
     surveys.forEach(s => {
       const champion = s.data?.teamRoles?.aiChampion;
       const val = champion?.value;
-      const acctName = s.data?.accountName || s.account || 'Unknown';
+      const acctName = s.data?.accountName || s.account_name || 'Unknown';
       const champions = champion?.champions || [];
       const futureChampions = champion?.futureChampions || [];
 
@@ -9210,12 +9218,17 @@
         }
 
         // Client Approved Tools
-        const approvedTools = landscape.approvedTools;
-        if (approvedTools) {
+        const approvedToolsList = landscape.approvedToolsList;
+        if (approvedToolsList) {
           const APPROVED_TOOL_MAP = { 'github-copilot': 'GitHub Copilot', chatgpt: 'ChatGPT', claude: 'Claude', gemini: 'Gemini', cursor: 'Cursor', 'amazon-q-kiro': 'Amazon Q/Kiro', 'ms-copilot': 'MS Copilot', 'atlassian-rovo': 'Rovo' };
           const items = [];
-          Object.entries(approvedTools).forEach(([k, v]) => {
-            if (!k.startsWith('_') && v?.selected === true) items.push(APPROVED_TOOL_MAP[k] || k);
+          const tools = approvedToolsList.tools || {};
+          Object.entries(tools).forEach(([k, v]) => {
+            if (k === 'custom' && Array.isArray(v)) {
+              v.forEach(ct => { if (ct.selected) items.push(ct.name || ct.id); });
+            } else if (!k.startsWith('_') && v?.selected === true) {
+              items.push(APPROVED_TOOL_MAP[k] || k);
+            }
           });
           if (items.length > 0) ctx += `Client Approved Tools: ${items.join(', ')}\n`;
         }
@@ -9308,15 +9321,24 @@
           if (ranked.length > 0) ctx += `Limiting Factors: ${ranked.map(r => `#${r.rank} ${r.label}`).join(', ')}\n`;
         }
 
-        // SDLC AI Coverage
-        const sdlcUsage = s.data?.sdlcAiUsage;
-        if (sdlcUsage) {
-          const items = [];
+        // SDLC AI Coverage (derived from useCases — phase has coverage if any use case is "doing")
+        const ucData = s.data?.useCases;
+        if (ucData) {
+          const coveredPhases = [];
           SDLC_PHASES.forEach(ph => {
-            const val = sdlcUsage[ph.key]?.value;
-            if (val === 'yes') items.push(ph.label);
+            const section = ucData[ph.key];
+            if (!section) return;
+            let hasDoing = false;
+            Object.entries(section).forEach(([k, v]) => {
+              if (k === '_meta' || k === 'custom') return;
+              if (v?.status === 'doing') hasDoing = true;
+            });
+            if (!hasDoing && Array.isArray(section.custom)) {
+              section.custom.forEach(c => { if (c?.status === 'doing') hasDoing = true; });
+            }
+            if (hasDoing) coveredPhases.push(ph.label);
           });
-          if (items.length > 0) ctx += `SDLC AI Coverage: ${items.join(', ')}\n`;
+          if (coveredPhases.length > 0) ctx += `SDLC AI Coverage: ${coveredPhases.join(', ')}\n`;
         }
 
         // Use Cases detail per SDLC phase (individual use case names)
