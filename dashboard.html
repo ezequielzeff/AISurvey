@@ -2629,9 +2629,9 @@
           <div class="kpi-sub" id="kpiToolAdoptionSub">using at least 1 AI tool</div>
         </div>
         <div class="kpi-card" data-accent="amber">
-          <div class="kpi-label">AI Landscape</div>
-          <div class="kpi-value" data-accent="amber" id="kpiAiLandscape" style="font-size:1.1rem;">—</div>
-          <div class="kpi-sub" id="kpiAiLandscapeSub">avg usage stage</div>
+          <div class="kpi-label">Agentic Workflow</div>
+          <div class="kpi-value" data-accent="amber" id="kpiWfm" style="font-size:1.1rem;">—</div>
+          <div class="kpi-sub" id="kpiWfmSub">avg stage</div>
         </div>
       </div>
 
@@ -5376,8 +5376,8 @@
       document.getElementById('kpiMaturitySub').textContent = 'no data';
       document.getElementById('kpiToolAdoption').textContent = '—';
       document.getElementById('kpiToolAdoptionSub').textContent = 'no data';
-      document.getElementById('kpiAiLandscape').textContent = '—';
-      document.getElementById('kpiAiLandscapeSub').textContent = 'no data';
+      document.getElementById('kpiWfm').textContent = '—';
+      document.getElementById('kpiWfmSub').textContent = 'no data';
       return;
     }
 
@@ -5406,29 +5406,24 @@
       document.getElementById('kpiToolAdoptionSub').textContent = 'no data';
     }
 
-    // 4. AI Landscape — median of each account's highest selected AI usage tier
-    const AI_USAGE_TIERS = ['not-using', 'off-the-shelf', 'business-apps', 'custom-solutions', 'business-processes', 'customer-facing'];
-    const accountMaxTiers = [];
-    surveys.forEach(s => {
-      const usage = s.data?.clientAILandscape?.usage;
-      if (!usage) return;
-      let maxIdx = -1;
-      AI_USAGE_TIERS.forEach((k, i) => {
-        if (usage[k]?.selected === true && i > maxIdx) maxIdx = i;
-      });
-      if (maxIdx >= 0) accountMaxTiers.push(maxIdx);
-    });
-    if (accountMaxTiers.length > 0) {
-      accountMaxTiers.sort((a, b) => a - b);
-      const medianIdx = accountMaxTiers[Math.floor(accountMaxTiers.length / 2)];
-      const medianKey = AI_USAGE_TIERS[medianIdx];
-      const label = AI_USAGE_LABELS[medianKey] || medianKey;
-      document.getElementById('kpiAiLandscape').textContent = label;
-      const atThisLevel = accountMaxTiers.filter(i => i === medianIdx).length;
-      document.getElementById('kpiAiLandscapeSub').textContent = `${atThisLevel} of ${accountMaxTiers.length} at this level`;
+    // 4. Account AI Agentic Workflow — use currentWfmStage set by renderWorkflowMaturityWidget
+    if (currentWfmStage !== null && WFM_LABELS[currentWfmStage] !== undefined) {
+      document.getElementById('kpiWfm').textContent = `${WFM_LABELS[currentWfmStage]} (Stage ${currentWfmStage} of 5)`;
+      const wfmCount = surveys.filter(s => {
+        const wfm = s.data?.workflowMaturity;
+        if (!wfm) return false;
+        const roleStages = [];
+        ROLE_ORDER.forEach(role => {
+          const st = wfm[role]?.stage;
+          if (st !== null && st !== undefined && typeof st === 'number') roleStages.push(st);
+        });
+        if (roleStages.length === 0) return false;
+        return Math.round(roleStages.reduce((a, b) => a + b, 0) / roleStages.length) === currentWfmStage;
+      }).length;
+      document.getElementById('kpiWfmSub').textContent = `${wfmCount} of ${n} at this stage`;
     } else {
-      document.getElementById('kpiAiLandscape').textContent = '—';
-      document.getElementById('kpiAiLandscapeSub').textContent = 'no usage data';
+      document.getElementById('kpiWfm').textContent = '—';
+      document.getElementById('kpiWfmSub').textContent = 'no workflow data';
     }
   }
 
