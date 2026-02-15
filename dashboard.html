@@ -8785,18 +8785,53 @@
     }
     ctx += '\n';
 
-    // 7. SDLC coverage
-    ctx += '## SDLC AI Coverage\n';
+    // 7. SDLC AI Coverage Map (use case doing/need breakdown per phase)
+    ctx += '## SDLC AI Coverage Map\n';
+    // Build a lookup from SCHEMA_SEED for use case labels
+    const useCaseLabelLookup = {};
+    SCHEMA_SEED.filter(s => s.section === 'useCases').forEach(s => {
+      useCaseLabelLookup[s.subsection + '/' + s.option_id] = s.option_label;
+    });
     SDLC_PHASES.forEach(phase => {
-      let using = 0, notUsing = 0;
+      let doing = 0, need = 0, total = 0;
+      // Collect per-use-case stats across all surveys
+      const ucStats = {};
       surveys.forEach(s => {
-        const val = s.data?.sdlcAiUsage?.[phase.key]?.value;
-        if (val === 'yes') using++;
-        else if (val === 'no') notUsing++;
+        const section = s.data?.useCases?.[phase.key];
+        if (!section) return;
+        Object.entries(section).forEach(([ucId, item]) => {
+          if (ucId === '_meta' || ucId === 'custom') return;
+          if (!item || typeof item !== 'object') return;
+          const status = item?.status;
+          if (!status) return;
+          total++;
+          if (!ucStats[ucId]) ucStats[ucId] = { doing: 0, need: 0, notUsing: 0 };
+          if (status === 'doing') { doing++; ucStats[ucId].doing++; }
+          else if (status === 'need') { need++; ucStats[ucId].need++; }
+          else { ucStats[ucId].notUsing++; }
+        });
+        // Handle custom use cases
+        if (Array.isArray(section.custom)) {
+          section.custom.forEach(c => {
+            if (!c || typeof c !== 'object' || !c.status) return;
+            const cId = c.id || c.label || 'custom';
+            total++;
+            if (!ucStats[cId]) ucStats[cId] = { doing: 0, need: 0, notUsing: 0 };
+            if (c.status === 'doing') { doing++; ucStats[cId].doing++; }
+            else if (c.status === 'need') { need++; ucStats[cId].need++; }
+            else { ucStats[cId].notUsing++; }
+          });
+        }
       });
-      const total = using + notUsing;
-      const pct = total > 0 ? Math.round((using / total) * 100) : 0;
-      ctx += `${phase.label}: ${pct}% using AI (${using} of ${total})\n`;
+      const doingPct = total > 0 ? Math.round((doing / total) * 100) : 0;
+      const needPct = total > 0 ? Math.round((need / total) * 100) : 0;
+      ctx += `### ${phase.label}: ${doingPct}% Doing, ${needPct}% Need\n`;
+      // List individual use cases with their status counts
+      const ucEntries = Object.entries(ucStats).sort((a, b) => b[1].doing - a[1].doing);
+      ucEntries.forEach(([ucId, stats]) => {
+        const label = useCaseLabelLookup[phase.key + '/' + ucId] || ucId;
+        ctx += `- ${label}: ${stats.doing} doing, ${stats.need} need, ${stats.notUsing} not using\n`;
+      });
     });
     ctx += '\n';
 
@@ -8955,24 +8990,34 @@
           if (items.length > 0) ctx += `SDLC AI Coverage: ${items.join(', ')}\n`;
         }
 
-        // Use Cases summary (doing vs need counts per SDLC phase)
+        // Use Cases detail per SDLC phase (individual use case names)
         const useCases = s.data?.useCases;
         if (useCases) {
-          const doingPhases = [];
-          const needPhases = [];
+          const doingItems = [];
+          const needItems = [];
           SDLC_PHASES.forEach(phase => {
             const section = useCases[phase.key];
             if (!section) return;
-            let doing = 0, need = 0;
-            getUseCaseItems(section).forEach(item => {
-              if (item?.status === 'doing') doing++;
-              else if (item?.status === 'need') need++;
+            Object.entries(section).forEach(([ucId, item]) => {
+              if (ucId === '_meta' || ucId === 'custom') return;
+              if (!item || typeof item !== 'object') return;
+              const label = useCaseLabelLookup[phase.key + '/' + ucId] || ucId;
+              const tag = `${label} [${phase.label}]`;
+              if (item?.status === 'doing') doingItems.push(tag);
+              else if (item?.status === 'need') needItems.push(tag);
             });
-            if (doing > 0) doingPhases.push(`${phase.label}(${doing})`);
-            if (need > 0) needPhases.push(`${phase.label}(${need})`);
+            // Handle custom use cases
+            if (Array.isArray(section.custom)) {
+              section.custom.forEach(c => {
+                if (!c || typeof c !== 'object') return;
+                const tag = `${c.label || c.id} [${phase.label}]`;
+                if (c.status === 'doing') doingItems.push(tag);
+                else if (c.status === 'need') needItems.push(tag);
+              });
+            }
           });
-          if (doingPhases.length > 0) ctx += `Use Cases Already Doing: ${doingPhases.join(', ')}\n`;
-          if (needPhases.length > 0) ctx += `Use Cases Needed: ${needPhases.join(', ')}\n`;
+          if (doingItems.length > 0) ctx += `Use Cases Doing: ${doingItems.join(', ')}\n`;
+          if (needItems.length > 0) ctx += `Use Cases Needed: ${needItems.join(', ')}\n`;
         }
 
         // Success Stories
@@ -9014,8 +9059,8 @@ Data dimensions available per account:
 - Cloud Platforms: AWS, GCP, Azure, On-Premises
 - Workflow Maturity (WFM): Stages 0-5 per role (No AI → Individual AI → Team Practices → AI-Chained → Event-Triggered → Semi-Agentic)
 - Limiting Factors (ranked #1/#2): Lack of Time, Lack of Knowledge, Unclear Value, Client Not Ready, Lack of Access, Other
-- SDLC AI Coverage: Requirements, Development, Documentation, PM, Design & UX, Data & Analytics
-- Use Cases: per SDLC phase, count of use cases "already doing" vs "needed"
+- SDLC AI Coverage Map: per SDLC phase (Requirements, Development, Documentation, PM, Design & UX, Data & Analytics), individual use case names with their doing/need/not-using status
+- Use Cases per account: individual use case names tagged with their SDLC phase and status (Doing vs Needed)
 - AI Champion: whether the account has a designated AI champion, with champion names
 - Success Stories: notable AI wins reported by the account
 
