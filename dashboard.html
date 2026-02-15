@@ -7514,7 +7514,8 @@
         if (roleStages.length > 0) {
           const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
           const rounded = Math.round(avg);
-          wfmCell = `<span class="maturity-badge">${WFM_LABELS[rounded] || 'Stage ' + rounded} (${avg.toFixed(1)})</span>`;
+          const wfmBg = WFM_COLORS[rounded] || '#6b7280';
+          wfmCell = `<span class="maturity-badge" style="background:${wfmBg}22;color:${wfmBg};">${WFM_LABELS[rounded] || 'Stage ' + rounded} (${avg.toFixed(1)})</span>`;
         }
       }
 
@@ -8556,7 +8557,8 @@
           const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
           const rounded = Math.round(avg);
           const label = WFM_LABELS[rounded] || `Stage ${rounded}`;
-          wfmCell = `<span class="maturity-badge">${label} (${avg.toFixed(1)})</span>`;
+          const wfmBg = WFM_COLORS[rounded] || '#6b7280';
+          wfmCell = `<span class="maturity-badge" style="background:${wfmBg}22;color:${wfmBg};">${label} (${avg.toFixed(1)})</span>`;
         }
       }
 
