@@ -1973,7 +1973,7 @@
        ═══════════════════════════════════════════ */
     .kpi-strip {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 0.75rem;
       margin-bottom: 1.5rem;
     }
@@ -2002,7 +2002,6 @@
     .kpi-card[data-accent="emerald"]::before { background: #10b981; }
     .kpi-card[data-accent="amber"]::before { background: #f59e0b; }
     .kpi-card[data-accent="sky"]::before { background: #0ea5e9; }
-    .kpi-card[data-accent="rose"]::before { background: #f43f5e; }
     .kpi-label {
       font-size: 0.7rem;
       font-weight: 700;
@@ -2021,7 +2020,6 @@
     .kpi-value[data-accent="emerald"] { color: #059669; }
     .kpi-value[data-accent="amber"] { color: #d97706; }
     .kpi-value[data-accent="sky"] { color: #0284c7; }
-    .kpi-value[data-accent="rose"] { color: #e11d48; }
     .kpi-sub {
       font-size: 0.72rem;
       color: #9ca3af;
@@ -2051,7 +2049,7 @@
       .wfm-journey { flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
       .wfm-journey .stage-connector { display: none; }
       .wfm-card { min-width: 80px; }
-      .kpi-strip { grid-template-columns: repeat(3, 1fr); }
+      .kpi-strip { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 600px) {
       .surveys-table { font-size: 0.8rem; }
@@ -2621,7 +2619,7 @@
           <div class="kpi-sub" id="kpiSurveySub">accounts assessed</div>
         </div>
         <div class="kpi-card" data-accent="emerald">
-          <div class="kpi-label">Avg Maturity</div>
+          <div class="kpi-label">Client Maturity</div>
           <div class="kpi-value" data-accent="emerald" id="kpiMaturity" style="font-size:1.1rem;">—</div>
           <div class="kpi-sub" id="kpiMaturitySub">median stage</div>
         </div>
@@ -2631,14 +2629,9 @@
           <div class="kpi-sub" id="kpiToolAdoptionSub">using at least 1 AI tool</div>
         </div>
         <div class="kpi-card" data-accent="amber">
-          <div class="kpi-label">SDLC Coverage</div>
-          <div class="kpi-value" data-accent="amber" id="kpiSdlcCoverage">—</div>
-          <div class="kpi-sub" id="kpiSdlcSub">avg doing across phases</div>
-        </div>
-        <div class="kpi-card" data-accent="rose">
-          <div class="kpi-label">Top Challenge</div>
-          <div class="kpi-value" data-accent="rose" id="kpiTopChallenge" style="font-size:1.1rem;">—</div>
-          <div class="kpi-sub" id="kpiChallengeSub">most cited barrier</div>
+          <div class="kpi-label">AI Landscape</div>
+          <div class="kpi-value" data-accent="amber" id="kpiAiLandscape" style="font-size:1.1rem;">—</div>
+          <div class="kpi-sub" id="kpiAiLandscapeSub">avg usage stage</div>
         </div>
       </div>
 
@@ -5383,17 +5376,14 @@
       document.getElementById('kpiMaturitySub').textContent = 'no data';
       document.getElementById('kpiToolAdoption').textContent = '—';
       document.getElementById('kpiToolAdoptionSub').textContent = 'no data';
-      document.getElementById('kpiSdlcCoverage').textContent = '—';
-      document.getElementById('kpiSdlcSub').textContent = 'no data';
-      document.getElementById('kpiTopChallenge').textContent = '—';
-      document.getElementById('kpiChallengeSub').textContent = 'no data';
+      document.getElementById('kpiAiLandscape').textContent = '—';
+      document.getElementById('kpiAiLandscapeSub').textContent = 'no data';
       return;
     }
 
-    // 2. Average Maturity — use currentMedianStage set by renderAdoptionStageWidget
+    // 2. Client Maturity — use currentMedianStage set by renderAdoptionStageWidget
     if (currentMedianStage && MATURITY_LABELS[currentMedianStage]) {
       document.getElementById('kpiMaturity').textContent = MATURITY_LABELS[currentMedianStage];
-      // Count how many are at this stage
       let stageCount = 0;
       surveys.forEach(s => {
         const val = s.data?.clientAILandscape?.maturity?.value;
@@ -5416,53 +5406,29 @@
       document.getElementById('kpiToolAdoptionSub').textContent = 'no data';
     }
 
-    // 4. SDLC Coverage — average "doing" % across all phases
-    let totalDoingPct = 0, phaseCount = 0;
-    SDLC_PHASES.forEach(phase => {
-      let doing = 0, total = 0;
-      surveys.forEach(s => {
-        const section = s.data?.useCases?.[phase.key];
-        if (!section) return;
-        getUseCaseItems(section).forEach(item => {
-          total++;
-          if (item?.status === 'doing') doing++;
-        });
-      });
-      if (total > 0) {
-        totalDoingPct += Math.round((doing / total) * 100);
-        phaseCount++;
-      }
-    });
-    if (phaseCount > 0) {
-      const avgDoing = Math.round(totalDoingPct / phaseCount);
-      document.getElementById('kpiSdlcCoverage').textContent = avgDoing + '%';
-      document.getElementById('kpiSdlcSub').textContent = `avg doing across ${phaseCount} phases`;
-    } else {
-      document.getElementById('kpiSdlcCoverage').textContent = '—';
-      document.getElementById('kpiSdlcSub').textContent = 'no use case data';
-    }
-
-    // 5. Top Limiting Factor
-    const lfCounts = {};
-    LIMITING_FACTOR_ORDER.forEach(k => lfCounts[k] = 0);
+    // 4. AI Landscape — median of each account's highest selected AI usage tier
+    const AI_USAGE_TIERS = ['not-using', 'off-the-shelf', 'business-apps', 'custom-solutions', 'business-processes', 'customer-facing'];
+    const accountMaxTiers = [];
     surveys.forEach(s => {
-      const factors = s.data?.limitingFactors;
-      if (!factors || typeof factors !== 'object') return;
-      Object.keys(factors).forEach(k => {
-        if (LIMITING_FACTOR_ORDER.includes(k) && factors[k]?.selected) lfCounts[k]++;
+      const usage = s.data?.clientAILandscape?.usage;
+      if (!usage) return;
+      let maxIdx = -1;
+      AI_USAGE_TIERS.forEach((k, i) => {
+        if (usage[k]?.selected === true && i > maxIdx) maxIdx = i;
       });
+      if (maxIdx >= 0) accountMaxTiers.push(maxIdx);
     });
-    let topFactor = null, topCount = 0;
-    LIMITING_FACTOR_ORDER.forEach(k => {
-      if (lfCounts[k] > topCount) { topFactor = k; topCount = lfCounts[k]; }
-    });
-    if (topFactor && topCount > 0) {
-      document.getElementById('kpiTopChallenge').textContent = LIMITING_FACTOR_LABELS[topFactor];
-      const pct = Math.round((topCount / n) * 100);
-      document.getElementById('kpiChallengeSub').textContent = `${pct}% of accounts (${topCount})`;
+    if (accountMaxTiers.length > 0) {
+      accountMaxTiers.sort((a, b) => a - b);
+      const medianIdx = accountMaxTiers[Math.floor(accountMaxTiers.length / 2)];
+      const medianKey = AI_USAGE_TIERS[medianIdx];
+      const label = AI_USAGE_LABELS[medianKey] || medianKey;
+      document.getElementById('kpiAiLandscape').textContent = label;
+      const atThisLevel = accountMaxTiers.filter(i => i === medianIdx).length;
+      document.getElementById('kpiAiLandscapeSub').textContent = `${atThisLevel} of ${accountMaxTiers.length} at this level`;
     } else {
-      document.getElementById('kpiTopChallenge').textContent = '—';
-      document.getElementById('kpiChallengeSub').textContent = 'no data';
+      document.getElementById('kpiAiLandscape').textContent = '—';
+      document.getElementById('kpiAiLandscapeSub').textContent = 'no usage data';
     }
   }
 
