@@ -312,7 +312,7 @@
     }
     .sdlc-modal-bar .sdlc-bar-segment {
       height: 100%;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
     }
     .sdlc-legend {
       display: flex;
@@ -428,7 +428,7 @@
       gap: 0.4rem;
     }
     .section-summary-label {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 600;
       color: #6b7280;
       text-transform: uppercase;
@@ -471,7 +471,7 @@
       background: #f0f9ff;
       border: 1px solid #bae6fd;
       color: #0369a1;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 600;
       padding: 2px 8px;
       border-radius: 10px;
@@ -535,7 +535,7 @@
       line-height: 1.2;
     }
     .ai-adoption-card-revenue-label {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: #94a3b8;
       margin-top: 0.1rem;
     }
@@ -604,7 +604,7 @@
     }
     .widget-card.widget-collapsed .widget-summary { display: flex; }
     .widget-summary-label {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 600;
       color: #6b7280;
       text-transform: uppercase;
@@ -682,7 +682,7 @@
       font-weight: 800;
     }
     .champion-card-count {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: #9ca3af;
     }
     .champion-bar-container {
@@ -806,7 +806,7 @@
       justify-content: center;
       padding: 2px 8px;
       border-radius: 10px;
-      font-size: 0.68rem;
+      font-size: 0.75rem;
       font-weight: 700;
       color: #fff;
       margin-bottom: 3px;
@@ -822,7 +822,7 @@
     }
     .role-heatmap thead th .rh-stage-pct {
       display: block;
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 400;
       opacity: 0.8;
       white-space: nowrap;
@@ -844,7 +844,7 @@
     }
     .role-heatmap .rh-role-full {
       font-weight: 400;
-      font-size: 0.66rem;
+      font-size: 0.75rem;
       opacity: 0.75;
       display: block;
       line-height: 1.3;
@@ -950,7 +950,7 @@
       color: #4338ca;
     }
     .champion-details-toggle .chevron {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       transition: transform 0.2s ease;
       display: inline-block;
     }
@@ -1016,7 +1016,7 @@
       color: #1f2937;
     }
     .stage-card-count {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: #9ca3af;
       margin-top: 0.1rem;
     }
@@ -1054,7 +1054,7 @@
     .progress-labels {
       display: flex;
       justify-content: space-between;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: #9ca3af;
     }
 
@@ -1235,7 +1235,7 @@
     .surveys-table th.sortable:hover { color: #374151; background: #f3f4f6; }
     .surveys-table th.sortable::after {
       content: ' ⇅';
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       opacity: 0.35;
       position: absolute;
       right: 0.4rem;
@@ -1372,7 +1372,7 @@
     .maturity-piloting { background: #fef3c7; color: #92400e; }
     .maturity-scaling { background: #d1fae5; color: #065f46; }
     .maturity-optimizing { background: #ede9fe; color: #5b21b6; }
-    .maturity-dont-know { background: #fef2f2; color: #f87171; }
+    .maturity-dont-know { background: #f3f4f6; color: #9ca3af; }
 
     /* More info link */
     .more-info-link {
@@ -1415,15 +1415,24 @@
     .compare-banner button:hover { background: #f9fafb; color: #374151; border-color: #9ca3af; }
 
     .compare-modal-overlay {
-      display: none; position: fixed; inset: 0;
+      display: flex; position: fixed; inset: 0;
       background: rgba(0,0,0,0.5); z-index: 1100;
       justify-content: center; align-items: center;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity 0.2s ease, visibility 0.2s;
     }
-    .compare-modal-overlay.open { display: flex; }
+    .compare-modal-overlay.open {
+      opacity: 1; visibility: visible; pointer-events: auto;
+    }
     .compare-modal {
       background: #fff; border-radius: 16px; max-width: 960px; width: 95%;
       max-height: 88vh; overflow-y: auto;
       box-shadow: 0 25px 50px rgba(0,0,0,0.15); padding: 1.5rem; position: relative;
+      transform: scale(0.95); opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .compare-modal-overlay.open .compare-modal {
+      transform: scale(1); opacity: 1;
     }
     .compare-modal h2 {
       font-size: 1.15rem; font-weight: 700; color: #1f2937;
@@ -1480,7 +1489,7 @@
       display: flex; gap: 0.5rem; margin-top: 0.4rem;
     }
     .compare-filter-actions button {
-      font-size: 0.72rem; color: #6366f1; background: none; border: none;
+      font-size: 0.75rem; color: #6366f1; background: none; border: none;
       cursor: pointer; font-weight: 600; padding: 0;
     }
     .compare-filter-actions button:hover { text-decoration: underline; }
@@ -1511,7 +1520,7 @@
     .compare-panel.panel-a { border-color: #6366f1; }
     .compare-panel.panel-b { border-color: #10b981; }
     .compare-panel-label {
-      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.05em; margin-bottom: 0.4rem;
     }
     .compare-panel-label.label-a { color: #6366f1; }
@@ -1521,16 +1530,22 @@
        MATURITY INFO MODAL
        ═══════════════════════════════════════════ */
     .info-modal-overlay {
-      display: none;
+      display: flex;
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.5);
       z-index: 1000;
       justify-content: center;
       align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.2s ease, visibility 0.2s;
     }
     .info-modal-overlay.open {
-      display: flex;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
     }
     .info-modal {
       background: #fff;
@@ -1542,6 +1557,13 @@
       box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
       padding: 2rem;
       position: relative;
+      transform: scale(0.95);
+      opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .info-modal-overlay.open .info-modal {
+      transform: scale(1);
+      opacity: 1;
     }
     .info-modal-close {
       position: absolute;
@@ -1671,15 +1693,23 @@
        UPLOAD MODAL
        ═══════════════════════════════════════════ */
     .modal-overlay {
-      display: none;
+      display: flex;
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.5);
       z-index: 1000;
       justify-content: center;
       align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.2s ease, visibility 0.2s;
     }
-    .modal-overlay.open { display: flex; }
+    .modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
     .modal {
       background: #fff;
       border-radius: 16px;
@@ -1690,6 +1720,13 @@
       box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
       padding: 2rem;
       position: relative;
+      transform: scale(0.95);
+      opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .modal-overlay.open .modal {
+      transform: scale(1);
+      opacity: 1;
     }
     .modal-close {
       position: absolute;
@@ -1826,7 +1863,7 @@
       text-overflow: ellipsis;
     }
     .multi-select-arrow {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: #6b7280;
       flex-shrink: 0;
     }
@@ -1921,7 +1958,7 @@
       z-index: 2;
     }
     .wfm-card-badge {
-      font-size: 0.6rem;
+      font-size: 0.75rem;
       font-weight: 700;
       padding: 2px 6px;
       border-radius: 4px;
@@ -1929,7 +1966,7 @@
       letter-spacing: 0.03em;
     }
     .wfm-card-title {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 700;
       color: #374151;
       line-height: 1.2;
@@ -1940,13 +1977,13 @@
       font-weight: 800;
     }
     .wfm-card-count {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: #9ca3af;
       margin-top: 0.1rem;
       margin-bottom: 0.2rem;
     }
     .wfm-card-sub {
-      font-size: 0.62rem;
+      font-size: 0.75rem;
       color: #9ca3af;
       line-height: 1.2;
     }
@@ -2003,7 +2040,7 @@
     .kpi-card[data-accent="amber"]::before { background: #f59e0b; }
     .kpi-card[data-accent="sky"]::before { background: #0ea5e9; }
     .kpi-label {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 700;
       color: #6b7280;
       text-transform: uppercase;
@@ -2021,7 +2058,7 @@
     .kpi-value[data-accent="amber"] { color: #d97706; }
     .kpi-value[data-accent="sky"] { color: #0284c7; }
     .kpi-sub {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       color: #9ca3af;
       margin-top: 0.2rem;
       line-height: 1.3;
@@ -2067,10 +2104,14 @@
        AI CHAT PANEL
        ═══════════════════════════════════════════ */
     .ai-chat-overlay {
-      display: none; position: fixed; inset: 0;
+      display: block; position: fixed; inset: 0;
       background: rgba(0,0,0,0.3); z-index: 1050;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity 0.2s ease, visibility 0.2s;
     }
-    .ai-chat-overlay.open { display: block; }
+    .ai-chat-overlay.open {
+      opacity: 1; visibility: visible; pointer-events: auto;
+    }
 
     .ai-chat-panel {
       position: fixed; top: 0; right: 0; bottom: 0; width: 420px;
@@ -2097,7 +2138,7 @@
     }
     .ai-chat-settings.open { display: block; }
     .ai-chat-settings label {
-      display: block; font-size: 0.72rem; font-weight: 700; color: #6b7280;
+      display: block; font-size: 0.75rem; font-weight: 700; color: #6b7280;
       text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.15rem;
     }
     .ai-chat-settings select,
@@ -2290,6 +2331,105 @@
       .ai-fab { bottom: 1rem; right: 1rem; width: 48px; height: 48px; font-size: 1.3rem; }
     }
 
+    /* ═══════════════════════════════════════════
+       SECTION NAVIGATOR
+       ═══════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════
+       COLLAPSIBLE FILTER DRAWER
+       ═══════════════════════════════════════════ */
+    .filter-drawer-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.85rem;
+      border: 1.5px solid #c7d2fe;
+      border-radius: 8px;
+      background: #eef2ff;
+      color: #4f46e5;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .filter-drawer-toggle:hover {
+      background: #e0e7ff;
+      border-color: #a5b4fc;
+    }
+    .filter-drawer-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9px;
+      background: #4f46e5;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .filter-drawer-chevron {
+      font-size: 0.75rem;
+      transition: transform 0.2s ease;
+    }
+    .filter-drawer-chevron.open {
+      transform: rotate(180deg);
+    }
+    .filters-drawer {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0;
+    }
+    .filters-drawer.open {
+      max-height: 200px;
+      padding: 0.75rem 0 0 0;
+    }
+
+    /* ═══════════════════════════════════════════
+       SECTION NAVIGATOR
+       ═══════════════════════════════════════════ */
+    .section-nav {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem 2rem;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 99;
+      justify-content: center;
+    }
+    .section-nav-pill {
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      border: 1.5px solid #e5e7eb;
+      background: #fff;
+      color: #6b7280;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .section-nav-pill:hover {
+      border-color: #c7d2fe;
+      color: #4f46e5;
+      background: #eef2ff;
+    }
+    .section-nav-pill.active {
+      background: #4f46e5;
+      color: #fff;
+      border-color: #4f46e5;
+    }
+
   </style>
 </head>
 <body>
@@ -2315,6 +2455,11 @@
           <option value="4">Q4</option>
         </select>
       </div>
+      <button class="filter-drawer-toggle" id="filterDrawerToggle" onclick="toggleFiltersDrawer()" type="button" title="Show/hide additional filters">
+        More Filters <span class="filter-drawer-badge" id="filterDrawerBadge" style="display:none;">0</span>
+        <span class="filter-drawer-chevron" id="filterDrawerChevron">&#9662;</span>
+      </button>
+      <div class="filters-drawer" id="filtersDrawer">
       <div class="filter-group" style="position:relative;">
         <span class="filter-label">Type:</span>
         <div class="multi-select" id="filterAccountType">
@@ -2436,13 +2581,14 @@
           <option value="not-using">Not Using AI Tools</option>
         </select>
       </div>
+      </div><!-- end filters-drawer -->
       <button class="filter-clear-btn" onclick="clearAllFilters()" title="Clear all interactive filters" style="margin-left:0.5rem;">✕ Clear Filters</button>
       <button class="filter-clear-btn" onclick="openCompareModal()" title="Compare two groups of accounts" style="margin-left:0.5rem;">⚖ Compare</button>
 
       <!-- Actions dropdown -->
       <div class="actions-wrapper">
         <button class="actions-toggle" id="actionsToggle" type="button" title="Data & upload actions">
-          <span class="gear-icon">&#9881;</span> Actions <span style="font-size:0.7rem;color:#9ca3af;">&#9662;</span>
+          <span class="gear-icon">&#9881;</span> Actions <span style="font-size:0.75rem;color:#9ca3af;">&#9662;</span>
         </button>
         <div class="actions-menu" id="actionsMenu">
           <button class="actions-menu-item" id="uploadBtn" type="button">
@@ -2635,8 +2781,15 @@
         </div>
       </div>
 
+      <!-- Section Navigator -->
+      <nav class="section-nav" id="sectionNav">
+        <button class="section-nav-pill active" data-target="sectionClientLandscape">Client AI Landscape</button>
+        <button class="section-nav-pill" data-target="sectionAccountLandscape">Account AI Landscape</button>
+        <button class="section-nav-pill" data-target="sectionSurveys">Surveys</button>
+      </nav>
+
       <!-- Section: Client AI Landscape -->
-      <div class="widget-section">
+      <div class="widget-section" id="sectionClientLandscape">
         <div class="widget-section-title" onclick="toggleSection(this)">
           <span>Client AI Landscape</span>
           <span class="section-chevron">&#9662;</span>
@@ -2724,7 +2877,7 @@
       </div> <!-- end Client AI Landscape section -->
 
       <!-- Section: Account AI Landscape -->
-      <div class="widget-section">
+      <div class="widget-section" id="sectionAccountLandscape">
         <div class="widget-section-title" onclick="toggleSection(this)">
           <span>Account AI Landscape</span>
           <span class="section-chevron">&#9662;</span>
@@ -2896,7 +3049,7 @@
       </div> <!-- end Account AI Landscape section -->
 
       <!-- Section: Surveys -->
-      <div class="widget-section">
+      <div class="widget-section" id="sectionSurveys">
         <div class="widget-section-title" onclick="toggleSection(this)">
           <span>Surveys</span>
           <span class="section-chevron">&#9662;</span>
@@ -3098,8 +3251,8 @@
             <span class="compare-group-badge a">A</span>
             <input type="text" class="compare-group-name-input" id="compareGroupAName" value="Group A" placeholder="Group name">
             <div style="margin-left:auto;">
-              <button style="font-size:0.7rem;color:#6366f1;background:none;border:none;cursor:pointer;font-weight:600;" onclick="copyCurrentFiltersToGroup('A')" title="Copy current dashboard filters">📋 Copy Current</button>
-              <button style="font-size:0.7rem;color:#ef4444;background:none;border:none;cursor:pointer;font-weight:600;margin-left:0.3rem;" onclick="clearCompareGroupFilters('A')">✕ Clear</button>
+              <button style="font-size:0.75rem;color:#6366f1;background:none;border:none;cursor:pointer;font-weight:600;" onclick="copyCurrentFiltersToGroup('A')" title="Copy current dashboard filters">📋 Copy Current</button>
+              <button style="font-size:0.75rem;color:#ef4444;background:none;border:none;cursor:pointer;font-weight:600;margin-left:0.3rem;" onclick="clearCompareGroupFilters('A')">✕ Clear</button>
             </div>
           </div>
           <div class="compare-filter-section">
@@ -3150,8 +3303,8 @@
             <span class="compare-group-badge b">B</span>
             <input type="text" class="compare-group-name-input" id="compareGroupBName" value="Group B" placeholder="Group name">
             <div style="margin-left:auto;">
-              <button style="font-size:0.7rem;color:#10b981;background:none;border:none;cursor:pointer;font-weight:600;" onclick="copyCurrentFiltersToGroup('B')" title="Copy current dashboard filters">📋 Copy Current</button>
-              <button style="font-size:0.7rem;color:#ef4444;background:none;border:none;cursor:pointer;font-weight:600;margin-left:0.3rem;" onclick="clearCompareGroupFilters('B')">✕ Clear</button>
+              <button style="font-size:0.75rem;color:#10b981;background:none;border:none;cursor:pointer;font-weight:600;" onclick="copyCurrentFiltersToGroup('B')" title="Copy current dashboard filters">📋 Copy Current</button>
+              <button style="font-size:0.75rem;color:#ef4444;background:none;border:none;cursor:pointer;font-weight:600;margin-left:0.3rem;" onclick="clearCompareGroupFilters('B')">✕ Clear</button>
             </div>
           </div>
           <div class="compare-filter-section">
@@ -3381,12 +3534,12 @@
   const MATURITY_ORDER = ['dont-know', 'not-started', 'exploring', 'piloting', 'scaling', 'optimizing'];
   const MATURITY_STAGES = ['not-started', 'exploring', 'piloting', 'scaling', 'optimizing']; // without dont-know
   const MATURITY_COLORS = {
-    'not-started': '#f87171',
-    'exploring': '#fbbf24',
-    'piloting': '#4ade80',
-    'scaling': '#4ade80',
-    'optimizing': '#22c55e',
-    'dont-know': '#f87171'
+    'not-started': '#ef4444',
+    'exploring': '#f59e0b',
+    'piloting': '#06b6d4',
+    'scaling': '#10b981',
+    'optimizing': '#8b5cf6',
+    'dont-know': '#9ca3af'
   };
   const MATURITY_ICONS = {
     'not-started': '🚫',
@@ -3533,8 +3686,8 @@
     4: 'Automated AI integration', 5: 'AI recommends, humans decide'
   };
   const WFM_COLORS = {
-    0: '#f87171', 1: '#fbbf24', 2: '#fbbf24',
-    3: '#4ade80', 4: '#4ade80', 5: '#22c55e'
+    0: '#ef4444', 1: '#f59e0b', 2: '#06b6d4',
+    3: '#10b981', 4: '#8b5cf6', 5: '#0ea5e9'
   };
   const WFM_DESCRIPTIONS = {
     0: { title: 'Stage 0 — No AI Usage', desc: 'AI is not used in delivery workflows. Tools may be blocked or discouraged, no AI policy or guidance exists, and any usage is unofficial "shadow AI." Leadership has not discussed AI adoption.' },
@@ -4331,6 +4484,85 @@
   }
 
   // ═══════════════════════════════════════════
+  // SECTION NAVIGATOR
+  // ═══════════════════════════════════════════
+  function initSectionNav() {
+    const nav = document.getElementById('sectionNav');
+    if (!nav) return;
+    const pills = nav.querySelectorAll('.section-nav-pill');
+    const sectionIds = ['sectionClientLandscape', 'sectionAccountLandscape', 'sectionSurveys'];
+    const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+
+    pills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        const target = document.getElementById(pill.dataset.target);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    function updateNavTop() {
+      const header = document.querySelector('.dashboard-header');
+      if (header && nav) nav.style.top = header.offsetHeight + 'px';
+    }
+    updateNavTop();
+    window.addEventListener('resize', updateNavTop);
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          pills.forEach(p => p.classList.remove('active'));
+          const activePill = nav.querySelector(`[data-target="${entry.target.id}"]`);
+          if (activePill) activePill.classList.add('active');
+        }
+      });
+    }, { root: null, rootMargin: '-20% 0px -60% 0px', threshold: 0 });
+
+    sections.forEach(section => observer.observe(section));
+  }
+
+  // ═══════════════════════════════════════════
+  // COLLAPSIBLE FILTER DRAWER
+  // ═══════════════════════════════════════════
+  function toggleFiltersDrawer() {
+    const drawer = document.getElementById('filtersDrawer');
+    const chevron = document.getElementById('filterDrawerChevron');
+    if (drawer.classList.contains('open')) {
+      drawer.style.overflow = 'hidden';
+      drawer.classList.remove('open');
+      chevron.classList.remove('open');
+    } else {
+      drawer.classList.add('open');
+      chevron.classList.add('open');
+      setTimeout(() => { drawer.style.overflow = 'visible'; }, 300);
+    }
+    const nav = document.getElementById('sectionNav');
+    if (nav) {
+      setTimeout(() => {
+        const header = document.querySelector('.dashboard-header');
+        if (header) nav.style.top = header.offsetHeight + 'px';
+      }, 320);
+    }
+  }
+
+  function updateFilterDrawerBadge() {
+    const badge = document.getElementById('filterDrawerBadge');
+    if (!badge) return;
+    let count = 0;
+    const acctTypeChecks = document.querySelectorAll('#accountTypeMenu input[type="checkbox"]');
+    if (acctTypeChecks.length > 0 && !Array.from(acctTypeChecks).every(cb => cb.checked)) count++;
+    const engChecks = document.querySelectorAll('#engagementTypeMenu input[type="checkbox"]');
+    if (engChecks.length > 0 && !Array.from(engChecks).every(cb => cb.checked)) count++;
+    if (typeof selectedAccounts !== 'undefined' && selectedAccounts.size > 0) count++;
+    if (typeof selectedDeliveryManagers !== 'undefined' && selectedDeliveryManagers.size > 0) count++;
+    const cloudChecks = document.querySelectorAll('#cloudPlatformsMenu input[type="checkbox"]');
+    if (cloudChecks.length > 0 && !Array.from(cloudChecks).every(cb => cb.checked)) count++;
+    const aiVal = document.getElementById('filterAiAdoption');
+    if (aiVal && aiVal.value !== 'all') count++;
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
+
+  // ═══════════════════════════════════════════
   // ACCOUNT TYPE MULTI-SELECT
   // ═══════════════════════════════════════════
   function toggleAccountTypeMenu() {
@@ -4677,20 +4909,20 @@
 
     // Color palette matching screenshot: light fills with stronger color at the reached stage
     const FILL_COLORS = {
-      0: '#e5e7eb', // Gray
-      1: '#fecdd3', // Light pink/red
-      2: '#fde68a', // Light amber
-      3: '#fde68a', // Light amber
-      4: '#bbf7d0', // Light green
-      5: '#86efac'  // Medium green
+      0: '#fecdd3', // Light red
+      1: '#fef3c7', // Light amber
+      2: '#cffafe', // Light cyan
+      3: '#d1fae5', // Light emerald
+      4: '#ede9fe', // Light violet
+      5: '#e0f2fe'  // Light sky
     };
     const MARKER_COLORS = {
-      0: '#9ca3af', // Gray
-      1: '#f87171', // Red
-      2: '#fbbf24', // Amber
-      3: '#f59e0b', // Darker amber
-      4: '#4ade80', // Green
-      5: '#22c55e'  // Dark green
+      0: '#ef4444', // Red
+      1: '#f59e0b', // Amber
+      2: '#06b6d4', // Cyan
+      3: '#10b981', // Emerald
+      4: '#8b5cf6', // Violet
+      5: '#0ea5e9'  // Sky
     };
 
     const tbody = document.getElementById('comparisonMatrixBody');
@@ -5208,6 +5440,9 @@
     // Sync dropdowns
     populateAccountsFilter();
     populateDMFilter();
+
+    // Update filter drawer badge
+    updateFilterDrawerBadge();
   }
 
   function refreshDashboard() {
@@ -5219,10 +5454,12 @@
     // ── Comparison Mode Branch ──
     if (comparisonMode) {
       document.getElementById('kpiStrip').style.display = 'none';
+      document.getElementById('sectionNav').style.display = 'none';
       refreshDashboardComparison(allSurveys, totalCount);
       return;
     }
     document.getElementById('kpiStrip').style.display = '';
+    document.getElementById('sectionNav').style.display = '';
     document.getElementById('comparisonBanner').classList.remove('active');
 
     // Update subtitle
@@ -5337,6 +5574,9 @@
 
     // Collapsed surveys section summary
     updateSurveysSectionSummary(surveys, allSurveys);
+
+    // Update filter drawer badge
+    updateFilterDrawerBadge();
   }
 
 
@@ -5408,7 +5648,7 @@
 
     // 4. Account AI Agentic Workflow — use currentWfmStage set by renderWorkflowMaturityWidget
     if (currentWfmStage !== null && WFM_LABELS[currentWfmStage] !== undefined) {
-      document.getElementById('kpiWfm').innerHTML = `${WFM_LABELS[currentWfmStage]} <span style="font-size:0.7rem;font-weight:600;color:#9ca3af;">(Stage ${currentWfmStage} of 5)</span>`;
+      document.getElementById('kpiWfm').innerHTML = `${WFM_LABELS[currentWfmStage]} <span style="font-size:0.75rem;font-weight:600;color:#9ca3af;">(Stage ${currentWfmStage} of 5)</span>`;
       const wfmCount = surveys.filter(s => {
         const wfm = s.data?.workflowMaturity;
         if (!wfm) return false;
@@ -7055,10 +7295,10 @@
         <div class="stage-card-label">${MATURITY_LABELS[k]}</div>
         <div style="display:flex;gap:0.5rem;align-items:center;justify-content:center;margin-top:0.3rem;">
           <span style="font-size:0.85rem;font-weight:700;color:${COMPARE_COLOR_A};">${dataA.pcts[k]}%</span>
-          <span style="font-size:0.7rem;color:#9ca3af;">vs</span>
+          <span style="font-size:0.75rem;color:#9ca3af;">vs</span>
           <span style="font-size:0.85rem;font-weight:700;color:${COMPARE_COLOR_B};">${dataB.pcts[k]}%</span>
         </div>
-        <div class="stage-card-count" style="font-size:0.65rem;color:#9ca3af;">${dataA.counts[k]} vs ${dataB.counts[k]}</div>
+        <div class="stage-card-count" style="font-size:0.75rem;color:#9ca3af;">${dataA.counts[k]} vs ${dataB.counts[k]}</div>
       </div>${i < maturityOrder.length - 1 ? '<div class="stage-connector">&#9654;</div>' : ''}`;
     }).join('');
 
@@ -7132,10 +7372,10 @@
         <div class="wfm-card-title">${WFM_LABELS[stage]}</div>
         <div style="display:flex;gap:0.4rem;align-items:center;justify-content:center;margin:0.2rem 0;">
           <span style="font-size:0.85rem;font-weight:700;color:${COMPARE_COLOR_A};">${pctsA[stage]}%</span>
-          <span style="font-size:0.65rem;color:#9ca3af;">vs</span>
+          <span style="font-size:0.75rem;color:#9ca3af;">vs</span>
           <span style="font-size:0.85rem;font-weight:700;color:${COMPARE_COLOR_B};">${pctsB[stage]}%</span>
         </div>
-        <div class="wfm-card-count" style="font-size:0.65rem;">${countsA[stage]} vs ${countsB[stage]}</div>
+        <div class="wfm-card-count" style="font-size:0.75rem;">${countsA[stage]} vs ${countsB[stage]}</div>
       </div>${connector}`;
     }).join('');
 
@@ -7323,10 +7563,10 @@
       const rowStyle = inNeither ? 'opacity:0.3;' : '';
 
       let groupTag = '';
-      if (inA && inB) groupTag = `<span style="display:inline-block;padding:0.1rem 0.4rem;border-radius:8px;font-size:0.65rem;font-weight:700;background:${COMPARE_COLOR_A};color:#fff;margin-right:2px;">A</span><span style="display:inline-block;padding:0.1rem 0.4rem;border-radius:8px;font-size:0.65rem;font-weight:700;background:${COMPARE_COLOR_B};color:#fff;">B</span>`;
-      else if (inA) groupTag = `<span style="display:inline-block;padding:0.1rem 0.4rem;border-radius:8px;font-size:0.65rem;font-weight:700;background:${COMPARE_COLOR_A};color:#fff;">A</span>`;
-      else if (inB) groupTag = `<span style="display:inline-block;padding:0.1rem 0.4rem;border-radius:8px;font-size:0.65rem;font-weight:700;background:${COMPARE_COLOR_B};color:#fff;">B</span>`;
-      else groupTag = `<span style="font-size:0.65rem;color:#9ca3af;">—</span>`;
+      if (inA && inB) groupTag = `<span style="display:inline-block;padding:0.1rem 0.4rem;border-radius:8px;font-size:0.75rem;font-weight:700;background:${COMPARE_COLOR_A};color:#fff;margin-right:2px;">A</span><span style="display:inline-block;padding:0.1rem 0.4rem;border-radius:8px;font-size:0.75rem;font-weight:700;background:${COMPARE_COLOR_B};color:#fff;">B</span>`;
+      else if (inA) groupTag = `<span style="display:inline-block;padding:0.1rem 0.4rem;border-radius:8px;font-size:0.75rem;font-weight:700;background:${COMPARE_COLOR_A};color:#fff;">A</span>`;
+      else if (inB) groupTag = `<span style="display:inline-block;padding:0.1rem 0.4rem;border-radius:8px;font-size:0.75rem;font-weight:700;background:${COMPARE_COLOR_B};color:#fff;">B</span>`;
+      else groupTag = `<span style="font-size:0.75rem;color:#9ca3af;">—</span>`;
 
       const maturityVal = s.data?.clientAILandscape?.maturity?.value || '-';
       const maturityLabel = MATURITY_LABELS[maturityVal] || maturityVal;
@@ -8235,7 +8475,7 @@
           <div class="ai-adoption-card-detail">${nameA} vs ${nameB}</div>
           <div class="ai-adoption-card-revenue">
             <span style="color:${COMPARE_COLOR_A};">${formatCurrency(a.revUsing) || '$0'}</span>
-            <span style="font-size:0.7rem;color:#9ca3af;"> vs </span>
+            <span style="font-size:0.75rem;color:#9ca3af;"> vs </span>
             <span style="color:${COMPARE_COLOR_B};">${formatCurrency(b.revUsing) || '$0'}</span>
           </div>
           <div class="ai-adoption-card-revenue-label">Service Revenue</div>
@@ -8250,7 +8490,7 @@
           <div class="ai-adoption-card-detail">${nameA} vs ${nameB}</div>
           <div class="ai-adoption-card-revenue">
             <span style="color:${COMPARE_COLOR_A};">${formatCurrency(a.revAtRisk) || '$0'}</span>
-            <span style="font-size:0.7rem;color:#9ca3af;"> vs </span>
+            <span style="font-size:0.75rem;color:#9ca3af;"> vs </span>
             <span style="color:${COMPARE_COLOR_B};">${formatCurrency(b.revAtRisk) || '$0'}</span>
           </div>
           <div class="ai-adoption-card-revenue-label">Service Revenue at Risk</div>
@@ -9522,6 +9762,7 @@ Instructions:
 
       refreshDashboard();
       initAiChat();
+      initSectionNav();
 
       // Listen for updates from the survey tool in another tab
       try {
