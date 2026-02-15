@@ -24,39 +24,43 @@
     .dashboard-header {
       background: #fff;
       border-bottom: 1px solid #e5e7eb;
-      padding: 1.25rem 2rem;
+      padding: 0.6rem 1.5rem;
       position: sticky;
       top: 0;
       z-index: 100;
     }
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
     .header-title {
-      font-size: 1.5rem;
+      font-size: 1.1rem;
       font-weight: 700;
       color: #1f2937;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      white-space: nowrap;
     }
     .header-back {
-      font-size: 0.85rem;
-      color: #4f46e5;
-      text-decoration: none;
-      font-weight: 600;
       display: inline-flex;
       align-items: center;
-      gap: 0.3rem;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1.5px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: all 0.15s;
+      flex-shrink: 0;
     }
-    .header-back:hover { text-decoration: underline; }
+    .header-back:hover { background: #f3f4f6; border-color: #d1d5db; color: #374151; }
+    .header-divider {
+      width: 1px;
+      height: 1.2rem;
+      background: #d1d5db;
+      margin: 0 0.15rem;
+      flex-shrink: 0;
+    }
     .header-controls {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.6rem;
       flex-wrap: wrap;
     }
     .filter-group {
@@ -70,7 +74,7 @@
       color: #6b7280;
     }
     .filter-select {
-      padding: 0.4rem 0.75rem;
+      padding: 0.3rem 0.6rem;
       border: 1.5px solid #e5e7eb;
       border-radius: 8px;
       font-size: 0.9rem;
@@ -90,6 +94,7 @@
       align-items: center;
       gap: 0.5rem;
       flex-wrap: wrap;
+      margin-top: 0.3rem;
     }
 
     /* ═══════════════════════════════════════════
@@ -2091,8 +2096,7 @@
       .landscape-chart-row { grid-template-columns: 1fr; }
       .ai-adoption-cards { grid-template-columns: 1fr; }
       .dashboard-content { padding: 1rem; }
-      .dashboard-header { padding: 1rem; }
-      .header-top { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .dashboard-header { padding: 0.6rem 1rem; }
       .header-controls { width: 100%; }
       .actions-wrapper { margin-left: 0; }
       .actions-menu { right: auto; left: 0; }
@@ -2105,6 +2109,7 @@
       .kpi-strip { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 600px) {
+      .header-title { font-size: 1rem; }
       .surveys-table { font-size: 0.8rem; }
       .surveys-table th, .surveys-table td { padding: 0.5rem; }
       .widget-card { padding: 1.25rem; }
@@ -2354,7 +2359,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      padding: 0.4rem 0.85rem;
+      padding: 0.3rem 0.7rem;
       border: 1.5px solid #c7d2fe;
       border-radius: 8px;
       background: #eef2ff;
@@ -2403,7 +2408,7 @@
     }
     .filters-drawer.open {
       max-height: 200px;
-      padding: 0.75rem 0 0 0;
+      padding: 0.5rem 0 0 0;
     }
 
   </style>
@@ -2412,11 +2417,10 @@
 
   <!-- Header -->
   <header class="dashboard-header">
-    <div class="header-top">
-      <div class="header-title">AI Adoption Dashboard</div>
-      <a href="index.html" class="header-back">&#8592; Back to Survey Tool</a>
-    </div>
     <div class="header-controls">
+      <a href="index.html" class="header-back" title="Back to Survey Tool">&#8592;</a>
+      <span class="header-title">AI Adoption Dashboard</span>
+      <span class="header-divider"></span>
       <div class="filter-group">
         <span class="filter-label">Year:</span>
         <select class="filter-select" id="filterYear"></select>
