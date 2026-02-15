@@ -2332,9 +2332,6 @@
     }
 
     /* ═══════════════════════════════════════════
-       SECTION NAVIGATOR
-       ═══════════════════════════════════════════ */
-    /* ═══════════════════════════════════════════
        COLLAPSIBLE FILTER DRAWER
        ═══════════════════════════════════════════ */
     .filter-drawer-toggle {
@@ -2391,43 +2388,6 @@
     .filters-drawer.open {
       max-height: 200px;
       padding: 0.75rem 0 0 0;
-    }
-
-    /* ═══════════════════════════════════════════
-       SECTION NAVIGATOR
-       ═══════════════════════════════════════════ */
-    .section-nav {
-      display: flex;
-      gap: 0.5rem;
-      padding: 0.75rem 2rem;
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
-      position: sticky;
-      top: 0;
-      z-index: 99;
-      justify-content: center;
-    }
-    .section-nav-pill {
-      padding: 0.4rem 1rem;
-      border-radius: 20px;
-      border: 1.5px solid #e5e7eb;
-      background: #fff;
-      color: #6b7280;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      white-space: nowrap;
-    }
-    .section-nav-pill:hover {
-      border-color: #c7d2fe;
-      color: #4f46e5;
-      background: #eef2ff;
-    }
-    .section-nav-pill.active {
-      background: #4f46e5;
-      color: #fff;
-      border-color: #4f46e5;
     }
 
   </style>
@@ -2781,15 +2741,8 @@
         </div>
       </div>
 
-      <!-- Section Navigator -->
-      <nav class="section-nav" id="sectionNav">
-        <button class="section-nav-pill active" data-target="sectionClientLandscape">Client AI Landscape</button>
-        <button class="section-nav-pill" data-target="sectionAccountLandscape">Account AI Landscape</button>
-        <button class="section-nav-pill" data-target="sectionSurveys">Surveys</button>
-      </nav>
-
       <!-- Section: Client AI Landscape -->
-      <div class="widget-section" id="sectionClientLandscape">
+      <div class="widget-section">
         <div class="widget-section-title" onclick="toggleSection(this)">
           <span>Client AI Landscape</span>
           <span class="section-chevron">&#9662;</span>
@@ -2877,7 +2830,7 @@
       </div> <!-- end Client AI Landscape section -->
 
       <!-- Section: Account AI Landscape -->
-      <div class="widget-section" id="sectionAccountLandscape">
+      <div class="widget-section">
         <div class="widget-section-title" onclick="toggleSection(this)">
           <span>Account AI Landscape</span>
           <span class="section-chevron">&#9662;</span>
@@ -3049,7 +3002,7 @@
       </div> <!-- end Account AI Landscape section -->
 
       <!-- Section: Surveys -->
-      <div class="widget-section" id="sectionSurveys">
+      <div class="widget-section">
         <div class="widget-section-title" onclick="toggleSection(this)">
           <span>Surveys</span>
           <span class="section-chevron">&#9662;</span>
@@ -4484,43 +4437,6 @@
   }
 
   // ═══════════════════════════════════════════
-  // SECTION NAVIGATOR
-  // ═══════════════════════════════════════════
-  function initSectionNav() {
-    const nav = document.getElementById('sectionNav');
-    if (!nav) return;
-    const pills = nav.querySelectorAll('.section-nav-pill');
-    const sectionIds = ['sectionClientLandscape', 'sectionAccountLandscape', 'sectionSurveys'];
-    const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
-
-    pills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        const target = document.getElementById(pill.dataset.target);
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    });
-
-    function updateNavTop() {
-      const header = document.querySelector('.dashboard-header');
-      if (header && nav) nav.style.top = header.offsetHeight + 'px';
-    }
-    updateNavTop();
-    window.addEventListener('resize', updateNavTop);
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          pills.forEach(p => p.classList.remove('active'));
-          const activePill = nav.querySelector(`[data-target="${entry.target.id}"]`);
-          if (activePill) activePill.classList.add('active');
-        }
-      });
-    }, { root: null, rootMargin: '-20% 0px -60% 0px', threshold: 0 });
-
-    sections.forEach(section => observer.observe(section));
-  }
-
-  // ═══════════════════════════════════════════
   // COLLAPSIBLE FILTER DRAWER
   // ═══════════════════════════════════════════
   function toggleFiltersDrawer() {
@@ -4534,13 +4450,6 @@
       drawer.classList.add('open');
       chevron.classList.add('open');
       setTimeout(() => { drawer.style.overflow = 'visible'; }, 300);
-    }
-    const nav = document.getElementById('sectionNav');
-    if (nav) {
-      setTimeout(() => {
-        const header = document.querySelector('.dashboard-header');
-        if (header) nav.style.top = header.offsetHeight + 'px';
-      }, 320);
     }
   }
 
@@ -5454,12 +5363,10 @@
     // ── Comparison Mode Branch ──
     if (comparisonMode) {
       document.getElementById('kpiStrip').style.display = 'none';
-      document.getElementById('sectionNav').style.display = 'none';
       refreshDashboardComparison(allSurveys, totalCount);
       return;
     }
     document.getElementById('kpiStrip').style.display = '';
-    document.getElementById('sectionNav').style.display = '';
     document.getElementById('comparisonBanner').classList.remove('active');
 
     // Update subtitle
@@ -9762,7 +9669,6 @@ Instructions:
 
       refreshDashboard();
       initAiChat();
-      initSectionNav();
 
       // Listen for updates from the survey tool in another tab
       try {
