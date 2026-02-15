@@ -5408,7 +5408,7 @@
 
     // 4. Account AI Agentic Workflow — use currentWfmStage set by renderWorkflowMaturityWidget
     if (currentWfmStage !== null && WFM_LABELS[currentWfmStage] !== undefined) {
-      document.getElementById('kpiWfm').textContent = `${WFM_LABELS[currentWfmStage]} (Stage ${currentWfmStage} of 5)`;
+      document.getElementById('kpiWfm').innerHTML = `${WFM_LABELS[currentWfmStage]} <span style="font-size:0.7rem;font-weight:600;color:#9ca3af;">(Stage ${currentWfmStage} of 5)</span>`;
       const wfmCount = surveys.filter(s => {
         const wfm = s.data?.workflowMaturity;
         if (!wfm) return false;
