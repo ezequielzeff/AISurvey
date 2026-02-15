@@ -2439,6 +2439,34 @@
         More Filters <span class="filter-drawer-badge" id="filterDrawerBadge" style="display:none;">0</span>
         <span class="filter-drawer-chevron" id="filterDrawerChevron">&#9662;</span>
       </button>
+      <button class="filter-clear-btn" onclick="clearAllFilters()" title="Clear all interactive filters">✕ Clear Filters</button>
+      <button class="filter-clear-btn" onclick="openCompareModal()" title="Compare two groups of accounts">⚖ Compare</button>
+      <!-- Actions dropdown -->
+      <div class="actions-wrapper">
+        <button class="actions-toggle" id="actionsToggle" type="button" title="Data & upload actions">
+          <span class="gear-icon">&#9881;</span> Actions <span style="font-size:0.75rem;color:#9ca3af;">&#9662;</span>
+        </button>
+        <div class="actions-menu" id="actionsMenu">
+          <button class="actions-menu-item" id="uploadBtn" type="button">
+            <span class="item-icon">&#128228;</span> Upload Survey
+          </button>
+          <button class="actions-menu-item" id="exportSurveysBtn" type="button">
+            <span class="item-icon">&#128196;</span> Export Surveys
+          </button>
+          <div class="actions-menu-divider"></div>
+          <button class="actions-menu-item" id="exportDbBtn" type="button">
+            <span class="item-icon">&#128190;</span> Backup Database
+          </button>
+          <label class="actions-menu-item" style="cursor:pointer;">
+            <span class="item-icon">&#128259;</span> Restore Database
+            <input type="file" id="importDbInput" accept=".sqlite,.db" style="display:none;">
+          </label>
+          <div class="actions-menu-divider"></div>
+          <button class="actions-menu-item danger" id="clearDbBtn" type="button">
+            <span class="item-icon">&#128465;</span> Clear Database
+          </button>
+        </div>
+      </div>
       <div class="filters-drawer" id="filtersDrawer">
       <div class="filter-group" style="position:relative;">
         <span class="filter-label">Type:</span>
@@ -2562,35 +2590,6 @@
         </select>
       </div>
       </div><!-- end filters-drawer -->
-      <button class="filter-clear-btn" onclick="clearAllFilters()" title="Clear all interactive filters" style="margin-left:0.5rem;">✕ Clear Filters</button>
-      <button class="filter-clear-btn" onclick="openCompareModal()" title="Compare two groups of accounts" style="margin-left:0.5rem;">⚖ Compare</button>
-
-      <!-- Actions dropdown -->
-      <div class="actions-wrapper">
-        <button class="actions-toggle" id="actionsToggle" type="button" title="Data & upload actions">
-          <span class="gear-icon">&#9881;</span> Actions <span style="font-size:0.75rem;color:#9ca3af;">&#9662;</span>
-        </button>
-        <div class="actions-menu" id="actionsMenu">
-          <button class="actions-menu-item" id="uploadBtn" type="button">
-            <span class="item-icon">&#128228;</span> Upload Survey
-          </button>
-          <button class="actions-menu-item" id="exportSurveysBtn" type="button">
-            <span class="item-icon">&#128196;</span> Export Surveys
-          </button>
-          <div class="actions-menu-divider"></div>
-          <button class="actions-menu-item" id="exportDbBtn" type="button">
-            <span class="item-icon">&#128190;</span> Backup Database
-          </button>
-          <label class="actions-menu-item" style="cursor:pointer;">
-            <span class="item-icon">&#128259;</span> Restore Database
-            <input type="file" id="importDbInput" accept=".sqlite,.db" style="display:none;">
-          </label>
-          <div class="actions-menu-divider"></div>
-          <button class="actions-menu-item danger" id="clearDbBtn" type="button">
-            <span class="item-icon">&#128465;</span> Clear Database
-          </button>
-        </div>
-      </div>
     </div>
     <div class="header-subtitle" id="headerSubtitle">Loading...</div>
   </header>
