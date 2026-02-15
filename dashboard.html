@@ -9351,7 +9351,7 @@
 
         // Success Stories
         const successStories = s.data?.teamRoles?.successStories;
-        if (successStories?.hasSuccessStories === 'yes' && Array.isArray(successStories?.stories) && successStories.stories.length > 0) {
+        if (successStories?.value === 'yes' && Array.isArray(successStories?.stories) && successStories.stories.length > 0) {
           ctx += `Success Stories: ${successStories.stories.join('; ')}\n`;
         }
 
