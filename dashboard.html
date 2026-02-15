@@ -1969,6 +1969,70 @@
     }
 
     /* ═══════════════════════════════════════════
+       KPI SUMMARY STRIP
+       ═══════════════════════════════════════════ */
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .kpi-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1rem 1.15rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .kpi-card:hover {
+      border-color: #c7d2fe;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+    .kpi-card[data-accent="indigo"]::before { background: #4f46e5; }
+    .kpi-card[data-accent="emerald"]::before { background: #10b981; }
+    .kpi-card[data-accent="amber"]::before { background: #f59e0b; }
+    .kpi-card[data-accent="sky"]::before { background: #0ea5e9; }
+    .kpi-card[data-accent="rose"]::before { background: #f43f5e; }
+    .kpi-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.35rem;
+    }
+    .kpi-value {
+      font-size: 1.65rem;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #1f2937;
+    }
+    .kpi-value[data-accent="indigo"] { color: #4f46e5; }
+    .kpi-value[data-accent="emerald"] { color: #059669; }
+    .kpi-value[data-accent="amber"] { color: #d97706; }
+    .kpi-value[data-accent="sky"] { color: #0284c7; }
+    .kpi-value[data-accent="rose"] { color: #e11d48; }
+    .kpi-sub {
+      font-size: 0.72rem;
+      color: #9ca3af;
+      margin-top: 0.2rem;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ═══════════════════════════════════════════
        RESPONSIVE
        ═══════════════════════════════════════════ */
     @media (max-width: 900px) {
@@ -1987,6 +2051,7 @@
       .wfm-journey { flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
       .wfm-journey .stage-connector { display: none; }
       .wfm-card { min-width: 80px; }
+      .kpi-strip { grid-template-columns: repeat(3, 1fr); }
     }
     @media (max-width: 600px) {
       .surveys-table { font-size: 0.8rem; }
@@ -1995,6 +2060,9 @@
       .stage-card { padding: 0.6rem 0.5rem; }
       .stage-card-icon { font-size: 1.2rem; }
       .wfm-card { padding: 0.6rem 0.5rem; }
+      .kpi-strip { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+      .kpi-card { padding: 0.75rem 0.85rem; }
+      .kpi-value { font-size: 1.35rem; }
     }
 
     /* ═══════════════════════════════════════════
@@ -2543,6 +2611,35 @@
         <span>⚖ Comparing: <span class="group-a-name" id="compareNameA">Group A</span> vs <span class="group-b-name" id="compareNameB">Group B</span></span>
         <button onclick="openCompareModal()">✎ Edit Groups</button>
         <button onclick="exitComparison()">✕ Exit Comparison</button>
+      </div>
+
+      <!-- KPI Summary Strip -->
+      <div class="kpi-strip" id="kpiStrip">
+        <div class="kpi-card" data-accent="indigo">
+          <div class="kpi-label">Surveys</div>
+          <div class="kpi-value" data-accent="indigo" id="kpiSurveyCount">—</div>
+          <div class="kpi-sub" id="kpiSurveySub">accounts assessed</div>
+        </div>
+        <div class="kpi-card" data-accent="emerald">
+          <div class="kpi-label">Avg Maturity</div>
+          <div class="kpi-value" data-accent="emerald" id="kpiMaturity" style="font-size:1.1rem;">—</div>
+          <div class="kpi-sub" id="kpiMaturitySub">median stage</div>
+        </div>
+        <div class="kpi-card" data-accent="sky">
+          <div class="kpi-label">AI Tool Adoption</div>
+          <div class="kpi-value" data-accent="sky" id="kpiToolAdoption">—</div>
+          <div class="kpi-sub" id="kpiToolAdoptionSub">using at least 1 AI tool</div>
+        </div>
+        <div class="kpi-card" data-accent="amber">
+          <div class="kpi-label">SDLC Coverage</div>
+          <div class="kpi-value" data-accent="amber" id="kpiSdlcCoverage">—</div>
+          <div class="kpi-sub" id="kpiSdlcSub">avg doing across phases</div>
+        </div>
+        <div class="kpi-card" data-accent="rose">
+          <div class="kpi-label">Top Challenge</div>
+          <div class="kpi-value" data-accent="rose" id="kpiTopChallenge" style="font-size:1.1rem;">—</div>
+          <div class="kpi-sub" id="kpiChallengeSub">most cited barrier</div>
+        </div>
       </div>
 
       <!-- Section: Client AI Landscape -->
@@ -5128,9 +5225,11 @@
 
     // ── Comparison Mode Branch ──
     if (comparisonMode) {
+      document.getElementById('kpiStrip').style.display = 'none';
       refreshDashboardComparison(allSurveys, totalCount);
       return;
     }
+    document.getElementById('kpiStrip').style.display = '';
     document.getElementById('comparisonBanner').classList.remove('active');
 
     // Update subtitle
@@ -5233,6 +5332,9 @@
     // Collapsed account section summary (must run after renderWorkflowMaturityWidget sets currentWfmStage)
     updateAccountSectionSummary(surveys);
 
+    // KPI Summary Strip — glanceable top-level metrics
+    updateKpiStrip(surveys);
+
     // Surveys table — show all rows, dim non-matching
     renderSurveysTable(allSurveys, surveys);
 
@@ -5263,6 +5365,105 @@
     });
 
     return Math.round((usesAiCount / surveys.length) * 100);
+  }
+
+
+  // ═══════════════════════════════════════════
+  // KPI SUMMARY STRIP
+  // ═══════════════════════════════════════════
+  function updateKpiStrip(surveys) {
+    const n = surveys.length;
+
+    // 1. Survey count
+    document.getElementById('kpiSurveyCount').textContent = n;
+    document.getElementById('kpiSurveySub').textContent = n === 1 ? 'account assessed' : 'accounts assessed';
+
+    if (n === 0) {
+      document.getElementById('kpiMaturity').textContent = '—';
+      document.getElementById('kpiMaturitySub').textContent = 'no data';
+      document.getElementById('kpiToolAdoption').textContent = '—';
+      document.getElementById('kpiToolAdoptionSub').textContent = 'no data';
+      document.getElementById('kpiSdlcCoverage').textContent = '—';
+      document.getElementById('kpiSdlcSub').textContent = 'no data';
+      document.getElementById('kpiTopChallenge').textContent = '—';
+      document.getElementById('kpiChallengeSub').textContent = 'no data';
+      return;
+    }
+
+    // 2. Average Maturity — use currentMedianStage set by renderAdoptionStageWidget
+    if (currentMedianStage && MATURITY_LABELS[currentMedianStage]) {
+      document.getElementById('kpiMaturity').textContent = MATURITY_LABELS[currentMedianStage];
+      // Count how many are at this stage
+      let stageCount = 0;
+      surveys.forEach(s => {
+        const val = s.data?.clientAILandscape?.maturity?.value;
+        if (val === currentMedianStage) stageCount++;
+      });
+      document.getElementById('kpiMaturitySub').textContent = `${stageCount} of ${n} at this stage`;
+    } else {
+      document.getElementById('kpiMaturity').textContent = '—';
+      document.getElementById('kpiMaturitySub').textContent = 'not reported';
+    }
+
+    // 3. AI Tool Adoption %
+    const aiPct = calculateAiUsagePercent(surveys);
+    if (aiPct !== null) {
+      document.getElementById('kpiToolAdoption').textContent = aiPct + '%';
+      const aiCount = Math.round((aiPct / 100) * n);
+      document.getElementById('kpiToolAdoptionSub').textContent = `${aiCount} of ${n} using AI tools`;
+    } else {
+      document.getElementById('kpiToolAdoption').textContent = '—';
+      document.getElementById('kpiToolAdoptionSub').textContent = 'no data';
+    }
+
+    // 4. SDLC Coverage — average "doing" % across all phases
+    let totalDoingPct = 0, phaseCount = 0;
+    SDLC_PHASES.forEach(phase => {
+      let doing = 0, total = 0;
+      surveys.forEach(s => {
+        const section = s.data?.useCases?.[phase.key];
+        if (!section) return;
+        getUseCaseItems(section).forEach(item => {
+          total++;
+          if (item?.status === 'doing') doing++;
+        });
+      });
+      if (total > 0) {
+        totalDoingPct += Math.round((doing / total) * 100);
+        phaseCount++;
+      }
+    });
+    if (phaseCount > 0) {
+      const avgDoing = Math.round(totalDoingPct / phaseCount);
+      document.getElementById('kpiSdlcCoverage').textContent = avgDoing + '%';
+      document.getElementById('kpiSdlcSub').textContent = `avg doing across ${phaseCount} phases`;
+    } else {
+      document.getElementById('kpiSdlcCoverage').textContent = '—';
+      document.getElementById('kpiSdlcSub').textContent = 'no use case data';
+    }
+
+    // 5. Top Limiting Factor
+    const lfCounts = {};
+    LIMITING_FACTOR_ORDER.forEach(k => lfCounts[k] = 0);
+    surveys.forEach(s => {
+      const factors = s.data?.limitingFactors;
+      if (!factors || typeof factors !== 'object') return;
+      Object.keys(factors).forEach(k => {
+        if (LIMITING_FACTOR_ORDER.includes(k) && factors[k]?.selected) lfCounts[k]++;
+      });
+    });
+    let topFactor = null, topCount = 0;
+    LIMITING_FACTOR_ORDER.forEach(k => {
+      if (lfCounts[k] > topCount) { topFactor = k; topCount = lfCounts[k]; }
+    });
+    if (topFactor && topCount > 0) {
+      document.getElementById('kpiTopChallenge').textContent = LIMITING_FACTOR_LABELS[topFactor];
+      const pct = Math.round((topCount / n) * 100);
+      document.getElementById('kpiChallengeSub').textContent = `${pct}% of accounts (${topCount})`;
+    } else {
+      document.getElementById('kpiTopChallenge').textContent = '—';
+      document.getElementById('kpiChallengeSub').textContent = 'no data';
+    }
   }
 
 
