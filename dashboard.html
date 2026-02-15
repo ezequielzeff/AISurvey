@@ -4290,34 +4290,12 @@
   // ═══════════════════════════════════════════
   // COLLAPSIBLE SECTIONS
   // ═══════════════════════════════════════════
-  let _expandCount = 0;
   function toggleSection(titleEl) {
     const section = titleEl.closest('.widget-section');
     section.classList.toggle('collapsed');
     if (!section.classList.contains('collapsed')) {
-      _expandCount++;
-      const attempt = _expandCount;
-      section.offsetHeight;
-
-      // Log BEFORE refreshDashboard
-      section.querySelectorAll('canvas').forEach(c => {
-        const rect = c.getBoundingClientRect();
-        const prect = c.parentElement.getBoundingClientRect();
-        console.log(`[expand #${attempt}] BEFORE - ${c.id}: canvasRect=${rect.width.toFixed(0)}x${rect.height.toFixed(0)} parentRect=${prect.width.toFixed(0)}x${prect.height.toFixed(0)} chartExists=${!!Chart.getChart(c)}`);
-      });
-
+      section.offsetHeight; // force reflow
       refreshDashboard();
-
-      // Log AFTER refreshDashboard
-      section.querySelectorAll('canvas').forEach(c => {
-        const chart = Chart.getChart(c);
-        console.log(`[expand #${attempt}] AFTER - ${c.id}: canvas.wh=${c.width}x${c.height} chartExists=${!!chart}`);
-        if (chart && c.width > 0 && c.height > 0) {
-          const ctx = c.getContext('2d');
-          const px = ctx.getImageData(Math.floor(c.width/2), Math.floor(c.height/2), 1, 1).data;
-          console.log(`[expand #${attempt}] AFTER - ${c.id}: pixel=${Array.from(px)} blank=${px[3]===0}`);
-        }
-      });
     }
   }
 
@@ -5398,6 +5376,20 @@
     return false;
   }
 
+  // Pre-size a canvas to match its container before Chart.js reads it.
+  // Without this, a freshly-visible canvas still has the default 300×150
+  // HTML size on first expand — Chart.js creates the chart at that size,
+  // then the responsive resize wipes the drawn content.
+  function prepareCanvas(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const container = canvas.parentElement;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    if (rect.width > 0) canvas.width = rect.width;
+    if (rect.height > 0) canvas.height = rect.height;
+  }
+
   // ═══════════════════════════════════════════
   // ADOPTION STAGE WIDGET
   // ═══════════════════════════════════════════
@@ -5717,6 +5709,7 @@
       return '#374151';
     });
 
+    prepareCanvas('chartLimitingFactors');
     const ctx = document.getElementById('chartLimitingFactors').getContext('2d');
     charts['chartLimitingFactors'] = new Chart(ctx, {
       type: 'bar',
@@ -6144,6 +6137,7 @@
       return '#374151';
     });
 
+    prepareCanvas('chartAiChallenges');
     const ctx = document.getElementById('chartAiChallenges').getContext('2d');
     charts['chartAiChallenges'] = new Chart(ctx, {
       type: 'bar',
@@ -6267,6 +6261,7 @@
       return '#374151';
     });
 
+    prepareCanvas('chartAiUsage');
     const ctx = document.getElementById('chartAiUsage').getContext('2d');
     charts['chartAiUsage'] = new Chart(ctx, {
       type: 'bar',
@@ -6424,6 +6419,7 @@
     const barCount = toolKeys.length || 1;
     chartContainer.style.height = Math.max(180, barCount * 32 + 40) + 'px';
 
+    prepareCanvas('chartAiTools');
     const ctx = document.getElementById('chartAiTools').getContext('2d');
     charts['chartAiTools'] = new Chart(ctx, {
       type: 'bar',
@@ -6570,6 +6566,7 @@
     const barCount = platformKeys.length || 1;
     chartContainer.style.height = Math.max(100, barCount * 32 + 40) + 'px';
 
+    prepareCanvas('chartCloudPlatforms');
     const ctx = document.getElementById('chartCloudPlatforms').getContext('2d');
     charts['chartCloudPlatforms'] = new Chart(ctx, {
       type: 'bar',
@@ -6757,6 +6754,7 @@
     const pctsA = sorted.map(k => totalA > 0 ? Math.round((countsA[k] / totalA) * 100) : 0);
     const pctsB = sorted.map(k => totalB > 0 ? Math.round((countsB[k] / totalB) * 100) : 0);
 
+    prepareCanvas('chartLimitingFactors');
     const ctx = document.getElementById('chartLimitingFactors').getContext('2d');
     charts['chartLimitingFactors'] = new Chart(ctx, {
       type: 'bar',
@@ -6802,6 +6800,7 @@
     const pctsA = sorted.map(k => totalA > 0 ? Math.round((countsA[k] / totalA) * 100) : 0);
     const pctsB = sorted.map(k => totalB > 0 ? Math.round((countsB[k] / totalB) * 100) : 0);
 
+    prepareCanvas('chartAiChallenges');
     const ctx = document.getElementById('chartAiChallenges').getContext('2d');
     charts['chartAiChallenges'] = new Chart(ctx, {
       type: 'bar',
@@ -6847,6 +6846,7 @@
     const pctsA = sorted.map(k => totalA > 0 ? Math.round((countsA[k] / totalA) * 100) : 0);
     const pctsB = sorted.map(k => totalB > 0 ? Math.round((countsB[k] / totalB) * 100) : 0);
 
+    prepareCanvas('chartAiUsage');
     const ctx = document.getElementById('chartAiUsage').getContext('2d');
     charts['chartAiUsage'] = new Chart(ctx, {
       type: 'bar',
@@ -6899,6 +6899,7 @@
     const barCount = allKeys.length || 1;
     chartContainer.style.height = Math.max(180, barCount * 36 + 40) + 'px';
 
+    prepareCanvas('chartAiTools');
     const ctx = document.getElementById('chartAiTools').getContext('2d');
     charts['chartAiTools'] = new Chart(ctx, {
       type: 'bar',
@@ -6945,6 +6946,7 @@
     const barCount = allKeys.length || 1;
     chartContainer.style.height = Math.max(100, barCount * 36 + 40) + 'px';
 
+    prepareCanvas('chartCloudPlatforms');
     const ctx = document.getElementById('chartCloudPlatforms').getContext('2d');
     charts['chartCloudPlatforms'] = new Chart(ctx, {
       type: 'bar',
