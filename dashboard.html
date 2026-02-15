@@ -5878,7 +5878,7 @@
       surveys.forEach(s => {
         const section = s.data?.useCases?.[phase.key];
         if (!section) return;
-        Object.values(section).forEach(item => {
+        getUseCaseItems(section).forEach(item => {
           total++;
           if (item?.status === 'doing') doing++;
         });
@@ -7280,6 +7280,20 @@
     { key: 'data-analytics', label: 'Data & Analytics' }
   ];
 
+  /** Return flat array of use-case items from a useCases section, skipping _meta and flattening custom[] */
+  function getUseCaseItems(section) {
+    const items = [];
+    for (const [key, value] of Object.entries(section)) {
+      if (key === '_meta') continue;
+      if (key === 'custom') {
+        if (Array.isArray(value)) value.forEach(v => { if (v && typeof v === 'object') items.push(v); });
+        continue;
+      }
+      if (value && typeof value === 'object') items.push(value);
+    }
+    return items;
+  }
+
   function renderSdlcCoverageWidget(surveys) {
     const container = document.getElementById('sdlcCoverageContent');
     const insightEl = document.getElementById('sdlcKeyInsight');
@@ -7298,7 +7312,7 @@
       surveys.forEach(s => {
         const section = s.data?.useCases?.[phase.key];
         if (!section) return;
-        Object.values(section).forEach(item => {
+        getUseCaseItems(section).forEach(item => {
           const status = item?.status;
           total++;
           if (status === 'doing') doing++;
@@ -8950,7 +8964,7 @@
             const section = useCases[phase.key];
             if (!section) return;
             let doing = 0, need = 0;
-            Object.values(section).forEach(item => {
+            getUseCaseItems(section).forEach(item => {
               if (item?.status === 'doing') doing++;
               else if (item?.status === 'need') need++;
             });
