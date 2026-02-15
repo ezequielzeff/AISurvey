@@ -4290,14 +4290,34 @@
   // ═══════════════════════════════════════════
   // COLLAPSIBLE SECTIONS
   // ═══════════════════════════════════════════
+  let _expandCount = 0;
   function toggleSection(titleEl) {
     const section = titleEl.closest('.widget-section');
     section.classList.toggle('collapsed');
-    // Charts use animation:false so they draw synchronously.
-    // Re-render on expand so charts in previously-hidden containers get real dimensions.
     if (!section.classList.contains('collapsed')) {
-      section.offsetHeight; // force reflow
+      _expandCount++;
+      const attempt = _expandCount;
+      section.offsetHeight;
+
+      // Log BEFORE refreshDashboard
+      section.querySelectorAll('canvas').forEach(c => {
+        const rect = c.getBoundingClientRect();
+        const prect = c.parentElement.getBoundingClientRect();
+        console.log(`[expand #${attempt}] BEFORE - ${c.id}: canvasRect=${rect.width.toFixed(0)}x${rect.height.toFixed(0)} parentRect=${prect.width.toFixed(0)}x${prect.height.toFixed(0)} chartExists=${!!Chart.getChart(c)}`);
+      });
+
       refreshDashboard();
+
+      // Log AFTER refreshDashboard
+      section.querySelectorAll('canvas').forEach(c => {
+        const chart = Chart.getChart(c);
+        console.log(`[expand #${attempt}] AFTER - ${c.id}: canvas.wh=${c.width}x${c.height} chartExists=${!!chart}`);
+        if (chart && c.width > 0 && c.height > 0) {
+          const ctx = c.getContext('2d');
+          const px = ctx.getImageData(Math.floor(c.width/2), Math.floor(c.height/2), 1, 1).data;
+          console.log(`[expand #${attempt}] AFTER - ${c.id}: pixel=${Array.from(px)} blank=${px[3]===0}`);
+        }
+      });
     }
   }
 
