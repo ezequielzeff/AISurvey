@@ -4313,6 +4313,13 @@
     }
   }
 
+  // Re-render charts on window resize (since responsive:false)
+  let _resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(() => { if (typeof refreshDashboard === 'function') refreshDashboard(); }, 300);
+  });
+
   // ═══════════════════════════════════════════
   // ACCOUNT TYPE MULTI-SELECT
   // ═══════════════════════════════════════════
@@ -5376,18 +5383,20 @@
     return false;
   }
 
-  // Pre-size a canvas to match its container before Chart.js reads it.
-  // Without this, a freshly-visible canvas still has the default 300×150
-  // HTML size on first expand — Chart.js creates the chart at that size,
-  // then the responsive resize wipes the drawn content.
+  // Size canvas to fill its container. Used with responsive:false so
+  // Chart.js renders at the correct dimensions without async resizing.
   function prepareCanvas(canvasId) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     const container = canvas.parentElement;
     if (!container) return;
     const rect = container.getBoundingClientRect();
-    if (rect.width > 0) canvas.width = rect.width;
-    if (rect.height > 0) canvas.height = rect.height;
+    if (rect.width > 0 && rect.height > 0) {
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.width = Math.round(rect.width);
+      canvas.height = Math.round(rect.height);
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -5726,8 +5735,7 @@
       },
       options: {
         indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: false,
         animation: false,
         plugins: {
           legend: { display: false },
@@ -6154,8 +6162,7 @@
       },
       options: {
         indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: false,
         animation: false,
         plugins: {
           legend: { display: false },
@@ -6278,8 +6285,7 @@
       },
       options: {
         indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: false,
         animation: false,
         plugins: {
           legend: { display: false },
@@ -6436,8 +6442,7 @@
       },
       options: {
         indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: false,
         animation: false,
         plugins: {
           legend: { display: false },
@@ -6583,8 +6588,7 @@
       },
       options: {
         indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: false,
         animation: false,
         plugins: {
           legend: { display: false },
@@ -6766,7 +6770,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: false,
+        indexAxis: 'y', responsive: false, animation: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -6812,7 +6816,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: false,
+        indexAxis: 'y', responsive: false, animation: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -6858,7 +6862,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: false,
+        indexAxis: 'y', responsive: false, animation: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -6911,7 +6915,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: false,
+        indexAxis: 'y', responsive: false, animation: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
@@ -6958,7 +6962,7 @@
         ]
       },
       options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: false,
+        indexAxis: 'y', responsive: false, animation: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 11, weight: '600' }, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
