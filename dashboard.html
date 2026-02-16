@@ -38,18 +38,20 @@
     .header-back {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
+      gap: 0.3rem;
+      padding: 0.3rem 0.7rem;
       border-radius: 8px;
-      border: 1.5px solid #e5e7eb;
-      color: #6b7280;
-      font-size: 1rem;
+      border: 1.5px solid #c7d2fe;
+      background: #eef2ff;
+      color: #4f46e5;
+      font-size: 0.8rem;
+      font-weight: 600;
       text-decoration: none;
       transition: all 0.15s;
       flex-shrink: 0;
+      white-space: nowrap;
     }
-    .header-back:hover { background: #f3f4f6; border-color: #d1d5db; color: #374151; }
+    .header-back:hover { background: #e0e7ff; border-color: #a5b4fc; }
     .header-divider {
       width: 1px;
       height: 1.2rem;
@@ -2418,7 +2420,7 @@
   <!-- Header -->
   <header class="dashboard-header">
     <div class="header-controls">
-      <a href="index.html" class="header-back" title="Back to Survey Tool">&#8592;</a>
+      <a href="index.html" class="header-back" title="Back to Survey Tool">&#8592; Survey Tool</a>
       <span class="header-title">AI Adoption Dashboard</span>
       <span class="header-divider"></span>
       <div class="filter-group">
