@@ -9678,6 +9678,38 @@ Instructions:
   }
 
   // ── Claude.ai Integration ──
+  /**
+   * Merge PRD template with live data by replacing placeholder patterns.
+   * Recognized placeholders (case-insensitive):
+   *   [PASTE YOUR FULL DASHBOARD DATA EXPORT BELOW THIS LINE]
+   *   <!-- Insert your AI adoption dashboard data here -->
+   *   [INSERT DATA HERE]
+   *   {{DATA}}
+   * If none found, the data is appended at the end of the PRD content.
+   */
+  function mergePRDWithData(prdContent, dataContext) {
+    const placeholderPatterns = [
+      /\[PASTE YOUR FULL DASHBOARD DATA EXPORT BELOW THIS LINE\][^\n]*/gi,
+      /<!--\s*Insert your AI adoption dashboard data here\s*-->/gi,
+      /\[INSERT DATA HERE\][^\n]*/gi,
+      /\{\{DATA\}\}/gi
+    ];
+    let merged = prdContent;
+    let replaced = false;
+    for (const pattern of placeholderPatterns) {
+      if (pattern.test(merged)) {
+        pattern.lastIndex = 0; // reset after test()
+        merged = merged.replace(pattern, '\n' + dataContext);
+        replaced = true;
+      }
+    }
+    if (!replaced) {
+      // No placeholder found — append data after the PRD content
+      merged += '\n\n--- LIVE DASHBOARD DATA ---\n\n' + dataContext;
+    }
+    return merged;
+  }
+
   function buildClipboardPayload() {
     const systemPrompt = buildSystemPrompt();
     const dataContext = buildDataContext();
@@ -9687,27 +9719,21 @@ Instructions:
 
     if (prd) {
       // ── PRD-driven layout ──
-      // The reference document defines the full schema, field definitions,
-      // and dashboard recommendations. The data context is injected into it.
+      // The reference document is the master template. Live data is injected
+      // directly into it at placeholder locations, producing one seamless document.
       payload += '=== AI ADOPTION DASHBOARD - DATA EXPORT ===\n\n';
       payload += 'I am pasting context from the AI Adoption Dashboard. ';
       payload += 'Below you will find:\n';
       payload += '1. Your role and analysis instructions\n';
-      payload += '2. A reference document describing the complete survey schema, field definitions, value mappings, and dashboard design recommendations\n';
-      payload += '3. The live dashboard data (aggregate metrics + per-account detail)\n\n';
-      payload += 'Use the reference document to understand what each field means, how values map to labels, and what analyses are recommended. ';
+      payload += '2. The complete reference document with survey schema, field definitions, and value mappings — with live dashboard data injected inline\n\n';
+      payload += 'Use the field definitions to understand what each value means. ';
       payload += 'Use the live data to answer my questions with specific, data-driven insights.\n\n';
       payload += '--- ROLE & INSTRUCTIONS ---\n\n';
       payload += systemPrompt;
-      payload += '\n\n--- REFERENCE DOCUMENT (Survey Schema & Field Definitions) ---\n\n';
-      // Process PRD content: replace any data injection placeholders
-      let prdContent = prd.content;
-      prdContent = prdContent.replace(/\[PASTE YOUR FULL DASHBOARD DATA EXPORT BELOW THIS LINE\]/gi, '(See LIVE DATA section below)');
-      payload += prdContent;
-      payload += '\n\n--- LIVE DATA (Dashboard Export) ---\n\n';
-      payload += dataContext;
-      payload += '--- END OF CONTEXT ---\n\n';
-      payload += 'I have pasted the full context above (instructions + reference document + live data). Please confirm you have received it, then I will ask my questions.';
+      payload += '\n\n--- REFERENCE DOCUMENT + LIVE DATA ---\n\n';
+      payload += mergePRDWithData(prd.content, dataContext);
+      payload += '\n\n--- END OF CONTEXT ---\n\n';
+      payload += 'I have pasted the full context above (instructions + reference document with live data). Please confirm you have received it, then I will ask my questions.';
     } else {
       // ── Default layout (no reference document loaded) ──
       payload += '=== AI ADOPTION DASHBOARD - DATA EXPORT ===\n\n';
@@ -9847,13 +9873,11 @@ Instructions:
 
       let systemContent = systemPrompt;
       if (prd) {
-        systemContent += '\n\n--- REFERENCE DOCUMENT (Survey Schema & Field Definitions) ---\n\n';
-        systemContent += prd.content.replace(/\[PASTE YOUR FULL DASHBOARD DATA EXPORT BELOW THIS LINE\]/gi, '(See LIVE DATA below)');
-        systemContent += '\n\n--- LIVE DATA ---\n\n';
+        systemContent += '\n\n--- REFERENCE DOCUMENT + LIVE DATA ---\n\n';
+        systemContent += mergePRDWithData(prd.content, dataContext);
       } else {
-        systemContent += '\n\n';
+        systemContent += '\n\n' + dataContext;
       }
-      systemContent += dataContext;
 
       const messages = [{ role: 'system', content: systemContent }];
 
