@@ -2597,20 +2597,22 @@
               <div id="aiChampionsList"></div>
               <div style="margin-top: 0.75rem;">
                 <label class="account-name-label">Add a champion:</label>
-                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <input type="text" id="aiChampionInput" class="account-name-input" placeholder="e.g., John Smith, Solutions Architect" maxlength="200" style="flex: 1; min-width: 200px;">
+                  <button class="btn btn-primary" id="addChampionBtn" style="white-space:nowrap;flex-shrink:0;">+ Add</button>
                 </div>
-                <button class="btn btn-secondary" id="addChampionBtn" style="margin-top: 0.5rem;">+ Add Champion</button>
+                <div style="font-size:0.75rem;color:#9ca3af;margin-top:0.3rem;">Press Enter to add · auto-saved on navigation</div>
               </div>
             </div>
             <div id="aiFutureChampionSection" style="display: none; margin-top: 1rem;">
               <div id="aiFutureChampionsList"></div>
               <div style="margin-top: 0.75rem;">
                 <label class="account-name-label">Who would you like to nominate as a future AI champion?</label>
-                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <input type="text" id="aiFutureChampionInput" class="account-name-input" placeholder="e.g., Jane Doe, Tech Lead" maxlength="200" style="flex: 1; min-width: 200px;">
+                  <button class="btn btn-primary" id="addFutureChampionBtn" style="white-space:nowrap;flex-shrink:0;">+ Add</button>
                 </div>
-                <button class="btn btn-secondary" id="addFutureChampionBtn" style="margin-top: 0.5rem;">+ Add Future Champion</button>
+                <div style="font-size:0.75rem;color:#9ca3af;margin-top:0.3rem;">Press Enter to add · auto-saved on navigation</div>
               </div>
             </div>
           </div>
@@ -2635,7 +2637,10 @@
               <div style="margin-top: 0.75rem;">
                 <label class="account-name-label">Add a success story:</label>
                 <textarea id="aiSuccessStoryInput" class="account-name-input" style="max-width:100%;min-height:80px;resize:vertical;" placeholder="Describe the AI success story..."></textarea>
-                <button class="btn btn-secondary" id="addSuccessStoryBtn" style="margin-top: 0.5rem;">+ Add Story</button>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.4rem;">
+                  <div style="font-size:0.75rem;color:#9ca3af;">Press Enter to add · auto-saved on navigation</div>
+                  <button class="btn btn-primary" id="addSuccessStoryBtn" style="white-space:nowrap;flex-shrink:0;">+ Add Story</button>
+                </div>
               </div>
             </div>
           </div>
@@ -4905,7 +4910,50 @@
       });
     }
 
+    // Auto-add any unsaved text in champion / story / future-champion / custom-tool inputs
+    function flushPendingInputs() {
+      const champInput = document.getElementById('aiChampionInput');
+      if (champInput && champInput.value.trim()) {
+        aiChampions.push(champInput.value.trim());
+        champInput.value = '';
+        renderChampions();
+      }
+      const futureInput = document.getElementById('aiFutureChampionInput');
+      if (futureInput && futureInput.value.trim()) {
+        aiFutureChampions.push(futureInput.value.trim());
+        futureInput.value = '';
+        renderFutureChampions();
+      }
+      const storyInput = document.getElementById('aiSuccessStoryInput');
+      if (storyInput && storyInput.value.trim()) {
+        successStories.push(storyInput.value.trim());
+        storyInput.value = '';
+        renderSuccessStories();
+      }
+      const approvedToolInput = document.getElementById('customApprovedToolInput');
+      if (approvedToolInput && approvedToolInput.value.trim()) {
+        addCustomApprovedTool();
+      }
+      const complianceInput = document.getElementById('customComplianceInput');
+      if (complianceInput && complianceInput.value.trim()) {
+        addCustomCompliance();
+      }
+      // Custom tools per category
+      document.querySelectorAll('.tool-add-input input[data-category]').forEach(input => {
+        if (input.value.trim()) {
+          addCustomTool(input.dataset.category);
+        }
+      });
+      // Custom use cases per category
+      document.querySelectorAll('.usecase-add-input input[data-category]').forEach(input => {
+        if (input.value.trim()) {
+          addCustomUseCase(input.dataset.category);
+        }
+      });
+    }
+
     function goToStep(step) {
+      flushPendingInputs();
       currentStep = step;
 
       const activeOrder = getActiveOrder();
@@ -6263,6 +6311,12 @@
           autoSave();
         }
       });
+      document.getElementById('aiSuccessStoryInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          document.getElementById('addSuccessStoryBtn').click();
+        }
+      });
 
       // Step 2 (Tools) — displayed as Step 4
       document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
@@ -6320,6 +6374,7 @@
     }
 
     function generateJSON() {
+      flushPendingInputs(); // capture any unsaved input text before exporting
       // Full-universe export: every question and option is always present
       // _meta, _label, _valueLabel fields provide human-readable context (strip with key.startsWith('_'))
       const paymentLabels = { us: 'We Are/Will', customer: 'Customer Is/Will', mix: 'It Is a Mix', tbd: 'To Be Determined' };
