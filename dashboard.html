@@ -7536,6 +7536,7 @@
         <td>${escapeHtml(s.delivery_manager || '--')}</td>
         <td>Q${s.quarter} ${s.year}</td>
         <td class="actions" onclick="event.stopPropagation();">
+          <a href="account-detail.html?id=${s.id}" class="btn-icon" title="View account details" style="text-decoration:none;">🔍</a>
           <button class="btn-icon" title="Download JSON" onclick="downloadSurvey(${s.id})">📥</button>
         </td>
       </tr>`;
@@ -8596,6 +8597,7 @@
         </td>
         <td>Q${s.quarter} ${s.year}</td>
         <td class="actions" onclick="event.stopPropagation();">
+          <a href="account-detail.html?id=${s.id}" class="btn-icon" title="View account details" style="text-decoration:none;">🔍</a>
           <button class="btn-icon" title="Download JSON" onclick="downloadSurvey(${s.id})">📥</button>
           <button class="btn-icon" title="Delete survey" onclick="deleteSurvey(${s.id}, '${escapedName}')">🗑️</button>
         </td>
