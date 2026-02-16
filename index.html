@@ -2601,7 +2601,7 @@
                   <input type="text" id="aiChampionInput" class="account-name-input" placeholder="e.g., John Smith, Solutions Architect" maxlength="200" style="flex: 1; min-width: 200px;">
                   <button class="btn btn-primary" id="addChampionBtn" style="white-space:nowrap;flex-shrink:0;">+ Add</button>
                 </div>
-                <div style="font-size:0.75rem;color:#9ca3af;margin-top:0.3rem;">Press Enter to add · auto-saved on navigation</div>
+                <div style="font-size:0.75rem;color:#9ca3af;margin-top:0.3rem;">Auto-saved while typing · Press Enter or click Add</div>
               </div>
             </div>
             <div id="aiFutureChampionSection" style="display: none; margin-top: 1rem;">
@@ -2612,7 +2612,7 @@
                   <input type="text" id="aiFutureChampionInput" class="account-name-input" placeholder="e.g., Jane Doe, Tech Lead" maxlength="200" style="flex: 1; min-width: 200px;">
                   <button class="btn btn-primary" id="addFutureChampionBtn" style="white-space:nowrap;flex-shrink:0;">+ Add</button>
                 </div>
-                <div style="font-size:0.75rem;color:#9ca3af;margin-top:0.3rem;">Press Enter to add · auto-saved on navigation</div>
+                <div style="font-size:0.75rem;color:#9ca3af;margin-top:0.3rem;">Auto-saved while typing · Press Enter or click Add</div>
               </div>
             </div>
           </div>
@@ -2638,7 +2638,7 @@
                 <label class="account-name-label">Add a success story:</label>
                 <textarea id="aiSuccessStoryInput" class="account-name-input" style="max-width:100%;min-height:80px;resize:vertical;" placeholder="Describe the AI success story..."></textarea>
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.4rem;">
-                  <div style="font-size:0.75rem;color:#9ca3af;">Press Enter to add · auto-saved on navigation</div>
+                  <div style="font-size:0.75rem;color:#9ca3af;">Auto-saved while typing · Press Enter or click Add</div>
                   <button class="btn btn-primary" id="addSuccessStoryBtn" style="white-space:nowrap;flex-shrink:0;">+ Add Story</button>
                 </div>
               </div>
@@ -3541,6 +3541,7 @@
     let aiFutureChampions = [];    // array of strings (future champion nominations)
     let hasSuccessStories = null;  // 'yes', 'no'
     let successStories = [];       // array of strings
+    let pendingInputs = {};        // { inputId: text } — in-progress text auto-saved on every keystroke
     let selectedRoles = new Set();
     let selectedTools = {};
     let customTools = {};
@@ -3757,6 +3758,7 @@
             custom: data.custom || []
           }])
         ),
+        pendingInputs,
         dashboardSource,
         savedAt: new Date().toISOString()
       };
@@ -3816,6 +3818,7 @@
         roleToolMatrix = state.roleToolMatrix || {};
         workflowMaturity = state.workflowMaturity || {};
         stepNotes = state.stepNotes || {};
+        pendingInputs = state.pendingInputs || {};
         dashboardSource = state.dashboardSource || null;
 
         // Restore use case data
@@ -4157,6 +4160,7 @@
         roleToolMatrix: {},
         workflowMaturity: {},
         stepNotes: {},
+        pendingInputs: {},
         useCaseData: {},
         savedAt: new Date().toISOString()
       };
@@ -4557,6 +4561,11 @@
       });
       document.getElementById('aiSuccessStoriesSection').style.display = hasSuccessStories === 'yes' ? 'block' : 'none';
       renderSuccessStories();
+
+      // Restore any pending (in-progress) text
+      if (pendingInputs.aiChampionInput) document.getElementById('aiChampionInput').value = pendingInputs.aiChampionInput;
+      if (pendingInputs.aiFutureChampionInput) document.getElementById('aiFutureChampionInput').value = pendingInputs.aiFutureChampionInput;
+      if (pendingInputs.aiSuccessStoryInput) document.getElementById('aiSuccessStoryInput').value = pendingInputs.aiSuccessStoryInput;
     }
 
     function renderSuccessStories() {
@@ -4728,6 +4737,18 @@
             }
           }
         });
+        input.addEventListener('input', (e) => {
+          const catId = input.dataset.category;
+          if (catId) {
+            pendingInputs['tool_' + catId] = e.target.value;
+            autoSave();
+          }
+        });
+        // Restore pending text
+        const catId = input.dataset.category;
+        if (catId && pendingInputs['tool_' + catId]) {
+          input.value = pendingInputs['tool_' + catId];
+        }
       });
     }
 
@@ -4833,13 +4854,14 @@
       }
       
       customTools[categoryId].push({ id: customId, name: value });
-      
+      delete pendingInputs['tool_' + categoryId];
+
       // Add the tool to selected tools
       if (!selectedTools[categoryId]) {
         selectedTools[categoryId] = new Set();
       }
       selectedTools[categoryId].add(customId);
-      
+
       // Re-render tools to include the new custom tool
       renderTools();
       autoSave();
@@ -4916,18 +4938,21 @@
       if (champInput && champInput.value.trim()) {
         aiChampions.push(champInput.value.trim());
         champInput.value = '';
+        delete pendingInputs.aiChampionInput;
         renderChampions();
       }
       const futureInput = document.getElementById('aiFutureChampionInput');
       if (futureInput && futureInput.value.trim()) {
         aiFutureChampions.push(futureInput.value.trim());
         futureInput.value = '';
+        delete pendingInputs.aiFutureChampionInput;
         renderFutureChampions();
       }
       const storyInput = document.getElementById('aiSuccessStoryInput');
       if (storyInput && storyInput.value.trim()) {
         successStories.push(storyInput.value.trim());
         storyInput.value = '';
+        delete pendingInputs.aiSuccessStoryInput;
         renderSuccessStories();
       }
       const approvedToolInput = document.getElementById('customApprovedToolInput');
@@ -5030,6 +5055,8 @@
       updatePaymentUI();
       updateComplianceUI();
       renderCustomComplianceChips();
+      // Restore pending input text
+      if (pendingInputs.customComplianceInput) document.getElementById('customComplianceInput').value = pendingInputs.customComplianceInput;
     }
 
     function updateOwnershipUI() {
@@ -5078,7 +5105,8 @@
       customCompliance.push({ id, name: value });
       selectedCompliance.add(id);
       input.value = '';
-      
+      delete pendingInputs.customComplianceInput;
+
       renderCustomComplianceChips();
       autoSave();
     }
@@ -5134,6 +5162,8 @@
       updateClientAIGovernanceUI();
       updateChallengeUI();
       updateClientApprovedToolsUI();
+      // Restore pending input text
+      if (pendingInputs.customApprovedToolInput) document.getElementById('customApprovedToolInput').value = pendingInputs.customApprovedToolInput;
     }
 
     function updateClientAIMaturityUI() {
@@ -5236,6 +5266,7 @@
       customApprovedTools.push({ id, name });
       selectedApprovedTools.add(id);
       input.value = '';
+      delete pendingInputs.customApprovedToolInput;
       renderCustomApprovedToolsChips();
       autoSave();
     }
@@ -5347,6 +5378,18 @@
             addCustomUseCase(catId);
           }
         });
+        input.addEventListener('input', (e) => {
+          const catId = input.dataset.category;
+          if (catId) {
+            pendingInputs['uc_' + catId] = e.target.value;
+            autoSave();
+          }
+        });
+        // Restore pending text
+        const catId = input.dataset.category;
+        if (catId && pendingInputs['uc_' + catId]) {
+          input.value = pendingInputs['uc_' + catId];
+        }
       });
     }
 
@@ -5393,6 +5436,7 @@
       catData.need.add(customId);
       catData.custom.push({ id: customId, label: value });
       input.value = '';
+      delete pendingInputs['uc_' + categoryId];
 
       renderUseCases();
       autoSave();
@@ -6136,6 +6180,10 @@
       document.getElementById('customComplianceInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') addCustomCompliance();
       });
+      document.getElementById('customComplianceInput').addEventListener('input', (e) => {
+        pendingInputs.customComplianceInput = e.target.value;
+        autoSave();
+      });
 
       // Step 6 (Client AI) — displayed as Step 2
       document.getElementById('step6Back').addEventListener('click', () => goToStep(5));
@@ -6244,6 +6292,10 @@
       document.getElementById('customApprovedToolInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') addCustomApprovedTool();
       });
+      document.getElementById('customApprovedToolInput').addEventListener('input', (e) => {
+        pendingInputs.customApprovedToolInput = e.target.value;
+        autoSave();
+      });
 
       // Step 1 (Roles) — displayed as Step 3
       document.getElementById('step1Back').addEventListener('click', () => goToStep(6));
@@ -6268,6 +6320,7 @@
         if (name) {
           aiChampions.push(name);
           nameInput.value = '';
+          delete pendingInputs.aiChampionInput;
           renderChampions();
           autoSave();
         }
@@ -6275,18 +6328,27 @@
       document.getElementById('aiChampionInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') document.getElementById('addChampionBtn').click();
       });
+      document.getElementById('aiChampionInput').addEventListener('input', (e) => {
+        pendingInputs.aiChampionInput = e.target.value;
+        autoSave();
+      });
       document.getElementById('addFutureChampionBtn').addEventListener('click', () => {
         const input = document.getElementById('aiFutureChampionInput');
         const name = input.value.trim();
         if (name) {
           aiFutureChampions.push(name);
           input.value = '';
+          delete pendingInputs.aiFutureChampionInput;
           renderFutureChampions();
           autoSave();
         }
       });
       document.getElementById('aiFutureChampionInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') document.getElementById('addFutureChampionBtn').click();
+      });
+      document.getElementById('aiFutureChampionInput').addEventListener('input', (e) => {
+        pendingInputs.aiFutureChampionInput = e.target.value;
+        autoSave();
       });
 
       // AI Success Stories
@@ -6307,6 +6369,7 @@
         if (text) {
           successStories.push(text);
           input.value = '';
+          delete pendingInputs.aiSuccessStoryInput;
           renderSuccessStories();
           autoSave();
         }
@@ -6316,6 +6379,10 @@
           e.preventDefault();
           document.getElementById('addSuccessStoryBtn').click();
         }
+      });
+      document.getElementById('aiSuccessStoryInput').addEventListener('input', (e) => {
+        pendingInputs.aiSuccessStoryInput = e.target.value;
+        autoSave();
       });
 
       // Step 2 (Tools) — displayed as Step 4
