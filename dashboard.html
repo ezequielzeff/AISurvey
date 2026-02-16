@@ -2709,6 +2709,24 @@
               <li>Then ask any question about your survey data</li>
             </ol>
           </div>
+
+          <!-- PRD / Reference Document -->
+          <div style="margin-top:0.75rem;padding:0.6rem 0.75rem;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.35rem;">
+              <span style="font-size:0.8rem;font-weight:600;color:#374151;">Reference Document</span>
+              <span id="prdStatus" style="font-size:0.72rem;color:#9ca3af;">No document loaded</span>
+            </div>
+            <div style="font-size:0.72rem;color:#6b7280;margin-bottom:0.5rem;line-height:1.4;">
+              Load a <code>.md</code> file (e.g. PRD, schema reference) to merge with the copied context. The AI will receive both the reference and your data.
+            </div>
+            <div style="display:flex;gap:0.4rem;align-items:center;">
+              <label style="cursor:pointer;display:inline-flex;align-items:center;gap:0.3rem;font-size:0.78rem;color:#4338ca;font-weight:500;padding:0.25rem 0.5rem;border:1px solid #c7d2fe;border-radius:6px;background:#eef2ff;">
+                <span>📄</span> Load .md file
+                <input type="file" accept=".md,.txt,.markdown" onchange="handlePRDUpload(event)" style="display:none;">
+              </label>
+              <button id="prdClearBtn" onclick="clearPRD()" style="display:none;font-size:0.72rem;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;">Remove</button>
+            </div>
+          </div>
         </div>
 
         <!-- Divider -->
@@ -4716,6 +4734,13 @@
         option_type TEXT NOT NULL,
         display_order INTEGER DEFAULT 0,
         UNIQUE(section, subsection, option_id)
+      )
+    `);
+    db.run(`
+      CREATE TABLE IF NOT EXISTS config (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
   }
@@ -9175,6 +9200,72 @@
       : '<span style="color:#f59e0b;">🔒 No key</span>';
   }
 
+  // ── PRD / Reference Document Management ──
+  function getStoredPRD() {
+    if (!db) return null;
+    try {
+      const result = db.exec("SELECT value, updated_at FROM config WHERE key = 'prd_content'");
+      if (result.length === 0 || result[0].values.length === 0) return null;
+      return { content: result[0].values[0][0], updatedAt: result[0].values[0][1] };
+    } catch (e) { return null; }
+  }
+
+  function storePRD(content) {
+    if (!db) return false;
+    try {
+      db.run("INSERT OR REPLACE INTO config (key, value, updated_at) VALUES ('prd_content', ?, datetime('now'))", [content]);
+      saveToIndexedDB();
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function removePRD() {
+    if (!db) return;
+    try {
+      db.run("DELETE FROM config WHERE key = 'prd_content'");
+      saveToIndexedDB();
+    } catch (e) {}
+  }
+
+  function handlePRDUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const content = e.target.result;
+      if (storePRD(content)) {
+        updatePRDStatus();
+        showAiToast('Reference document loaded: ' + file.name);
+      } else {
+        showAiToast('Failed to store reference document.');
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  function clearPRD() {
+    removePRD();
+    updatePRDStatus();
+    showAiToast('Reference document removed.');
+  }
+
+  function updatePRDStatus() {
+    const statusEl = document.getElementById('prdStatus');
+    const clearBtn = document.getElementById('prdClearBtn');
+    if (!statusEl) return;
+    const prd = getStoredPRD();
+    if (prd) {
+      const lines = prd.content.split('\n').length;
+      const sizeKb = (new Blob([prd.content]).size / 1024).toFixed(1);
+      statusEl.innerHTML = `<span style="color:#10b981;">Loaded</span> &middot; ${lines} lines, ${sizeKb} KB`;
+      if (clearBtn) clearBtn.style.display = 'inline';
+    } else {
+      statusEl.innerHTML = '<span style="color:#9ca3af;">No document loaded</span>';
+      if (clearBtn) clearBtn.style.display = 'none';
+    }
+  }
+
   // ── Data Context Builder ──
   function buildDataContext() {
     const surveys = getFilteredSurveys();
@@ -9590,14 +9681,21 @@ Instructions:
   function buildClipboardPayload() {
     const systemPrompt = buildSystemPrompt();
     const dataContext = buildDataContext();
+    const prd = getStoredPRD();
 
     let payload = '';
     payload += '=== AI ADOPTION DASHBOARD - DATA EXPORT ===\n\n';
     payload += 'I am pasting context from the AI Adoption Dashboard. ';
-    payload += 'Below you will find your role/instructions followed by the current dashboard data. ';
+    payload += 'Below you will find your role/instructions, ';
+    if (prd) payload += 'a reference document with survey field definitions and schema, ';
+    payload += 'and the current dashboard data. ';
     payload += 'Please use this context to answer my questions about the survey data.\n\n';
     payload += '--- INSTRUCTIONS ---\n\n';
     payload += systemPrompt;
+    if (prd) {
+      payload += '\n\n--- REFERENCE DOCUMENT ---\n\n';
+      payload += prd.content;
+    }
     payload += '\n\n--- DATA ---\n\n';
     payload += dataContext;
     payload += '--- END OF CONTEXT ---\n\n';
@@ -9724,8 +9822,13 @@ Instructions:
     try {
       const dataContext = buildDataContext();
       const systemPrompt = buildSystemPrompt();
+      const prd = getStoredPRD();
 
-      const messages = [{ role: 'system', content: systemPrompt + '\n\n' + dataContext }];
+      let systemContent = systemPrompt;
+      if (prd) systemContent += '\n\n--- REFERENCE DOCUMENT ---\n\n' + prd.content;
+      systemContent += '\n\n' + dataContext;
+
+      const messages = [{ role: 'system', content: systemContent }];
 
       // Include conversation history (last 20 messages = ~10 exchanges)
       const recentHistory = aiChatHistory.slice(-20);
@@ -9850,6 +9953,7 @@ Instructions:
 
   function initAiChat() {
     loadAiKeys();
+    updatePRDStatus();
     // Close on Escape
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && aiChatOpen) closeAiChatPanel();
