@@ -1797,6 +1797,40 @@
     .upload-result-warning { color: #f59e0b; }
     .upload-result-success { color: #10b981; }
 
+    /* Autocomplete dropdown */
+    .autocomplete-wrapper { position: relative; }
+    .autocomplete-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      background: #fff;
+      border: 1px solid #d1d5db;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      max-height: 160px;
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: none;
+    }
+    .autocomplete-list.open { display: block; }
+    .autocomplete-item {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      color: #374151;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .autocomplete-item:hover,
+    .autocomplete-item.active { background: #eef2ff; color: #4338ca; }
+    .autocomplete-item mark {
+      background: #fef08a;
+      color: inherit;
+      padding: 0;
+      border-radius: 2px;
+    }
+
     /* ═══════════════════════════════════════════
        EMPTY STATE
        ═══════════════════════════════════════════ */
@@ -3093,7 +3127,10 @@
         </div>
         <div style="flex:1;min-width:180px;">
           <label style="display:block;font-size:0.8rem;font-weight:600;color:#6b7280;margin-bottom:0.35rem;text-transform:uppercase;letter-spacing:0.05em;">Delivery Manager</label>
-          <input type="text" class="filter-select" id="uploadDeliveryManager" placeholder="e.g. John Smith" style="width:100%;box-sizing:border-box;">
+          <div class="autocomplete-wrapper">
+            <input type="text" class="filter-select" id="uploadDeliveryManager" placeholder="e.g. John Smith" style="width:100%;box-sizing:border-box;" autocomplete="off">
+            <div class="autocomplete-list" id="dmAutocompleteList"></div>
+          </div>
         </div>
       </div>
       <div class="drop-zone" id="dropZone">
@@ -5000,9 +5037,100 @@
     }
     document.getElementById('uploadQuarter').value = String(currentQuarter);
     document.getElementById('uploadDeliveryManager').value = '';
+    document.getElementById('dmAutocompleteList').classList.remove('open');
+    setupDMAutocomplete();
   }
   function closeUploadModal() {
     document.getElementById('uploadModal').classList.remove('open');
+  }
+
+  // ── Delivery Manager Autocomplete ──
+  function getDistinctDeliveryManagers() {
+    if (!db) return [];
+    try {
+      const result = db.exec("SELECT DISTINCT delivery_manager FROM surveys WHERE delivery_manager != '' ORDER BY delivery_manager");
+      if (result.length === 0) return [];
+      return result[0].values.map(r => r[0]);
+    } catch (e) { return []; }
+  }
+
+  function setupDMAutocomplete() {
+    const input = document.getElementById('uploadDeliveryManager');
+    const list = document.getElementById('dmAutocompleteList');
+    if (!input || !list) return;
+
+    let allDMs = getDistinctDeliveryManagers();
+    let activeIndex = -1;
+
+    function renderSuggestions(query) {
+      const q = query.toLowerCase().trim();
+      if (!q) { list.classList.remove('open'); activeIndex = -1; return; }
+      const matches = allDMs.filter(dm => dm.toLowerCase().includes(q));
+      if (matches.length === 0) { list.classList.remove('open'); activeIndex = -1; return; }
+      // Highlight matching portion
+      list.innerHTML = matches.map((dm, i) => {
+        const idx = dm.toLowerCase().indexOf(q);
+        const before = dm.slice(0, idx);
+        const match = dm.slice(idx, idx + q.length);
+        const after = dm.slice(idx + q.length);
+        return `<div class="autocomplete-item${i === activeIndex ? ' active' : ''}" data-index="${i}" data-value="${escapeHtml(dm)}">${escapeHtml(before)}<mark>${escapeHtml(match)}</mark>${escapeHtml(after)}</div>`;
+      }).join('');
+      list.classList.add('open');
+    }
+
+    function selectItem(value) {
+      input.value = value;
+      list.classList.remove('open');
+      activeIndex = -1;
+    }
+
+    input.addEventListener('input', () => {
+      activeIndex = -1;
+      renderSuggestions(input.value);
+    });
+
+    input.addEventListener('focus', () => {
+      allDMs = getDistinctDeliveryManagers(); // refresh on focus
+      if (input.value.trim()) renderSuggestions(input.value);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      const items = list.querySelectorAll('.autocomplete-item');
+      if (!items.length || !list.classList.contains('open')) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIndex = Math.min(activeIndex + 1, items.length - 1);
+        items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+        items[activeIndex]?.scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIndex = Math.max(activeIndex - 1, 0);
+        items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+        items[activeIndex]?.scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeIndex >= 0 && items[activeIndex]) {
+          selectItem(items[activeIndex].dataset.value);
+        }
+      } else if (e.key === 'Escape') {
+        list.classList.remove('open');
+        activeIndex = -1;
+      }
+    });
+
+    list.addEventListener('mousedown', (e) => {
+      const item = e.target.closest('.autocomplete-item');
+      if (item) {
+        e.preventDefault(); // prevent blur before click registers
+        selectItem(item.dataset.value);
+      }
+    });
+
+    input.addEventListener('blur', () => {
+      // Small delay to allow mousedown on list items
+      setTimeout(() => list.classList.remove('open'), 150);
+    });
   }
 
   function validateSurveyJSON(data) {
