@@ -9902,31 +9902,14 @@ Instructions:
       // ── PRD-driven layout ──
       // The reference document is the master template. Live data is injected
       // directly into it at placeholder locations, producing one seamless document.
-      payload += '=== AI ADOPTION DASHBOARD - DATA EXPORT ===\n\n';
-      payload += 'I am pasting context from the AI Adoption Dashboard. ';
-      payload += 'Below you will find:\n';
-      payload += '1. Your role and analysis instructions\n';
-      payload += '2. The complete reference document with survey schema, field definitions, and value mappings — with live dashboard data injected inline\n\n';
-      payload += 'Use the field definitions to understand what each value means. ';
-      payload += 'Use the live data to answer my questions with specific, data-driven insights.\n\n';
-      payload += '--- ROLE & INSTRUCTIONS ---\n\n';
       payload += systemPrompt;
-      payload += '\n\n--- REFERENCE DOCUMENT + LIVE DATA ---\n\n';
+      payload += '\n\n';
       payload += mergePRDWithData(prd.content, dataContext);
-      payload += '\n\n--- END OF CONTEXT ---\n\n';
-      payload += 'I have pasted the full context above (instructions + reference document with live data). Please confirm you have received it, then I will ask my questions.';
     } else {
       // ── Default layout (no reference document loaded) ──
-      payload += '=== AI ADOPTION DASHBOARD - DATA EXPORT ===\n\n';
-      payload += 'I am pasting context from the AI Adoption Dashboard. ';
-      payload += 'Below you will find your role/instructions and the current dashboard data. ';
-      payload += 'Please use this context to answer my questions about the survey data.\n\n';
-      payload += '--- INSTRUCTIONS ---\n\n';
       payload += systemPrompt;
-      payload += '\n\n--- DATA ---\n\n';
+      payload += '\n\n';
       payload += dataContext;
-      payload += '--- END OF CONTEXT ---\n\n';
-      payload += 'I have pasted the full dashboard context above. Please confirm you have received it, then I will ask my questions.';
     }
 
     return payload;
