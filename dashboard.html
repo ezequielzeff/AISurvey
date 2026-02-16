@@ -9684,22 +9684,43 @@ Instructions:
     const prd = getStoredPRD();
 
     let payload = '';
-    payload += '=== AI ADOPTION DASHBOARD - DATA EXPORT ===\n\n';
-    payload += 'I am pasting context from the AI Adoption Dashboard. ';
-    payload += 'Below you will find your role/instructions, ';
-    if (prd) payload += 'a reference document with survey field definitions and schema, ';
-    payload += 'and the current dashboard data. ';
-    payload += 'Please use this context to answer my questions about the survey data.\n\n';
-    payload += '--- INSTRUCTIONS ---\n\n';
-    payload += systemPrompt;
+
     if (prd) {
-      payload += '\n\n--- REFERENCE DOCUMENT ---\n\n';
-      payload += prd.content;
+      // ── PRD-driven layout ──
+      // The reference document defines the full schema, field definitions,
+      // and dashboard recommendations. The data context is injected into it.
+      payload += '=== AI ADOPTION DASHBOARD - DATA EXPORT ===\n\n';
+      payload += 'I am pasting context from the AI Adoption Dashboard. ';
+      payload += 'Below you will find:\n';
+      payload += '1. Your role and analysis instructions\n';
+      payload += '2. A reference document describing the complete survey schema, field definitions, value mappings, and dashboard design recommendations\n';
+      payload += '3. The live dashboard data (aggregate metrics + per-account detail)\n\n';
+      payload += 'Use the reference document to understand what each field means, how values map to labels, and what analyses are recommended. ';
+      payload += 'Use the live data to answer my questions with specific, data-driven insights.\n\n';
+      payload += '--- ROLE & INSTRUCTIONS ---\n\n';
+      payload += systemPrompt;
+      payload += '\n\n--- REFERENCE DOCUMENT (Survey Schema & Field Definitions) ---\n\n';
+      // Process PRD content: replace any data injection placeholders
+      let prdContent = prd.content;
+      prdContent = prdContent.replace(/\[PASTE YOUR FULL DASHBOARD DATA EXPORT BELOW THIS LINE\]/gi, '(See LIVE DATA section below)');
+      payload += prdContent;
+      payload += '\n\n--- LIVE DATA (Dashboard Export) ---\n\n';
+      payload += dataContext;
+      payload += '--- END OF CONTEXT ---\n\n';
+      payload += 'I have pasted the full context above (instructions + reference document + live data). Please confirm you have received it, then I will ask my questions.';
+    } else {
+      // ── Default layout (no reference document loaded) ──
+      payload += '=== AI ADOPTION DASHBOARD - DATA EXPORT ===\n\n';
+      payload += 'I am pasting context from the AI Adoption Dashboard. ';
+      payload += 'Below you will find your role/instructions and the current dashboard data. ';
+      payload += 'Please use this context to answer my questions about the survey data.\n\n';
+      payload += '--- INSTRUCTIONS ---\n\n';
+      payload += systemPrompt;
+      payload += '\n\n--- DATA ---\n\n';
+      payload += dataContext;
+      payload += '--- END OF CONTEXT ---\n\n';
+      payload += 'I have pasted the full dashboard context above. Please confirm you have received it, then I will ask my questions.';
     }
-    payload += '\n\n--- DATA ---\n\n';
-    payload += dataContext;
-    payload += '--- END OF CONTEXT ---\n\n';
-    payload += 'I have pasted the full dashboard context above. Please confirm you have received it, then I will ask my questions.';
 
     return payload;
   }
@@ -9825,8 +9846,14 @@ Instructions:
       const prd = getStoredPRD();
 
       let systemContent = systemPrompt;
-      if (prd) systemContent += '\n\n--- REFERENCE DOCUMENT ---\n\n' + prd.content;
-      systemContent += '\n\n' + dataContext;
+      if (prd) {
+        systemContent += '\n\n--- REFERENCE DOCUMENT (Survey Schema & Field Definitions) ---\n\n';
+        systemContent += prd.content.replace(/\[PASTE YOUR FULL DASHBOARD DATA EXPORT BELOW THIS LINE\]/gi, '(See LIVE DATA below)');
+        systemContent += '\n\n--- LIVE DATA ---\n\n';
+      } else {
+        systemContent += '\n\n';
+      }
+      systemContent += dataContext;
 
       const messages = [{ role: 'system', content: systemContent }];
 
