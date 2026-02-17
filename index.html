@@ -3892,14 +3892,19 @@
         useCaseData = {};
         useCasesInitialized = false;
         dashboardSource = null;
+        pendingInputs = {};
 
         // Reset render flags so steps re-initialize
         toolsRendered = false;
-        
+
         // Reset UI elements
         renderRoles();
         updateRoleUI();
-        
+
+        // Reset download filename input
+        const downloadInput = document.getElementById('downloadNameInput');
+        if (downloadInput) downloadInput.value = '';
+
         // Reset account name input
         const accountInput = document.getElementById('accountNameInput');
         if (accountInput) accountInput.value = '';
@@ -4335,9 +4340,11 @@
 
       // ── Workflow Maturity (Step 9) ──
       if (data.workflowMaturity) {
+        const restoredRoles = new Set(state.selectedRoles || []);
         Object.entries(data.workflowMaturity).forEach(([roleId, val]) => {
           if (roleId === '_meta' || roleId.startsWith('_')) return;
-          if (typeof val === 'object' && val.stage !== null && val.stage !== undefined) {
+          // Only restore workflow maturity for roles that are actually selected
+          if (typeof val === 'object' && val.stage !== null && val.stage !== undefined && restoredRoles.has(roleId)) {
             state.workflowMaturity[roleId] = val.stage;
           }
         });
@@ -4634,6 +4641,8 @@
     function toggleRole(roleId) {
       if (selectedRoles.has(roleId)) {
         selectedRoles.delete(roleId);
+        // Clean up workflow maturity data for deselected role
+        delete workflowMaturity[roleId];
       } else {
         selectedRoles.add(roleId);
       }
@@ -6627,7 +6636,8 @@
           _meta: { step: 'Step 7', title: 'AI Workflow Maturity', type: 'single-select per role (stage 0-5)' },
           ...Object.fromEntries(
             roles.map(r => {
-              const stageIdx = workflowMaturity[r.id] !== undefined ? workflowMaturity[r.id] : null;
+              // Only export stage data for roles that are actually selected
+              const stageIdx = selectedRoles.has(r.id) && workflowMaturity[r.id] !== undefined ? workflowMaturity[r.id] : null;
               const entry = {
                 stage: stageIdx,
                 _label: r.name
