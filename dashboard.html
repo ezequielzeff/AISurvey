@@ -234,7 +234,6 @@
     .version-indicator:hover { color: #6b7280; background: #f3f4f6; border-color: #e5e7eb; }
     .version-indicator.checking { color: #6366f1; }
     .version-indicator.up-to-date { color: #10b981; }
-    .version-indicator.outdated { color: #f59e0b; border-color: #fde68a; background: #fffbeb; }
     .version-indicator.error { color: #ef4444; }
     .version-popup {
       position: absolute;
@@ -261,28 +260,6 @@
     .version-popup-row:last-child { border-bottom: none; }
     .version-popup-label { font-weight: 600; color: #6b7280; min-width: 70px; }
     .version-popup-value { color: #1f2937; text-align: right; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .version-check-btn {
-      margin-top: 0.5rem;
-      width: 100%;
-      padding: 0.4rem;
-      border: 1.5px solid #e5e7eb;
-      border-radius: 8px;
-      background: #f9fafb;
-      color: #374151;
-      font-size: 0.8rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .version-check-btn:hover { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
-    .version-check-result {
-      margin-top: 0.5rem;
-      padding: 0.4rem 0.5rem;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      line-height: 1.5;
-      display: none;
-    }
 
     /* ═══════════════════════════════════════════
        SDLC AI COVERAGE MAP
@@ -2587,8 +2564,6 @@
             <span class="version-popup-label">Message</span>
             <span class="version-popup-value" id="vpMessage" title=""></span>
           </div>
-          <button class="version-check-btn" id="versionCheckBtn" onclick="checkForUpdates(event)">Check for Updates</button>
-          <div class="version-check-result" id="versionCheckResult"></div>
         </div>
       </div>
       <div class="filters-drawer" id="filtersDrawer">
@@ -3480,25 +3455,9 @@
 
 <script>
   // ═══════════════════════════════════════════
-  // BUILD VERSION — updated by deploy.bat
-  // ═══════════════════════════════════════════
-  const BUILD_VERSION = { hash: 'a13edf2', date: '2026-02-16T14:16:29-03:00', message: 'Add version indicator with GitHub update check + deploy.bat' };
-
-  // ═══════════════════════════════════════════
-  // VERSION CHECK
+  // VERSION DISPLAY — fetches from GitHub API
   // ═══════════════════════════════════════════
   const GITHUB_API_URL = 'https://api.github.com/repos/ezequielzeff/AISurvey/commits/main';
-
-  function initVersionDisplay() {
-    const hashEl = document.getElementById('versionHashDisplay');
-    if (!hashEl) return;
-    hashEl.textContent = BUILD_VERSION.hash;
-    document.getElementById('vpHash').textContent = BUILD_VERSION.hash;
-    document.getElementById('vpDate').textContent = formatVersionDate(BUILD_VERSION.date);
-    const msgEl = document.getElementById('vpMessage');
-    msgEl.textContent = BUILD_VERSION.message;
-    msgEl.title = BUILD_VERSION.message;
-  }
 
   function formatVersionDate(isoDate) {
     try {
@@ -3508,59 +3467,48 @@
     } catch { return isoDate; }
   }
 
-  function toggleVersionPopup() {
-    document.getElementById('versionPopup').classList.toggle('open');
-  }
-
-  async function checkForUpdates(event) {
-    event.stopPropagation();
-    const btn = document.getElementById('versionCheckBtn');
-    const result = document.getElementById('versionCheckResult');
+  async function initVersionDisplay() {
+    const hashEl = document.getElementById('versionHashDisplay');
     const indicator = document.getElementById('versionIndicator');
+    if (!hashEl) return;
 
-    btn.textContent = 'Checking...';
-    btn.disabled = true;
+    // Show loading state
+    hashEl.textContent = '...';
     indicator.className = 'version-indicator checking';
+    indicator.title = 'Loading version info...';
 
     try {
       const resp = await fetch(GITHUB_API_URL, {
         headers: { 'Accept': 'application/vnd.github.v3+json' }
       });
-      if (!resp.ok) throw new Error(`GitHub API returned ${resp.status}`);
+      if (!resp.ok) throw new Error(`GitHub API ${resp.status}`);
       const data = await resp.json();
 
-      const remoteHash = data.sha.substring(0, 7);
-      const remoteDate = data.commit.author.date;
-      const remoteMsg = data.commit.message.split('\n')[0];
+      const hash = data.sha.substring(0, 7);
+      const date = data.commit.author.date;
+      const message = data.commit.message.split('\n')[0];
 
-      if (remoteHash === BUILD_VERSION.hash) {
-        indicator.className = 'version-indicator up-to-date';
-        result.style.display = 'block';
-        result.style.background = '#ecfdf5';
-        result.style.color = '#065f46';
-        result.innerHTML = '<strong>✓ Up to date</strong> — You are running the latest version.';
-      } else {
-        indicator.className = 'version-indicator outdated';
-        result.style.display = 'block';
-        result.style.background = '#fffbeb';
-        result.style.color = '#92400e';
-        result.innerHTML =
-          '<strong>⚠ Update available</strong><br>' +
-          'Latest: <code>' + escapeHtml(remoteHash) + '</code> (' + formatVersionDate(remoteDate) + ')<br>' +
-          '<em>' + escapeHtml(remoteMsg) + '</em><br>' +
-          '<span style="font-size:0.72rem;color:#6b7280;">Pull latest code, run deploy.bat, then hard-refresh (Ctrl+Shift+R).</span>';
-      }
+      hashEl.textContent = hash;
+      indicator.className = 'version-indicator up-to-date';
+      indicator.title = 'Click for version details';
+
+      document.getElementById('vpHash').textContent = hash;
+      document.getElementById('vpDate').textContent = formatVersionDate(date);
+      const msgEl = document.getElementById('vpMessage');
+      msgEl.textContent = message;
+      msgEl.title = message;
     } catch (err) {
+      hashEl.textContent = 'offline';
       indicator.className = 'version-indicator error';
-      result.style.display = 'block';
-      result.style.background = '#fef2f2';
-      result.style.color = '#991b1b';
-      result.innerHTML = '<strong>Check failed</strong> — ' + escapeHtml(err.message) +
-        '<br><span style="font-size:0.72rem;color:#6b7280;">This may not work on file:// protocol. Try serving via HTTP or check GitHub directly.</span>';
-    } finally {
-      btn.textContent = 'Check for Updates';
-      btn.disabled = false;
+      indicator.title = 'Could not fetch version info';
+      document.getElementById('vpHash').textContent = '\u2014';
+      document.getElementById('vpDate').textContent = '\u2014';
+      document.getElementById('vpMessage').textContent = err.message;
     }
+  }
+
+  function toggleVersionPopup() {
+    document.getElementById('versionPopup').classList.toggle('open');
   }
 
   // Close version popup on outside click
