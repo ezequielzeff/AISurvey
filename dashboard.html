@@ -2977,6 +2977,58 @@
         </div>
         <div class="widget-section-content">
 
+      <!-- 2-column row: Agentic Workflow + Limiting Factors -->
+      <div class="landscape-chart-row">
+      <!-- Widget: Account AI Agentic Workflow -->
+      <div class="widget-card" id="workflowMaturityWidget">
+        <div class="widget-header" onclick="toggleWidget(this)">
+          <div class="widget-title">Account AI Agentic Workflow <span class="stage-badge" id="wfmAvgValue" onclick="event.stopPropagation();openWfmStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">--</span> <a href="#" class="more-info-link" onclick="event.stopPropagation();event.preventDefault();openAccountComparisonModal();" style="font-size:0.8rem;margin-left:0.5rem;">See accounts comparison</a> <span class="widget-chevron">&#9662;</span></div>
+          <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
+          <div class="widget-summary" id="workflowMaturitySummary"></div>
+        </div>
+        <div class="widget-body">
+
+        <div class="wfm-section-title">Maturity Journey Distribution</div>
+
+        <!-- Journey visualization -->
+        <div class="wfm-journey" id="wfmJourney">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Gradient bar -->
+        <div class="progress-section" id="wfmProgressSection" style="margin-left:0;">
+          <div class="wfm-gradient-bar">
+            <div class="progress-marker" id="wfmProgressMarker" style="left:50%;">&#9650;</div>
+          </div>
+          <div class="progress-labels">
+            <span>← Starting Point</span>
+            <span>Maturity Goal →</span>
+          </div>
+        </div>
+
+        <!-- Service Revenue at Risk (Stage 0) -->
+        <div id="wfmRevenueAtRisk"><!-- Populated by JS --></div>
+
+        </div>
+      </div>
+
+      <!-- Widget: Limiting Factors -->
+      <div class="widget-card" id="limitingFactorsWidget">
+        <div class="widget-header" onclick="toggleWidget(this)">
+          <div class="widget-title">Limiting Factors <span class="widget-chevron">&#9662;</span></div>
+          <div class="widget-subtitle">What holds teams back from adopting AI</div>
+          <div class="widget-summary" id="limitingFactorsSummary"></div>
+          <div class="widget-question">Which factors are most frequently limiting AI adoption across the portfolio?</div>
+        </div>
+        <div class="widget-body">
+        <div class="lf-chart-container">
+          <canvas id="chartLimitingFactors"></canvas>
+        </div>
+        <div class="widget-legend" id="lfLegend"></div>
+        </div>
+      </div>
+      </div>
+
       <!-- 2-column row: AI Tool Adoption + AI Champion Coverage -->
       <div class="landscape-chart-row">
       <!-- Unified AI Tool Adoption Widget -->
@@ -3006,53 +3058,6 @@
       </div>
       </div>
 
-      <!-- 2-column row: Agentic Workflow + Limiting Factors -->
-      <div class="landscape-chart-row">
-      <!-- Widget: Account AI Agentic Workflow -->
-      <div class="widget-card" id="workflowMaturityWidget">
-        <div class="widget-header" onclick="toggleWidget(this)">
-          <div class="widget-title">Account AI Agentic Workflow <span class="stage-badge" id="wfmAvgValue" onclick="event.stopPropagation();openWfmStageDescriptionModal()" style="cursor:pointer;" title="Click for stage description">--</span> <a href="#" class="more-info-link" onclick="event.stopPropagation();event.preventDefault();openAccountComparisonModal();" style="font-size:0.8rem;margin-left:0.5rem;">See accounts comparison</a> <span class="widget-chevron">&#9662;</span></div>
-          <div class="widget-subtitle">Account distribution across AI workflow maturity stages</div>
-          <div class="widget-summary" id="workflowMaturitySummary"></div>
-        </div>
-        <div class="widget-body">
-
-        <div class="wfm-section-title">Maturity Journey Distribution</div>
-
-        <!-- Journey visualization -->
-        <div class="wfm-journey" id="wfmJourney">
-          <!-- Populated by JS -->
-        </div>
-
-        <!-- Gradient bar -->
-        <div class="progress-section" id="wfmProgressSection" style="margin-left:0;">
-          <div class="wfm-gradient-bar">
-            <div class="progress-marker" id="wfmProgressMarker" style="left:50%;">&#9650;</div>
-          </div>
-          <div class="progress-labels">
-            <span>← Starting Point</span>
-            <span>Maturity Goal →</span>
-          </div>
-        </div>
-        </div>
-      </div>
-
-      <!-- Widget: Limiting Factors -->
-      <div class="widget-card" id="limitingFactorsWidget">
-        <div class="widget-header" onclick="toggleWidget(this)">
-          <div class="widget-title">Limiting Factors <span class="widget-chevron">&#9662;</span></div>
-          <div class="widget-subtitle">What holds teams back from adopting AI</div>
-          <div class="widget-summary" id="limitingFactorsSummary"></div>
-          <div class="widget-question">Which factors are most frequently limiting AI adoption across the portfolio?</div>
-        </div>
-        <div class="widget-body">
-        <div class="lf-chart-container">
-          <canvas id="chartLimitingFactors"></canvas>
-        </div>
-        <div class="widget-legend" id="lfLegend"></div>
-        </div>
-      </div>
-      </div>
 
       <!-- Widget: AI Adoption by Role (full-width heatmap) -->
       <div class="widget-card" id="aiAdoptionByRoleWidget">
@@ -6178,6 +6183,61 @@
         wfmSummary.innerHTML = '<span style="color:#9ca3af;">No data</span>';
       }
     }
+
+    // 8. Service Revenue at Risk — accounts at Stage 0 (No AI Usage)
+    const revenueAtRiskEl = document.getElementById('wfmRevenueAtRisk');
+    if (revenueAtRiskEl) {
+      // Identify filtered surveys that resolve to Stage 0
+      const stage0Accounts = [];
+      filteredSurveys.forEach(s => {
+        const wfm = s.data?.workflowMaturity;
+        if (!wfm) return;
+        const roleStages = [];
+        ROLE_ORDER.forEach(role => {
+          const st = wfm[role]?.stage;
+          if (st !== null && st !== undefined && typeof st === 'number') roleStages.push(st);
+        });
+        if (roleStages.length === 0) return;
+        const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
+        if (Math.round(avg) === 0) {
+          const acctName = s.data?.accountName || s.account_name || 'Unknown';
+          const revenue = s.forecasted_service_revenue || 0;
+          stage0Accounts.push({ name: acctName, revenue });
+        }
+      });
+
+      if (stage0Accounts.length > 0) {
+        stage0Accounts.sort((a, b) => b.revenue - a.revenue);
+        const totalRevenueAtRisk = stage0Accounts.reduce((sum, a) => sum + a.revenue, 0);
+
+        revenueAtRiskEl.innerHTML = `
+          <div style="margin-top:1rem;padding:0.85rem 1rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
+              <span style="font-size:1rem;">⚠️</span>
+              <span style="font-size:0.85rem;font-weight:700;color:#991b1b;">Service Revenue at Risk — Stage 0 (No AI Usage)</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:0.5rem;margin-bottom:0.4rem;">
+              <span style="font-size:1.35rem;font-weight:800;color:#ef4444;">${formatCurrency(totalRevenueAtRisk) || '$0'}</span>
+              <span style="font-size:0.8rem;color:#6b7280;">across ${stage0Accounts.length} account${stage0Accounts.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="champion-details-toggle" onclick="toggleWfmRevenueDetails()" style="margin:0;padding:0;">
+              <span class="toggle-text" style="font-size:0.78rem;">Show accounts</span>
+              <span class="chevron" style="font-size:0.7rem;">&#9662;</span>
+            </div>
+            <div class="wfm-revenue-accounts-collapsible" style="display:none;margin-top:0.5rem;">
+              ${stage0Accounts.map(a =>
+                `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.2rem 0;font-size:0.8rem;">
+                  <span style="color:#374151;">${a.name}</span>
+                  <span style="color:#ef4444;font-weight:600;">${formatCurrency(a.revenue) || '$0'}</span>
+                </div>`
+              ).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        revenueAtRiskEl.innerHTML = '';
+      }
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -7601,6 +7661,10 @@
       markerEl.style.left = '0%';
       markerEl.style.color = 'transparent';
     }
+
+    // Clear revenue at risk in comparison mode
+    const revenueAtRiskEl = document.getElementById('wfmRevenueAtRisk');
+    if (revenueAtRiskEl) revenueAtRiskEl.innerHTML = '';
   }
 
   // --- SDLC Coverage Comparison ---
@@ -8574,6 +8638,15 @@
   // ═══════════════════════════════════════════
   // REVENUE AT RISK WIDGET
   // ═══════════════════════════════════════════
+  function toggleWfmRevenueDetails() {
+    const collapsible = document.querySelector('#wfmRevenueAtRisk .wfm-revenue-accounts-collapsible');
+    if (!collapsible) return;
+    const isExpanded = collapsible.style.display !== 'none';
+    collapsible.style.display = isExpanded ? 'none' : 'block';
+    const toggle = collapsible.previousElementSibling;
+    if (toggle) toggle.querySelector('.toggle-text').textContent = isExpanded ? 'Show accounts' : 'Hide accounts';
+  }
+
   function toggleRevenueDetails() {
     const collapsible = document.querySelector('#aiAdoptionContent .revenue-accounts-collapsible');
     if (!collapsible) return;
