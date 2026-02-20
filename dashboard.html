@@ -2361,6 +2361,16 @@
       transform: translateY(-1px);
     }
     .ai-claude-cta-btn:active { transform: translateY(0); }
+    .ai-claude-cta-btn.ai-claude-cta-btn-secondary {
+      background: #fff; color: #4f46e5; font-weight: 600;
+      border: 1.5px solid #c7d2fe; font-size: 0.85rem;
+      box-shadow: none; padding: 0.6rem 1rem;
+    }
+    .ai-claude-cta-btn.ai-claude-cta-btn-secondary:hover {
+      background: #eef2ff; border-color: #4f46e5;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+      transform: translateY(-1px);
+    }
 
     /* API Toggle Link */
     .ai-api-toggle-link {
@@ -2748,10 +2758,13 @@
           <div style="font-size:0.85rem;color:#6b7280;margin-bottom:1rem;">Get AI-powered insights from your filtered survey data.</div>
         </div>
 
-        <!-- Primary CTA: Copy data context -->
+        <!-- Primary CTAs: Copy buttons -->
         <div style="padding:0 0.5rem;">
           <button class="ai-claude-cta-btn" onclick="copyDataContext()">
-            <span>📋</span> Copy Data Context
+            <span>📋</span> Content + Insights Report
+          </button>
+          <button class="ai-claude-cta-btn ai-claude-cta-btn-secondary" onclick="copyRawContent()" style="margin-top:0.5rem;">
+            <span>📄</span> Copy Raw Content
           </button>
           <div style="font-size:0.75rem;color:#6b7280;margin-top:0.5rem;text-align:center;line-height:1.5;">
             Paste into any AI assistant:
@@ -9963,6 +9976,29 @@ Instructions:
         const instructionsEl = document.getElementById('aiCopyInstructions');
         if (instructionsEl) instructionsEl.style.display = 'block';
         showAiToast('Context copied! Paste it into your preferred AI assistant.');
+      } catch (fallbackErr) {
+        showAiToast('Could not copy to clipboard. Please check browser permissions.');
+      }
+    }
+  }
+
+  async function copyRawContent() {
+    try {
+      const payload = buildDataContext();
+      await navigator.clipboard.writeText(payload);
+      showAiToast('Raw content copied to clipboard!');
+    } catch (err) {
+      try {
+        const payload = buildDataContext();
+        const textArea = document.createElement('textarea');
+        textArea.value = payload;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showAiToast('Raw content copied to clipboard!');
       } catch (fallbackErr) {
         showAiToast('Could not copy to clipboard. Please check browser permissions.');
       }
