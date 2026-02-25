@@ -1681,6 +1681,44 @@
     }
 
     /* ═══════════════════════════════════════════
+       STAGE ACCOUNT LIST TABLE
+       ═══════════════════════════════════════════ */
+    .stage-account-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .stage-account-table th {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 2px solid #e5e7eb;
+      color: #6b7280;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .stage-account-table td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #f3f4f6;
+      color: #374151;
+    }
+    .stage-account-table tr:last-child td {
+      border-bottom: none;
+    }
+    .stage-account-table tr:hover td {
+      background: #f9fafb;
+    }
+    .stage-account-table .account-name-link {
+      color: #4f46e5;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .stage-account-table .account-name-link:hover {
+      text-decoration: underline;
+    }
+
+    /* ═══════════════════════════════════════════
        ACCOUNT MATURITY COMPARISON MATRIX
        ═══════════════════════════════════════════ */
     .comparison-table-wrapper {
@@ -3351,6 +3389,15 @@
     </div>
   </div>
 
+  <!-- Modal: Stage Account List -->
+  <div class="info-modal-overlay" id="stageAccountListModal">
+    <div class="info-modal" style="max-width:700px;">
+      <button class="info-modal-close" onclick="closeStageAccountListModal()" title="Close">&times;</button>
+      <h2 id="stageAccountListTitle"></h2>
+      <div id="stageAccountListContent"></div>
+    </div>
+  </div>
+
   <!-- Compare Groups Modal -->
   <div class="compare-modal-overlay" id="compareModal">
     <div class="compare-modal">
@@ -3970,6 +4017,7 @@
   let groupB = { name: 'Group B', filters: { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set() } };
 
   function setMaturityFilter(stage) {
+    openStageAccountListModal(stage);
     activeMaturityFilter = (activeMaturityFilter === stage) ? null : stage;
     refreshDashboard();
   }
@@ -5190,6 +5238,65 @@
 
   function closeSdlcPhaseModal() {
     document.getElementById('sdlcPhaseModal').classList.remove('open');
+  }
+
+  // ═══════════════════════════════════════════
+  // STAGE ACCOUNT LIST MODAL
+  // ═══════════════════════════════════════════
+  function openStageAccountListModal(stage) {
+    const label = MATURITY_LABELS[stage] || stage;
+    const icon = MATURITY_ICONS[stage] || '';
+    const color = MATURITY_COLORS[stage] || '#6b7280';
+
+    document.getElementById('stageAccountListTitle').innerHTML =
+      `<span style="color:${color};">${icon}</span> ${escapeHtml(label)} — Accounts`;
+
+    // Use getAllFilteredSurveys (respects year/quarter/type/engagement but NOT maturity filter)
+    const allSurveys = getAllFilteredSurveys();
+    const stageAccounts = allSurveys.filter(s =>
+      s.data?.clientAILandscape?.maturity?.value === stage
+    );
+
+    stageAccounts.sort((a, b) => (a.account_name || '').localeCompare(b.account_name || ''));
+
+    let html = '';
+    if (stageAccounts.length === 0) {
+      html = '<p style="text-align:center;padding:2rem;color:#6b7280;">No accounts at this stage match the current filters.</p>';
+    } else {
+      html = `<table class="stage-account-table">
+        <thead>
+          <tr>
+            <th>Account Name</th>
+            <th>Delivery Manager</th>
+            <th>Account Type</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      stageAccounts.forEach(s => {
+        const nameLink = s.id
+          ? `<a href="account-detail.html?id=${s.id}" class="account-name-link" title="View account details">${escapeHtml(s.account_name)}</a>`
+          : escapeHtml(s.account_name);
+        const dm = escapeHtml(s.delivery_manager || '\u2014');
+        const type = ACCOUNT_TYPE_LABELS[s.account_type] || s.account_type || '\u2014';
+
+        html += `<tr>
+          <td>${nameLink}</td>
+          <td>${dm}</td>
+          <td>${escapeHtml(type)}</td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      html += `<div style="margin-top:0.75rem;font-size:0.75rem;color:#9ca3af;">${stageAccounts.length} account${stageAccounts.length !== 1 ? 's' : ''}</div>`;
+    }
+
+    document.getElementById('stageAccountListContent').innerHTML = html;
+    document.getElementById('stageAccountListModal').classList.add('open');
+  }
+
+  function closeStageAccountListModal() {
+    document.getElementById('stageAccountListModal').classList.remove('open');
   }
 
   // ═══════════════════════════════════════════
