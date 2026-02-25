@@ -4028,12 +4028,17 @@
   let groupB = { name: 'Group B', filters: { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set() } };
 
   function setMaturityFilter(stage) {
-    openStageDrawer(stage);
+    if (activeMaturityFilter === stage) {
+      closeStageDrawer();
+    } else {
+      openStageDrawer(stage);
+    }
     activeMaturityFilter = (activeMaturityFilter === stage) ? null : stage;
     refreshDashboard();
   }
 
   function clearMaturityFilter() {
+    closeStageDrawer();
     activeMaturityFilter = null;
     refreshDashboard();
   }
