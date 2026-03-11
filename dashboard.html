@@ -1729,6 +1729,77 @@
     }
 
     /* ═══════════════════════════════════════════
+       ACCOUNT NOTES DRAWER (slide-in from right)
+       ═══════════════════════════════════════════ */
+    .notes-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 420px;
+      background: #fff; box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+      z-index: 1060; display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform 0.3s ease;
+    }
+    .notes-drawer.open { transform: translateX(0); }
+    .notes-drawer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.85rem 1.25rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;
+    }
+    .notes-drawer-header h3 {
+      margin: 0; font-size: 1rem; font-weight: 700; color: #1f2937;
+    }
+    .notes-drawer-header .btn-icon {
+      background: none; border: none; font-size: 1.2rem; cursor: pointer;
+      color: #6b7280; padding: 0.25rem 0.5rem; border-radius: 6px;
+    }
+    .notes-drawer-header .btn-icon:hover { background: #f3f4f6; color: #1f2937; }
+    .notes-drawer-body {
+      flex: 1; overflow-y: auto; padding: 1rem 1.25rem;
+    }
+    .notes-drawer-footer {
+      padding: 0.6rem 1.25rem; font-size: 0.75rem; color: #9ca3af;
+      border-top: 1px solid #f3f4f6; flex-shrink: 0;
+    }
+    .notes-form {
+      display: flex; flex-direction: column; gap: 0.5rem;
+      padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1rem;
+    }
+    .notes-form textarea {
+      width: 100%; min-height: 80px; border: 1.5px solid #e5e7eb; border-radius: 8px;
+      padding: 0.6rem; font-size: 0.85rem; font-family: inherit; resize: vertical;
+      box-sizing: border-box;
+    }
+    .notes-form textarea:focus {
+      outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+    .notes-form-row {
+      display: flex; gap: 0.5rem; align-items: center; justify-content: flex-end;
+    }
+    .notes-form-row button {
+      background: #4f46e5; color: #fff; border: none; padding: 0.4rem 1rem;
+      border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    }
+    .notes-form-row button:hover { background: #4338ca; }
+    .notes-form-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .note-card {
+      background: #f9fafb; border-radius: 8px; padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem; border: 1px solid #e5e7eb;
+    }
+    .note-card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.35rem;
+    }
+    .note-card-meta {
+      font-size: 0.7rem; color: #9ca3af;
+    }
+    .note-card-text {
+      font-size: 0.85rem; color: #374151; line-height: 1.4; white-space: pre-wrap;
+    }
+    .note-count-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 16px; height: 16px; border-radius: 8px;
+      background: #4f46e5; color: #fff; font-size: 0.65rem; font-weight: 700;
+      padding: 0 4px; margin-left: 2px; vertical-align: middle;
+    }
+
+    /* ═══════════════════════════════════════════
        ACCOUNT MATURITY COMPARISON MATRIX
        ═══════════════════════════════════════════ */
     .comparison-table-wrapper {
@@ -3409,6 +3480,24 @@
     <div class="stage-drawer-footer" id="stageDrawerFooter"></div>
   </div>
 
+  <!-- Account Notes Drawer (slide-in from right) -->
+  <div class="notes-drawer" id="notesDrawer">
+    <div class="notes-drawer-header">
+      <h3 id="notesDrawerTitle"></h3>
+      <button class="btn-icon" onclick="closeNotesDrawer()" title="Close">&times;</button>
+    </div>
+    <div class="notes-drawer-body">
+      <div class="notes-form">
+        <textarea id="noteTextInput" placeholder="Add a note about this account..." rows="3"></textarea>
+        <div class="notes-form-row">
+          <button onclick="addNote()" id="addNoteBtn">Add Note</button>
+        </div>
+      </div>
+      <div id="notesListContainer"></div>
+    </div>
+    <div class="notes-drawer-footer" id="notesDrawerFooter"></div>
+  </div>
+
   <!-- Compare Groups Modal -->
   <div class="compare-modal-overlay" id="compareModal">
     <div class="compare-modal">
@@ -4954,6 +5043,14 @@
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
+    db.run(`
+      CREATE TABLE IF NOT EXISTS account_notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        account_name TEXT NOT NULL,
+        note_text TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
   }
 
   function seedSchemaOptions() {
@@ -5310,6 +5407,98 @@
 
   function closeStageDrawer() {
     document.getElementById('stageDrawer').classList.remove('open');
+  }
+
+  // ═══════════════════════════════════════════
+  // ACCOUNT NOTES DRAWER
+  // ═══════════════════════════════════════════
+  let currentNotesAccount = null;
+
+  function openNotesDrawer(accountName) {
+    currentNotesAccount = accountName;
+    closeStageDrawer();
+    document.getElementById('notesDrawerTitle').textContent = '📝 ' + accountName;
+    document.getElementById('noteTextInput').value = '';
+    renderNotes(accountName);
+    document.getElementById('notesDrawer').classList.add('open');
+    setTimeout(() => document.getElementById('noteTextInput').focus(), 300);
+  }
+
+  function closeNotesDrawer() {
+    document.getElementById('notesDrawer').classList.remove('open');
+    currentNotesAccount = null;
+  }
+
+  function renderNotes(accountName) {
+    const container = document.getElementById('notesListContainer');
+    const results = db.exec(
+      'SELECT id, note_text, created_at FROM account_notes WHERE account_name = ? ORDER BY created_at DESC',
+      [accountName]
+    );
+
+    if (results.length === 0 || results[0].values.length === 0) {
+      container.innerHTML = '<p style="text-align:center;color:#9ca3af;padding:1.5rem 0;font-size:0.85rem;">No notes yet for this account.</p>';
+      document.getElementById('notesDrawerFooter').textContent = '0 notes';
+      return;
+    }
+
+    const notes = results[0].values;
+    container.innerHTML = notes.map(([id, text, createdAt]) => {
+      const dateStr = new Date(createdAt + 'Z').toLocaleString();
+      return `<div class="note-card">
+        <div class="note-card-header">
+          <span class="note-card-meta">${escapeHtml(dateStr)}</span>
+          <button class="btn-icon" style="font-size:0.75rem;color:#ef4444;background:none;border:none;cursor:pointer;padding:0.15rem 0.35rem;border-radius:4px;" title="Delete note" onclick="deleteNote(${id})">🗑️</button>
+        </div>
+        <div class="note-card-text">${escapeHtml(text)}</div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('notesDrawerFooter').textContent =
+      `${notes.length} note${notes.length !== 1 ? 's' : ''}`;
+  }
+
+  async function addNote() {
+    if (!currentNotesAccount) return;
+    const textInput = document.getElementById('noteTextInput');
+    const text = textInput.value.trim();
+    if (!text) { textInput.focus(); return; }
+
+    db.run(
+      'INSERT INTO account_notes (account_name, note_text) VALUES (?, ?)',
+      [currentNotesAccount, text]
+    );
+    await saveToIndexedDB();
+    textInput.value = '';
+    renderNotes(currentNotesAccount);
+    updateNoteCountBadges();
+  }
+
+  async function deleteNote(noteId) {
+    if (!confirm('Delete this note?')) return;
+    db.run('DELETE FROM account_notes WHERE id = ?', [noteId]);
+    await saveToIndexedDB();
+    if (currentNotesAccount) renderNotes(currentNotesAccount);
+    updateNoteCountBadges();
+  }
+
+  function getNoteCounts() {
+    const results = db.exec('SELECT account_name, COUNT(*) as cnt FROM account_notes GROUP BY account_name');
+    const counts = {};
+    if (results.length > 0) {
+      results[0].values.forEach(([name, cnt]) => { counts[name] = cnt; });
+    }
+    return counts;
+  }
+
+  function updateNoteCountBadges() {
+    const counts = getNoteCounts();
+    document.querySelectorAll('.note-count-badge').forEach(badge => {
+      const name = badge.dataset.account;
+      const count = counts[name] || 0;
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'inline-flex' : 'none';
+    });
   }
 
   // ═══════════════════════════════════════════
@@ -7974,6 +8163,7 @@
     }
 
     let html = '';
+    const noteCounts = getNoteCounts();
 
     sorted.forEach(s => {
       const inA = idsA.has(s.id);
@@ -8016,6 +8206,7 @@
         <td>Q${s.quarter} ${s.year}</td>
         <td class="actions" onclick="event.stopPropagation();">
           <a href="account-detail.html?id=${s.id}" class="btn-icon" title="View account details" style="text-decoration:none;">🔍</a>
+          <button class="btn-icon" title="View/add notes" onclick="openNotesDrawer('${escapeHtml(s.account_name).replace(/'/g, "\\\\'")}')" style="position:relative;">📝${(noteCounts[s.account_name] || 0) > 0 ? `<span class="note-count-badge" data-account="${escapeHtml(s.account_name)}">${noteCounts[s.account_name]}</span>` : `<span class="note-count-badge" data-account="${escapeHtml(s.account_name)}" style="display:none;">0</span>`}</button>
           <button class="btn-icon" title="Download JSON" onclick="downloadSurvey(${s.id})">📥</button>
         </td>
       </tr>`;
@@ -9019,6 +9210,7 @@
       }
     });
 
+    const noteCounts = getNoteCounts();
     tbody.innerHTML = sorted.map(s => {
       const maturity = s.data?.clientAILandscape?.maturity?.value || '-';
       const maturityLabel = MATURITY_LABELS[maturity] || maturity;
@@ -9086,6 +9278,7 @@
         <td>Q${s.quarter} ${s.year}</td>
         <td class="actions" onclick="event.stopPropagation();">
           <a href="account-detail.html?id=${s.id}" class="btn-icon" title="View account details" style="text-decoration:none;">🔍</a>
+          <button class="btn-icon" title="View/add notes" onclick="openNotesDrawer('${escapedName}')" style="position:relative;">📝${(noteCounts[s.account_name] || 0) > 0 ? `<span class="note-count-badge" data-account="${escapedName}">${noteCounts[s.account_name]}</span>` : `<span class="note-count-badge" data-account="${escapedName}" style="display:none;">0</span>`}</button>
           <button class="btn-icon" title="Download JSON" onclick="downloadSurvey(${s.id})">📥</button>
           <button class="btn-icon" title="Delete survey" onclick="deleteSurvey(${s.id}, '${escapedName}')">🗑️</button>
         </td>
@@ -9185,6 +9378,9 @@
 
     // Update database column
     db.run('UPDATE surveys SET account_name = ? WHERE id = ?', [newName, id]);
+
+    // Cascade rename to account notes
+    db.run('UPDATE account_notes SET account_name = ? WHERE account_name = ?', [newName, oldName]);
 
     // Also update accountName inside the raw_json so exports stay consistent
     const jsonResult = db.exec('SELECT raw_json FROM surveys WHERE id = ?', [id]);
@@ -9329,6 +9525,7 @@
         closeStageDescriptionModal();
         closeWfmInfoModal();
         closeSdlcPhaseModal();
+        closeNotesDrawer();
       }
     });
 
