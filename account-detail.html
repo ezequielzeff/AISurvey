@@ -306,6 +306,34 @@
       white-space: pre-wrap;
     }
 
+    /* Account Notes (from account_notes table) */
+    .account-note {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .account-note:last-child { margin-bottom: 0; }
+    .account-note-meta {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      margin-bottom: 0.3rem;
+    }
+    .account-note-text {
+      font-size: 0.88rem;
+      color: #1d1d1f;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+    .account-notes-empty {
+      text-align: center;
+      color: #aeaeb2;
+      font-style: italic;
+      font-size: 0.88rem;
+      padding: 1rem 0;
+    }
+
     /* Divider */
     .field-divider {
       height: 1px;
@@ -583,7 +611,7 @@
   // RENDER
   // ═══════════════════════════════════════════
 
-  function renderDetail(survey) {
+  function renderDetail(survey, accountNotes) {
     const d = survey.data;
     const notes = d.notes || {};
     let html = '';
@@ -927,6 +955,25 @@
       }
     }
 
+    // ── 9. Account Notes (from account_notes table) ──
+    if (accountNotes && accountNotes.length > 0) {
+      html += `<div class="section-card">
+        <div class="section-title"><span class="section-icon">📝</span>Account Notes</div>`;
+      accountNotes.forEach(([id, text, createdAt]) => {
+        const dateStr = new Date(createdAt + 'Z').toLocaleString();
+        html += `<div class="account-note">
+          <div class="account-note-meta">${escapeHtml(dateStr)}</div>
+          <div class="account-note-text">${escapeHtml(text)}</div>
+        </div>`;
+      });
+      html += '</div>';
+    } else {
+      html += `<div class="section-card">
+        <div class="section-title"><span class="section-icon">📝</span>Account Notes</div>
+        <div class="account-notes-empty">No notes recorded for this account.</div>
+      </div>`;
+    }
+
     return html;
   }
 
@@ -984,12 +1031,22 @@
         delivery_manager: row[8] || ''
       };
 
+      // Query account notes
+      let accountNotes = [];
+      try {
+        const notesResult = db.exec(
+          'SELECT id, note_text, created_at FROM account_notes WHERE account_name = ? ORDER BY created_at DESC',
+          [survey.account_name]
+        );
+        if (notesResult.length > 0) accountNotes = notesResult[0].values;
+      } catch (e) { /* account_notes table may not exist yet */ }
+
       // Update page title
       document.title = `${survey.account_name} — AI Adoption Assessment`;
 
       // Render
       loading.remove();
-      page.innerHTML = renderDetail(survey);
+      page.innerHTML = renderDetail(survey, accountNotes);
 
     } catch (e) {
       console.error(e);
