@@ -1249,7 +1249,9 @@
       background: #fff;
       border: 1px solid #e5e7eb;
       border-radius: 12px;
-      padding: 1.25rem;
+      padding: 0.75rem 0.25rem;
+      margin-left: -20px;
+      margin-right: -20px;
       margin-bottom: 1.5rem;
     }
     .surveys-section-header {
@@ -1265,12 +1267,13 @@
     }
     .surveys-table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
       font-size: 0.82rem;
     }
     .surveys-table th {
       text-align: left;
-      padding: 0.5rem 0.6rem;
+      padding: 0.4rem 0.35rem;
       background: #f9fafb;
       border-bottom: 2px solid #e5e7eb;
       font-weight: 600;
@@ -1279,11 +1282,13 @@
       text-transform: uppercase;
       letter-spacing: 0.04em;
       white-space: nowrap;
+      position: sticky;
+      top: var(--header-height, 88px);
+      z-index: 10;
     }
     .surveys-table th.sortable {
       cursor: pointer;
       user-select: none;
-      position: relative;
       padding-right: 1.5rem;
     }
     .surveys-table th.sortable:hover { color: #374151; background: #f3f4f6; }
@@ -1306,7 +1311,7 @@
       accent-color: #4f46e5;
     }
     .surveys-table td {
-      padding: 0.5rem 0.6rem;
+      padding: 0.4rem 0.35rem;
       border-bottom: 1px solid #f3f4f6;
       color: #374151;
     }
@@ -1321,11 +1326,15 @@
     }
     .surveys-table .actions {
       display: flex;
-      gap: 0.15rem;
+      gap: 0;
       white-space: nowrap;
     }
+    .surveys-table .actions .btn-icon {
+      padding: 0.2rem 0.3rem;
+      font-size: 0.9rem;
+    }
     .surveys-table .champions-cell div {
-      max-width: 110px; font-size: 0.78rem; line-height: 1.3;
+      max-width: 130px; font-size: 0.78rem; line-height: 1.3;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .maturity-badge {
@@ -1359,6 +1368,7 @@
       background: #fff;
       cursor: pointer;
       outline: none;
+      max-width: 135px;
     }
     .account-type-select:focus {
       border-color: #4f46e5;
@@ -1375,6 +1385,7 @@
       background: transparent;
       outline: none;
       width: 100%;
+      min-width: 120px;
       box-sizing: border-box;
     }
     .account-name-input:hover {
@@ -1396,7 +1407,7 @@
       color: #374151;
       background: #fff;
       outline: none;
-      width: 105px;
+      width: 95px;
       box-sizing: border-box;
     }
     .dm-input:focus {
@@ -1416,7 +1427,7 @@
       color: #1e293b;
       background: transparent;
       transition: border-color 0.15s, box-shadow 0.15s;
-      width: 95px;
+      width: 85px;
       box-sizing: border-box;
       text-align: right;
     }
@@ -3325,13 +3336,13 @@
               <th style="width:40px;text-align:center;padding:0.5rem;">
                 <input type="checkbox" id="selectAllTableAccounts" title="Select all / Clear all" onchange="onSelectAllAccountsToggle(this.checked)">
               </th>
-              <th class="sortable sort-asc" data-sort="account">Account</th>
-              <th class="sortable" data-sort="type">Type</th>
+              <th class="sortable sort-asc" data-sort="account" style="min-width:130px;">Account</th>
+              <th class="sortable" data-sort="type" style="min-width:120px;">Type</th>
               <th class="sortable" data-sort="maturity">Client AI Maturity</th>
-              <th class="sortable" data-sort="wfm">Account AI Agentic Workflow</th>
-              <th class="sortable" data-sort="dm">Delivery Manager</th>
-              <th class="sortable" data-sort="revenue">Forecasted Revenue</th>
-              <th>AI Champions</th>
+              <th class="sortable" data-sort="wfm" style="white-space:normal;min-width:140px;">Account AI Agentic Workflow</th>
+              <th class="sortable" data-sort="dm" style="min-width:110px;">Delivery Manager</th>
+              <th class="sortable" data-sort="revenue">Revenue</th>
+              <th style="min-width:110px;">AI Champions</th>
               <th class="sortable" data-sort="quarter">Quarter</th>
               <th>Actions</th>
             </tr>
@@ -10880,6 +10891,16 @@ Instructions:
       setupEventListeners();
       initVersionDisplay();
       populateFilters();
+
+      // Keep --header-height CSS variable in sync for sticky table headers
+      const dashHeader = document.querySelector('.dashboard-header');
+      if (dashHeader) {
+        const updateHeaderHeight = () => {
+          document.documentElement.style.setProperty('--header-height', dashHeader.offsetHeight + 'px');
+        };
+        updateHeaderHeight();
+        new ResizeObserver(updateHeaderHeight).observe(dashHeader);
+      }
 
       // Hide loading, show content
       document.getElementById('loadingState').style.display = 'none';
