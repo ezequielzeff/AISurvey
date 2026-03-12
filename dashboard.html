@@ -1322,6 +1322,10 @@
       display: flex;
       gap: 0.25rem;
     }
+    .surveys-table .champions-cell {
+      max-width: 120px; font-size: 0.78rem; line-height: 1.3;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     .maturity-badge {
       display: inline-block;
       padding: 0.2rem 0.6rem;
@@ -8263,11 +8267,14 @@
       // AI Champions
       const champData = s.data?.teamRoles?.aiChampion;
       let champCell = '\u2014';
+      let champTitle = '';
       if (champData?.value === 'yes' && champData.champions?.length) {
         champCell = champData.champions.map(n => escapeHtml(n)).join(', ');
+        champTitle = champData.champions.join(', ');
       } else if (champData?.value === 'no' && champData.futureChampions?.length) {
         champCell = '<span style="color:#9ca3af;font-style:italic;">' +
           champData.futureChampions.map(n => escapeHtml(n)).join(', ') + ' (future)</span>';
+        champTitle = champData.futureChampions.join(', ') + ' (future)';
       }
 
       html += `<tr style="${rowStyle}cursor:pointer;" onclick="window.location.href='account-detail.html?id=${s.id}'" title="Click to view ${escapeHtml(s.account_name)} details">
@@ -8277,7 +8284,7 @@
         <td><span class="maturity-badge ${maturityClass}">${maturityLabel}</span></td>
         <td>${wfmCell}</td>
         <td>${escapeHtml(s.delivery_manager || '--')}</td>
-        <td style="font-size:0.82rem;">${champCell}</td>
+        <td class="champions-cell" title="${escapeHtml(champTitle)}">${champCell}</td>
         <td>Q${s.quarter} ${s.year}</td>
         <td class="actions" onclick="event.stopPropagation();">
           <a href="account-detail.html?id=${s.id}" class="btn-icon" title="View account details" style="text-decoration:none;">🔍</a>
@@ -9308,11 +9315,14 @@
       // AI Champions
       const champData = s.data?.teamRoles?.aiChampion;
       let champCell = '\u2014';
+      let champTitle = '';
       if (champData?.value === 'yes' && champData.champions?.length) {
         champCell = champData.champions.map(n => escapeHtml(n)).join(', ');
+        champTitle = champData.champions.join(', ');
       } else if (champData?.value === 'no' && champData.futureChampions?.length) {
         champCell = '<span style="color:#9ca3af;font-style:italic;">' +
           champData.futureChampions.map(n => escapeHtml(n)).join(', ') + ' (future)</span>';
+        champTitle = champData.futureChampions.join(', ') + ' (future)';
       }
 
       // Compute WFM stage for this account (same logic as widget)
@@ -9360,7 +9370,7 @@
             onchange="updateForecastedRevenue(${s.id}, this.value)"
             title="Edit forecasted service revenue (USD)">
         </td>
-        <td style="font-size:0.82rem;">${champCell}</td>
+        <td class="champions-cell" title="${escapeHtml(champTitle)}">${champCell}</td>
         <td>Q${s.quarter} ${s.year}</td>
         <td class="actions" onclick="event.stopPropagation();">
           <a href="account-detail.html?id=${s.id}" class="btn-icon" title="View account details" style="text-decoration:none;">🔍</a>
