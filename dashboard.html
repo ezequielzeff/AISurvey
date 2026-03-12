@@ -1791,7 +1791,30 @@
     }
     .note-card-text {
       font-size: 0.85rem; color: #374151; line-height: 1.4; white-space: pre-wrap;
+      cursor: pointer; border-radius: 4px; padding: 0.15rem 0.25rem; margin: -0.15rem -0.25rem;
     }
+    .note-card-text:hover { background: #f3f4f6; }
+    .note-card-edit textarea {
+      width: 100%; min-height: 60px; font-size: 0.85rem; font-family: inherit;
+      line-height: 1.4; border: 1.5px solid #4f46e5; border-radius: 6px;
+      padding: 0.45rem 0.6rem; resize: vertical; box-sizing: border-box;
+    }
+    .note-card-edit textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+    .note-card-edit-actions {
+      display: flex; gap: 0.35rem; margin-top: 0.35rem; justify-content: flex-end;
+    }
+    .note-card-edit-actions button {
+      font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 6px;
+      border: none; cursor: pointer; font-weight: 600;
+    }
+    .note-card-edit-actions .note-save-btn {
+      background: #4f46e5; color: #fff;
+    }
+    .note-card-edit-actions .note-save-btn:hover { background: #4338ca; }
+    .note-card-edit-actions .note-cancel-btn {
+      background: #f3f4f6; color: #374151;
+    }
+    .note-card-edit-actions .note-cancel-btn:hover { background: #e5e7eb; }
     .note-count-badge {
       display: inline-flex; align-items: center; justify-content: center;
       min-width: 16px; height: 16px; border-radius: 8px;
@@ -5445,12 +5468,16 @@
     const notes = results[0].values;
     container.innerHTML = notes.map(([id, text, createdAt]) => {
       const dateStr = new Date(createdAt + 'Z').toLocaleString();
-      return `<div class="note-card">
+      const escapedText = escapeHtml(text);
+      return `<div class="note-card" id="noteCard${id}">
         <div class="note-card-header">
           <span class="note-card-meta">${escapeHtml(dateStr)}</span>
-          <button class="btn-icon" style="font-size:0.75rem;color:#ef4444;background:none;border:none;cursor:pointer;padding:0.15rem 0.35rem;border-radius:4px;" title="Delete note" onclick="deleteNote(${id})">🗑️</button>
+          <span>
+            <button class="btn-icon" style="font-size:0.75rem;color:#4f46e5;background:none;border:none;cursor:pointer;padding:0.15rem 0.35rem;border-radius:4px;" title="Edit note" onclick="startEditNote(${id})">✏️</button>
+            <button class="btn-icon" style="font-size:0.75rem;color:#ef4444;background:none;border:none;cursor:pointer;padding:0.15rem 0.35rem;border-radius:4px;" title="Delete note" onclick="deleteNote(${id})">🗑️</button>
+          </span>
         </div>
-        <div class="note-card-text">${escapeHtml(text)}</div>
+        <div class="note-card-text" id="noteText${id}" onclick="startEditNote(${id})">${escapedText}</div>
       </div>`;
     }).join('');
 
@@ -5480,6 +5507,42 @@
     await saveToIndexedDB();
     if (currentNotesAccount) renderNotes(currentNotesAccount);
     updateNoteCountBadges();
+  }
+
+  function startEditNote(noteId) {
+    const result = db.exec('SELECT note_text FROM account_notes WHERE id = ?', [noteId]);
+    if (result.length === 0 || result[0].values.length === 0) return;
+    const currentText = result[0].values[0][0];
+
+    const textEl = document.getElementById('noteText' + noteId);
+    if (!textEl) return;
+
+    textEl.outerHTML = `<div class="note-card-edit" id="noteEdit${noteId}">
+      <textarea id="noteEditInput${noteId}">${escapeHtml(currentText)}</textarea>
+      <div class="note-card-edit-actions">
+        <button class="note-cancel-btn" onclick="cancelEditNote()">Cancel</button>
+        <button class="note-save-btn" onclick="saveEditNote(${noteId})">Save</button>
+      </div>
+    </div>`;
+
+    const textarea = document.getElementById('noteEditInput' + noteId);
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  }
+
+  async function saveEditNote(noteId) {
+    const textarea = document.getElementById('noteEditInput' + noteId);
+    if (!textarea) return;
+    const newText = textarea.value.trim();
+    if (!newText) { textarea.focus(); return; }
+
+    db.run('UPDATE account_notes SET note_text = ? WHERE id = ?', [newText, noteId]);
+    await saveToIndexedDB();
+    if (currentNotesAccount) renderNotes(currentNotesAccount);
+  }
+
+  function cancelEditNote() {
+    if (currentNotesAccount) renderNotes(currentNotesAccount);
   }
 
   function getNoteCounts() {
