@@ -3325,6 +3325,7 @@
               <th class="sortable" data-sort="wfm">Account AI Agentic Workflow</th>
               <th class="sortable" data-sort="dm">Delivery Manager</th>
               <th class="sortable" data-sort="revenue">Forecasted Revenue</th>
+              <th>AI Champions</th>
               <th class="sortable" data-sort="quarter">Quarter</th>
               <th>Actions</th>
             </tr>
@@ -8221,7 +8222,7 @@
 
     const tbody = document.getElementById('surveysTableBody');
     if (allSurveys.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the base filters.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the base filters.</td></tr>';
       return;
     }
 
@@ -8259,6 +8260,16 @@
       const maturityClass = maturityVal !== '-' ? `maturity-${maturityVal}` : '';
       const accountType = s.account_type || 'other';
 
+      // AI Champions
+      const champData = s.data?.teamRoles?.aiChampion;
+      let champCell = '\u2014';
+      if (champData?.value === 'yes' && champData.champions?.length) {
+        champCell = champData.champions.map(n => escapeHtml(n)).join(', ');
+      } else if (champData?.value === 'no' && champData.futureChampions?.length) {
+        champCell = '<span style="color:#9ca3af;font-style:italic;">' +
+          champData.futureChampions.map(n => escapeHtml(n)).join(', ') + ' (future)</span>';
+      }
+
       html += `<tr style="${rowStyle}cursor:pointer;" onclick="window.location.href='account-detail.html?id=${s.id}'" title="Click to view ${escapeHtml(s.account_name)} details">
         <td style="text-align:center;width:40px;">${groupTag}</td>
         <td><strong>${escapeHtml(s.account_name)}</strong></td>
@@ -8266,6 +8277,7 @@
         <td><span class="maturity-badge ${maturityClass}">${maturityLabel}</span></td>
         <td>${wfmCell}</td>
         <td>${escapeHtml(s.delivery_manager || '--')}</td>
+        <td style="font-size:0.82rem;">${champCell}</td>
         <td>Q${s.quarter} ${s.year}</td>
         <td class="actions" onclick="event.stopPropagation();">
           <a href="account-detail.html?id=${s.id}" class="btn-icon" title="View account details" style="text-decoration:none;">🔍</a>
@@ -9255,7 +9267,7 @@
   function renderSurveysTable(allSurveys, filteredSurveys) {
     const tbody = document.getElementById('surveysTableBody');
     if (allSurveys.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
       return;
     }
 
@@ -9292,6 +9304,16 @@
 
       const dmValue = escapeHtml(s.delivery_manager || '');
       const revenueDisplay = s.forecasted_service_revenue ? formatCurrency(s.forecasted_service_revenue) : '';
+
+      // AI Champions
+      const champData = s.data?.teamRoles?.aiChampion;
+      let champCell = '\u2014';
+      if (champData?.value === 'yes' && champData.champions?.length) {
+        champCell = champData.champions.map(n => escapeHtml(n)).join(', ');
+      } else if (champData?.value === 'no' && champData.futureChampions?.length) {
+        champCell = '<span style="color:#9ca3af;font-style:italic;">' +
+          champData.futureChampions.map(n => escapeHtml(n)).join(', ') + ' (future)</span>';
+      }
 
       // Compute WFM stage for this account (same logic as widget)
       let wfmCell = '-';
@@ -9338,6 +9360,7 @@
             onchange="updateForecastedRevenue(${s.id}, this.value)"
             title="Edit forecasted service revenue (USD)">
         </td>
+        <td style="font-size:0.82rem;">${champCell}</td>
         <td>Q${s.quarter} ${s.year}</td>
         <td class="actions" onclick="event.stopPropagation();">
           <a href="account-detail.html?id=${s.id}" class="btn-icon" title="View account details" style="text-decoration:none;">🔍</a>
