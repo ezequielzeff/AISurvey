@@ -5827,6 +5827,20 @@
     return selected;
   }
 
+  // Deduplicate surveys: for each (account_name, year, quarter) combo,
+  // keep only the survey with the latest exported_at timestamp.
+  function deduplicateSurveys(surveys) {
+    const map = new Map();
+    surveys.forEach(s => {
+      const key = `${s.account_name}|${s.year}|${s.quarter}`;
+      const existing = map.get(key);
+      if (!existing || s.exported_at > existing.exported_at) {
+        map.set(key, s);
+      }
+    });
+    return Array.from(map.values());
+  }
+
   function getFilteredSurveys() {
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
@@ -5972,11 +5986,12 @@
       });
     }
 
-    return surveys;
+    return deduplicateSurveys(surveys);
   }
 
   // Get all surveys for year/quarter/type (ignoring maturity/account name filters) for the widget itself
-  function getAllFilteredSurveys() {
+  // Pass { deduplicate: false } to get raw rows (e.g. for the surveys table audit trail)
+  function getAllFilteredSurveys({ deduplicate: shouldDedup = true } = {}) {
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
     const selectedTypes = getSelectedAccountTypes();
@@ -6013,7 +6028,7 @@
       });
     }
 
-    return surveys;
+    return shouldDedup ? deduplicateSurveys(surveys) : surveys;
   }
 
   // ═══════════════════════════════════════════
@@ -6021,7 +6036,7 @@
   // ═══════════════════════════════════════════
   let charts = {};
 
-  function refreshDashboardComparison(allSurveys, totalCount) {
+  function refreshDashboardComparison(allSurveys, allSurveysRaw, totalCount) {
     const surveysA = getFilteredSurveysForGroup(groupA.filters);
     const surveysB = getFilteredSurveysForGroup(groupB.filters);
     const nameA = groupA.name;
@@ -6060,7 +6075,7 @@
     renderAiAdoptionWidgetComparison(surveysA, surveysB, nameA, nameB);
     updateAccountSectionSummaryComparison(surveysA, surveysB, nameA, nameB);
 
-    renderSurveysTableComparison(allSurveys, surveysA, surveysB, nameA, nameB);
+    renderSurveysTableComparison(allSurveysRaw, surveysA, surveysB, nameA, nameB);
     updateSurveysSectionSummaryComparison(surveysA, surveysB, nameA, nameB);
 
     // Sync dropdowns
@@ -6072,15 +6087,16 @@
   }
 
   function refreshDashboard() {
-    const surveys = getFilteredSurveys();
-    const allSurveys = getAllFilteredSurveys(); // for the widget (unfiltered by maturity)
+    const surveys = getFilteredSurveys();                              // deduplicated (for widgets)
+    const allSurveysRaw = getAllFilteredSurveys({ deduplicate: false }); // raw rows (for table audit trail)
+    const allSurveys = deduplicateSurveys(allSurveysRaw);              // deduplicated (for widgets)
     const totalAll = db.exec('SELECT COUNT(*) FROM surveys');
     const totalCount = totalAll.length > 0 ? totalAll[0].values[0][0] : 0;
 
     // ── Comparison Mode Branch ──
     if (comparisonMode) {
       document.getElementById('kpiStrip').style.display = 'none';
-      refreshDashboardComparison(allSurveys, totalCount);
+      refreshDashboardComparison(allSurveys, allSurveysRaw, totalCount);
       return;
     }
     document.getElementById('kpiStrip').style.display = '';
@@ -6096,12 +6112,12 @@
     let subtitleText = '';
     if (allSurveys.length > 0) {
       if (surveys.length < allSurveys.length) {
-        subtitleText = `Showing ${surveys.length} of ${allSurveys.length} survey${allSurveys.length !== 1 ? 's' : ''}${filterDesc ? ' for ' + filterDesc : ''}`;
+        subtitleText = `Showing ${surveys.length} of ${allSurveys.length} account${allSurveys.length !== 1 ? 's' : ''}${filterDesc ? ' for ' + filterDesc : ''}`;
       } else {
-        subtitleText = `Showing ${surveys.length} survey${surveys.length !== 1 ? 's' : ''}${filterDesc ? ' for ' + filterDesc : ''}`;
+        subtitleText = `Showing ${surveys.length} account${surveys.length !== 1 ? 's' : ''}${filterDesc ? ' for ' + filterDesc : ''}`;
       }
     } else if (totalCount > 0) {
-      subtitleText = 'No surveys match the selected filters';
+      subtitleText = 'No accounts match the selected filters';
     } else {
       subtitleText = 'No surveys uploaded yet';
     }
@@ -6189,8 +6205,8 @@
     // KPI Summary Strip — glanceable top-level metrics
     updateKpiStrip(surveys);
 
-    // Surveys table — show all rows, dim non-matching
-    renderSurveysTable(allSurveys, surveys);
+    // Surveys table — show all rows (raw, including dupes), dim non-matching
+    renderSurveysTable(allSurveysRaw, surveys);
 
     // Sync accounts and DM dropdowns with current data
     populateAccountsFilter();
@@ -9277,12 +9293,12 @@
       tableSortDirection = 'asc';
     }
     if (comparisonMode) {
-      const allSurveys = getAllFilteredSurveys();
+      const allSurveys = getAllFilteredSurveys({ deduplicate: false });
       const surveysA = getFilteredSurveysForGroup(groupA.filters);
       const surveysB = getFilteredSurveysForGroup(groupB.filters);
       renderSurveysTableComparison(allSurveys, surveysA, surveysB, groupA.name, groupB.name);
     } else {
-      renderSurveysTable(getAllFilteredSurveys(), getFilteredSurveys());
+      renderSurveysTable(getAllFilteredSurveys({ deduplicate: false }), getFilteredSurveys());
     }
   }
 
