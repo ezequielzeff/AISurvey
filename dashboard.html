@@ -2660,7 +2660,39 @@
       max-height: 200px;
       padding: 0.5rem 0 0 0;
     }
-
+    /* "Latest per account" toggle */
+    .latest-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.55rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: #374151;
+      user-select: none;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+    .latest-toggle:hover {
+      border-color: #9ca3af;
+    }
+    .latest-toggle input[type="checkbox"] {
+      margin: 0;
+      cursor: pointer;
+      accent-color: #2563eb;
+    }
+    .latest-toggle.active {
+      background: #eef4ff;
+      border-color: #2563eb;
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+    .filter-select.is-disabled-soft {
+      opacity: 0.45;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -2684,6 +2716,12 @@
           <option value="3">Q3</option>
           <option value="4">Q4</option>
         </select>
+      </div>
+      <div class="filter-group" id="filterLatestOnlyGroup" title="Show only the most recent survey for each account. Overrides Year/Quarter.">
+        <label class="latest-toggle">
+          <input type="checkbox" id="filterLatestOnly" />
+          <span class="latest-toggle-text">Latest per account</span>
+        </label>
       </div>
       <button class="filter-drawer-toggle" id="filterDrawerToggle" onclick="toggleFiltersDrawer()" type="button" title="Show/hide additional filters">
         More Filters <span class="filter-drawer-badge" id="filterDrawerBadge" style="display:none;">0</span>
@@ -4542,6 +4580,9 @@
     activeChampionFilter = null;
     activeAiAdoptionFilter = 'all';
     document.getElementById('filterAiAdoption').value = 'all';
+    const latestOnlyEl = document.getElementById('filterLatestOnly');
+    if (latestOnlyEl) latestOnlyEl.checked = false;
+    syncLatestOnlyUiState();
     resetCloudPlatformCheckboxes();
     refreshDashboard();
   }
@@ -5811,6 +5852,7 @@
 
     populateAccountsFilter();
     populateDMFilter();
+    syncLatestOnlyUiState();
   }
 
   function getSelectedAccountTypes() {
@@ -5841,7 +5883,41 @@
     return Array.from(map.values());
   }
 
+  // "Latest per account" mode — keep only the single most-recent survey per
+  // account, ranked by (year desc, quarter desc, exported_at desc).
+  function keepLatestPerAccount(surveys) {
+    const map = new Map();
+    surveys.forEach(s => {
+      const existing = map.get(s.account_name);
+      if (!existing) { map.set(s.account_name, s); return; }
+      const newer =
+        s.year > existing.year ||
+        (s.year === existing.year && s.quarter > existing.quarter) ||
+        (s.year === existing.year && s.quarter === existing.quarter && s.exported_at > existing.exported_at);
+      if (newer) map.set(s.account_name, s);
+    });
+    return Array.from(map.values());
+  }
+
+  function isLatestOnlyMode() {
+    const el = document.getElementById('filterLatestOnly');
+    return !!(el && el.checked);
+  }
+
+  // Visually disable Year/Quarter selects when "Latest per account" is on,
+  // and highlight the toggle so its override is obvious.
+  function syncLatestOnlyUiState() {
+    const on = isLatestOnlyMode();
+    const yearEl = document.getElementById('filterYear');
+    const quarterEl = document.getElementById('filterQuarter');
+    const toggleLabel = document.querySelector('#filterLatestOnlyGroup .latest-toggle');
+    if (yearEl) yearEl.classList.toggle('is-disabled-soft', on);
+    if (quarterEl) quarterEl.classList.toggle('is-disabled-soft', on);
+    if (toggleLabel) toggleLabel.classList.toggle('active', on);
+  }
+
   function getFilteredSurveys() {
+    const latestOnly = isLatestOnlyMode();
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
     const selectedTypes = getSelectedAccountTypes();
@@ -5851,8 +5927,12 @@
 
     let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue FROM surveys WHERE 1=1';
     const params = [];
-    if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
-    if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
+    // In "Latest per account" mode the Year/Quarter selects are overridden
+    // — we look across all surveys and pick the newest one per account.
+    if (!latestOnly) {
+      if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
+      if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
+    }
     if (selectedTypes.length < ACCOUNT_TYPES.length) {
       sql += ` AND account_type IN (${selectedTypes.map(() => '?').join(',')})`;
       params.push(...selectedTypes);
@@ -5986,12 +6066,13 @@
       });
     }
 
-    return deduplicateSurveys(surveys);
+    return latestOnly ? keepLatestPerAccount(surveys) : deduplicateSurveys(surveys);
   }
 
   // Get all surveys for year/quarter/type (ignoring maturity/account name filters) for the widget itself
   // Pass { deduplicate: false } to get raw rows (e.g. for the surveys table audit trail)
   function getAllFilteredSurveys({ deduplicate: shouldDedup = true } = {}) {
+    const latestOnly = isLatestOnlyMode();
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
     const selectedTypes = getSelectedAccountTypes();
@@ -6000,8 +6081,11 @@
 
     let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue FROM surveys WHERE 1=1';
     const params = [];
-    if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
-    if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
+    // "Latest per account" mode overrides Year/Quarter — search across all surveys.
+    if (!latestOnly) {
+      if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
+      if (quarter !== 'all') { sql += ' AND quarter = ?'; params.push(parseInt(quarter)); }
+    }
     if (selectedTypes.length < ACCOUNT_TYPES.length) {
       sql += ` AND account_type IN (${selectedTypes.map(() => '?').join(',')})`;
       params.push(...selectedTypes);
@@ -6028,7 +6112,8 @@
       });
     }
 
-    return shouldDedup ? deduplicateSurveys(surveys) : surveys;
+    if (!shouldDedup) return surveys;
+    return latestOnly ? keepLatestPerAccount(surveys) : deduplicateSurveys(surveys);
   }
 
   // ═══════════════════════════════════════════
@@ -6087,9 +6172,10 @@
   }
 
   function refreshDashboard() {
+    const latestOnly = isLatestOnlyMode();
     const surveys = getFilteredSurveys();                              // deduplicated (for widgets)
     const allSurveysRaw = getAllFilteredSurveys({ deduplicate: false }); // raw rows (for table audit trail)
-    const allSurveys = deduplicateSurveys(allSurveysRaw);              // deduplicated (for widgets)
+    const allSurveys = latestOnly ? keepLatestPerAccount(allSurveysRaw) : deduplicateSurveys(allSurveysRaw); // deduplicated (for widgets)
     const totalAll = db.exec('SELECT COUNT(*) FROM surveys');
     const totalCount = totalAll.length > 0 ? totalAll[0].values[0][0] : 0;
 
@@ -6106,8 +6192,12 @@
     const year = document.getElementById('filterYear').value;
     const quarter = document.getElementById('filterQuarter').value;
     let filterDesc = '';
-    if (year !== 'all') filterDesc += year;
-    if (quarter !== 'all') filterDesc += (filterDesc ? ' ' : '') + 'Q' + quarter;
+    if (latestOnly) {
+      filterDesc = 'latest survey per account';
+    } else {
+      if (year !== 'all') filterDesc += year;
+      if (quarter !== 'all') filterDesc += (filterDesc ? ' ' : '') + 'Q' + quarter;
+    }
 
     let subtitleText = '';
     if (allSurveys.length > 0) {
@@ -9686,6 +9776,13 @@
       selectedDeliveryManagers.clear();
       refreshDashboard();
     });
+    document.getElementById('filterLatestOnly').addEventListener('change', () => {
+      activeMaturityFilter = null;
+      selectedAccounts.clear();
+      selectedDeliveryManagers.clear();
+      syncLatestOnlyUiState();
+      refreshDashboard();
+    });
     // Table column sorting
     document.querySelectorAll('.surveys-table th.sortable').forEach(th => {
       th.addEventListener('click', () => onSortColumn(th.dataset.sort));
@@ -9935,9 +10032,14 @@
     let ctx = '=== DASHBOARD DATA CONTEXT ===\n\n';
 
     // 1. Filter state
+    const latestOnlyCtx = isLatestOnlyMode();
     ctx += '## Current Filters\n';
-    ctx += `Year: ${yearVal === 'all' ? 'All' : yearVal}\n`;
-    ctx += `Quarter: ${quarterVal === 'all' ? 'All' : 'Q' + quarterVal}\n`;
+    if (latestOnlyCtx) {
+      ctx += 'Latest per account: ON (overrides Year/Quarter — newest survey per account)\n';
+    } else {
+      ctx += `Year: ${yearVal === 'all' ? 'All' : yearVal}\n`;
+      ctx += `Quarter: ${quarterVal === 'all' ? 'All' : 'Q' + quarterVal}\n`;
+    }
     ctx += `Total surveys (base): ${allSurveys.length}\n`;
     ctx += `Filtered surveys shown: ${surveys.length}\n`;
     if (activeMaturityFilter) ctx += `Maturity filter: ${MATURITY_LABELS[activeMaturityFilter]}\n`;
