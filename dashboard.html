@@ -8370,8 +8370,10 @@
         if (roleStages.length > 0) {
           const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
           const rounded = Math.round(avg);
-          const wfmBg = WFM_COLORS[rounded] || '#6b7280';
-          wfmCell = `<span class="maturity-badge" style="background:${wfmBg}22;color:${wfmBg};">${WFM_LABELS[rounded] || 'Stage ' + rounded} (${avg.toFixed(1)})</span>`;
+          let displayStage = rounded;
+          if (rounded === 0 && surveyHasAiTools(s)) displayStage = 1;
+          const wfmBg = WFM_COLORS[displayStage] || '#6b7280';
+          wfmCell = `<span class="maturity-badge" style="background:${wfmBg}22;color:${wfmBg};">${WFM_LABELS[displayStage] || 'Stage ' + displayStage} (${avg.toFixed(1)})</span>`;
         }
       }
 
@@ -9439,7 +9441,10 @@
         champTitle = champData.futureChampions.join(', ') + ' (future)';
       }
 
-      // Compute WFM stage for this account (same logic as widget)
+      // Compute WFM stage for this account (same logic as widget).
+      // If the account has any AI tool selected but the rounded average lands at 0,
+      // surface "Individual AI" instead of "No AI Usage" — the avg number in parens
+      // still tells the truth about how shallow that usage is.
       let wfmCell = '-';
       const wfm = s.data?.workflowMaturity;
       if (wfm) {
@@ -9451,8 +9456,10 @@
         if (roleStages.length > 0) {
           const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
           const rounded = Math.round(avg);
-          const label = WFM_LABELS[rounded] || `Stage ${rounded}`;
-          const wfmBg = WFM_COLORS[rounded] || '#6b7280';
+          let displayStage = rounded;
+          if (rounded === 0 && surveyHasAiTools(s)) displayStage = 1;
+          const label = WFM_LABELS[displayStage] || `Stage ${displayStage}`;
+          const wfmBg = WFM_COLORS[displayStage] || '#6b7280';
           wfmCell = `<span class="maturity-badge" style="background:${wfmBg}22;color:${wfmBg};">${label} (${avg.toFixed(1)})</span>`;
         }
       }
