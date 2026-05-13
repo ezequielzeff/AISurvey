@@ -3218,7 +3218,7 @@
           </div>
         </div>
 
-        <!-- Service Revenue at Risk (Stage 0) -->
+        <!-- Service Revenue at Risk — accounts with no AI tools selected -->
         <div id="wfmRevenueAtRisk"><!-- Populated by JS --></div>
 
         </div>
@@ -6695,26 +6695,19 @@
       }
     }
 
-    // 8. Service Revenue at Risk — accounts at Stage 0 (No AI Usage)
+    // 8. Service Revenue at Risk — accounts with NO AI tools selected.
+    //    Classification is based on toolsAndInfrastructure.ai (surveyHasAiTools),
+    //    not the rounded WFM average, so a single role using AI (e.g. SWE on Copilot
+    //    with PM/QA still at Stage 0) keeps the account out of the "No AI Usage" bucket
+    //    even though its averaged WFM stage would round to 0.
     const revenueAtRiskEl = document.getElementById('wfmRevenueAtRisk');
     if (revenueAtRiskEl) {
-      // Identify filtered surveys that resolve to Stage 0
       const stage0Accounts = [];
       filteredSurveys.forEach(s => {
-        const wfm = s.data?.workflowMaturity;
-        if (!wfm) return;
-        const roleStages = [];
-        ROLE_ORDER.forEach(role => {
-          const st = wfm[role]?.stage;
-          if (st !== null && st !== undefined && typeof st === 'number') roleStages.push(st);
-        });
-        if (roleStages.length === 0) return;
-        const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
-        if (Math.round(avg) === 0) {
-          const acctName = s.data?.accountName || s.account_name || 'Unknown';
-          const revenue = s.forecasted_service_revenue || 0;
-          stage0Accounts.push({ name: acctName, revenue });
-        }
+        if (surveyHasAiTools(s)) return;
+        const acctName = s.data?.accountName || s.account_name || 'Unknown';
+        const revenue = s.forecasted_service_revenue || 0;
+        stage0Accounts.push({ name: acctName, revenue });
       });
 
       if (stage0Accounts.length > 0) {
@@ -6725,7 +6718,7 @@
           <div style="margin-top:1rem;padding:0.85rem 1rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
             <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
               <span style="font-size:1rem;">⚠️</span>
-              <span style="font-size:0.85rem;font-weight:700;color:#991b1b;">Service Revenue at Risk — Stage 0 (No AI Usage)</span>
+              <span style="font-size:0.85rem;font-weight:700;color:#991b1b;">Service Revenue at Risk — No AI Usage</span>
             </div>
             <div style="display:flex;align-items:baseline;gap:0.5rem;margin-bottom:0.4rem;">
               <span style="font-size:1.35rem;font-weight:800;color:#ef4444;">${formatCurrency(totalRevenueAtRisk) || '$0'}</span>
