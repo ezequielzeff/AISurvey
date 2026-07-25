@@ -6569,7 +6569,9 @@
     renderAiAdoptionByRoleWidget(surveys);
     renderAiChampionWidget(surveys);
     renderArtisynWidget(surveys);
-    renderAiAdoptionWidget(allSurveys);
+    // Use the FILTERED set so this widget reacts to interactive filters
+    // (Artisyn, stage, champion, ...) like every other widget on the page.
+    renderAiAdoptionWidget(surveys);
 
     // Collapsed account section summary (must run after renderWorkflowMaturityWidget sets currentWfmStage)
     updateAccountSectionSummary(surveys);
