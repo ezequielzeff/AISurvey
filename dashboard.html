@@ -1267,15 +1267,20 @@
     }
     /* Surveys section breaks out of the 1400px content column so all
        columns fit; scrolls horizontally on narrower screens. */
+    /* NOTE: do NOT use `transform` here. A transformed ancestor becomes the
+       containing block for position:sticky descendants, which breaks the
+       sticky table header (it detaches and overlaps the first rows). */
     .widget-section-wide {
       width: min(calc(100vw - 3rem), 1920px);
-      margin-left: 50%;
-      transform: translateX(-50%);
+      margin-left: calc((min(100vw - 3rem, 1920px) - 100%) / -2);
     }
-    .widget-section-wide .surveys-section { overflow-x: auto; }
     .widget-section-wide .surveys-table { min-width: 1500px; }
     @media (max-width: 1400px) {
-      .widget-section-wide { width: 100%; margin-left: 0; transform: none; }
+      /* Only below the breakout width do we need a scroll container.
+         (overflow-x also creates a scrollport, which changes sticky behaviour,
+         so it is deliberately NOT applied on wide screens.) */
+      .widget-section-wide { width: 100%; margin-left: 0; }
+      .widget-section-wide .surveys-section { overflow-x: auto; }
     }
     .surveys-table {
       width: 100%;
