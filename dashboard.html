@@ -2753,7 +2753,7 @@
       <div class="filter-group" id="filterLatestOnlyGroup" title="Show only the most recent survey for each account. Overrides Year/Quarter.">
         <label class="latest-toggle">
           <input type="checkbox" id="filterLatestOnly" checked />
-          <span class="latest-toggle-text">Latest per account</span>
+          <span class="latest-toggle-text">Use latest Survey per account</span>
         </label>
       </div>
       <div class="filter-group" id="filterActiveOnlyGroup" title="Hide accounts marked Inactive in Travel Accounts.md (they keep their historical surveys).">
@@ -4692,8 +4692,12 @@
     activeArtisynFilter = null;
     activeAiAdoptionFilter = 'all';
     document.getElementById('filterAiAdoption').value = 'all';
+    // "Use latest Survey per account" is the default view — keep it on when
+    // clearing filters (clearing should reset the analysis, not change the lens).
     const latestOnlyEl = document.getElementById('filterLatestOnly');
-    if (latestOnlyEl) latestOnlyEl.checked = false;
+    if (latestOnlyEl) latestOnlyEl.checked = true;
+    const activeOnlyEl = document.getElementById('filterActiveOnly');
+    if (activeOnlyEl) activeOnlyEl.checked = true;
     syncLatestOnlyUiState();
     resetCloudPlatformCheckboxes();
     refreshDashboard();
