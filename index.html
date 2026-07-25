@@ -3202,6 +3202,26 @@
         </div>
       </div>
 
+      <!-- Step 12: DataArt AI & Assets (displayed as Step 9) -->
+      <div id="step12" class="step hidden">
+        <div class="card-header">
+          <div class="step-indicator">Step 9</div>
+          <h1 class="card-title">DataArt AI &amp; Assets</h1>
+          <p class="card-subtitle">Artisyn products, case studies, and AI in the client's product</p>
+        </div>
+        <div class="card-body">
+          <div id="daaiContainer"><!-- Populated by JS --></div>
+          <div style="margin-top:1.25rem;">
+            <label style="display:block;font-weight:600;font-size:0.9rem;margin-bottom:0.4rem;">Notes (optional)</label>
+            <textarea id="daaiNote" rows="3" placeholder="Anything worth adding - rollout status, blockers, case study ideas..." style="width:100%;padding:0.6rem;border:1px solid #d1d5db;border-radius:8px;font-family:inherit;font-size:0.9rem;resize:vertical;"></textarea>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" id="step12Back">&larr; Back</button>
+          <button class="btn btn-primary" id="step12Next">Continue &rarr;</button>
+        </div>
+      </div>
+
       <!-- Step 9: AI Workflow Maturity -->
       <div id="step9" class="step hidden">
         <div class="card-header">
@@ -3773,6 +3793,7 @@
         selectedLimitingFactors: Array.from(selectedLimitingFactors),
         limitingFactorsOrder,
         limitingFactorOther,
+        dataArtAIState,
         clientAIMaturity,
         clientAIUsage: Array.from(clientAIUsage),
         clientAIPriority,
@@ -3815,6 +3836,7 @@
         
         currentStep = state.currentStep || 1;
         accountName = state.accountName || '';
+        dataArtAIState = Object.assign({ dw:null, transform:null, build:null, caseProduct:null, caseAdlc:null, productAI:null, primaryTool:null, note:'' }, state.dataArtAIState || {});
         aiChampion = state.aiChampion || null;
         aiChampions = state.aiChampions || [];
         // Backward compat: migrate old single-champion data
@@ -4997,15 +5019,15 @@
       // No longer needed - custom tools are now rendered as cards
     }
 
-    const stepLabels = {0:'Welcome', 5:'Engagement Model', 6:'Client AI Landscape', 1:'Team Roles', 2:'Tools & Infrastructure', 4:'Role-Tool Matrix', 3:'AI Use Cases', 9:'AI Workflow Maturity', 7:'Limiting Factors', 8:'Review & Download'};
-    const stepIcons = {0:'🏠', 5:'🤝', 6:'🏢', 1:'👥', 2:'🛠️', 4:'🔗', 3:'📋', 9:'🤖', 7:'🚧', 8:'📦'};
-    const stepSubtitles = {0:'Get started with your assessment', 5:'Define ownership and compliance', 6:'Current client AI adoption state', 1:'Select your team composition', 2:'Select tools used by your team', 4:'Map which roles use which AI tools', 3:'Identify AI use case needs', 9:'Assess workflow maturity per role', 7:'What limits your AI adoption?', 8:'Check your answers before downloading'};
+    const stepLabels = {0:'Welcome', 5:'Engagement Model', 6:'Client AI Landscape', 1:'Team Roles', 2:'Tools & Infrastructure', 4:'Role-Tool Matrix', 3:'AI Use Cases', 9:'AI Workflow Maturity', 7:'Limiting Factors', 12:'DataArt AI & Assets', 8:'Review & Download'};
+    const stepIcons = {0:'🏠', 5:'🤝', 6:'🏢', 1:'👥', 2:'🛠️', 4:'🔗', 3:'📋', 9:'🤖', 7:'🚧', 12:'🎨', 8:'📦'};
+    const stepSubtitles = {0:'Get started with your assessment', 5:'Define ownership and compliance', 6:'Current client AI adoption state', 1:'Select your team composition', 2:'Select tools used by your team', 4:'Map which roles use which AI tools', 3:'Identify AI use case needs', 9:'Assess workflow maturity per role', 7:'What limits your AI adoption?', 12:'Artisyn, case studies & product AI', 8:'Check your answers before downloading'};
 
     function getActiveOrder() {
       const aiTools = getSelectedAITools();
       return aiTools.length > 0
-        ? [5, 6, 1, 2, 4, 3, 9, 7, 8]
-        : [5, 6, 1, 2, 3, 9, 7, 8];
+        ? [5, 6, 1, 2, 4, 3, 9, 7, 12, 8]
+        : [5, 6, 1, 2, 3, 9, 7, 12, 8];
     }
 
     function renderSidebar() {
@@ -5098,9 +5120,40 @@
       });
     }
 
+    // ── DataArt AI & Assets (internal step 12) ──
+    let dataArtAIState = { dw:null, transform:null, build:null, caseProduct:null, caseAdlc:null, productAI:null, primaryTool:null, note:'' };
+    const DAAI_TOOL_LABELS = { claude:'Claude', copilot:'GitHub Copilot', amazonq:'Amazon Q / Kiro', cursor:'Cursor', chatgpt:'ChatGPT', custom:'Other', none:'None' };
+    function renderDataArtAI() {
+      const el = document.getElementById('daaiContainer');
+      if (!el) return;
+      const pill = (field, val, label) => {
+        const on = dataArtAIState[field] === val;
+        return `<button type="button" data-daai="${field}" data-val="${val}" style="padding:0.4rem 0.9rem;border-radius:999px;border:1.5px solid ${on ? '#4f46e5' : '#d1d5db'};background:${on ? '#eef2ff' : '#fff'};color:${on ? '#3730a3' : '#374151'};font-weight:${on ? '600' : '400'};font-size:0.85rem;cursor:pointer;margin:0 0.4rem 0.4rem 0;">${label}</button>`;
+      };
+      const group = (title, hint, field, opts) =>
+        `<div style="margin-bottom:1.1rem;">
+           <div style="font-weight:600;font-size:0.9rem;margin-bottom:0.15rem;">${title}</div>
+           ${hint ? `<div style="font-size:0.78rem;color:#6b7280;margin-bottom:0.4rem;">${hint}</div>` : ''}
+           <div>${opts.map(([v, l]) => pill(field, v, l)).join('')}</div>
+         </div>`;
+      const ART = [['using','Using'],['planned','Planned'],['not-planned','Not planned']];
+      const CS = [['na','N/A'],['not-yet','Not yet'],['planned','Planned'],['in-progress','In progress'],['ready','Ready']];
+      el.innerHTML =
+        group('Artisyn Delivery Workspace', 'AI-driven delivery workspace (formerly AILA)', 'dw', ART) +
+        group('Artisyn Transform', 'Legacy modernization accelerator', 'transform', ART) +
+        group('Artisyn Build', 'Greenfield build accelerator (formerly Labs)', 'build', ART) +
+        group("AI in the client's product", 'AI shipped inside the client\'s own product or service (customer-facing), not delivery tooling', 'productAI', [['no','No'],['scoped','Scoped / pipeline'],['live','Live / in build']]) +
+        group('AI-Product case study', 'A story about AI DataArt built into the client\'s product', 'caseProduct', CS) +
+        group('ADLC case study', 'A story about AI used in delivery (coding, testing, docs...)', 'caseAdlc', CS) +
+        group('Primary AI tool on the account', '', 'primaryTool', Object.entries(DAAI_TOOL_LABELS));
+      const note = document.getElementById('daaiNote');
+      if (note && note.value !== dataArtAIState.note) note.value = dataArtAIState.note || '';
+    }
+
     function goToStep(step) {
       flushPendingInputs();
       currentStep = step;
+      if (step === 12) renderDataArtAI();
 
       const activeOrder = getActiveOrder();
       const totalDisplaySteps = activeOrder.length - 1; // exclude review from count
@@ -6527,7 +6580,23 @@
 
       // Step 7 (Limiting Factors) — displayed as Step 8
       document.getElementById('step7Back').addEventListener('click', () => goToStep(9));
-      document.getElementById('step7Next').addEventListener('click', () => { if (validateStep(7)) goToStep(8); });
+      document.getElementById('step7Next').addEventListener('click', () => { if (validateStep(7)) goToStep(12); });
+
+      // Step 12 (DataArt AI & Assets) — displayed as Step 9
+      document.getElementById('step12Back').addEventListener('click', () => goToStep(7));
+      document.getElementById('step12Next').addEventListener('click', () => goToStep(8));
+      document.getElementById('daaiContainer').addEventListener('click', (e) => {
+        const pill = e.target.closest('[data-daai]');
+        if (!pill) return;
+        const field = pill.dataset.daai, val = pill.dataset.val;
+        dataArtAIState[field] = (dataArtAIState[field] === val) ? null : val;  // click again to clear
+        renderDataArtAI();
+        autoSave();
+      });
+      document.getElementById('daaiNote').addEventListener('input', (e) => {
+        dataArtAIState.note = e.target.value;
+        autoSave();
+      });
 
       // Step 7: Limiting Factors click handler
       document.getElementById('limitingFactorsOptions').addEventListener('click', (e) => {
@@ -6541,7 +6610,7 @@
       });
 
       // Step 8 (Review)
-      document.getElementById('step8Back').addEventListener('click', () => goToStep(7));
+      document.getElementById('step8Back').addEventListener('click', () => goToStep(12));
       document.getElementById('downloadAssessmentReview').addEventListener('click', () => downloadAssessment());
 
       document.getElementById('updateDashboardSurvey').addEventListener('click', async () => {
@@ -6811,6 +6880,26 @@
               return [id, entry];
             })
           )
+        },
+
+        // --- DataArt AI & Assets (schema extension, Q3 2026) ---
+        dataArtAI: {
+          _meta: { step: 'Step 9', title: 'DataArt AI & Assets', type: 'dm-review',
+                   description: 'DataArt-side AI signals: Artisyn products, case studies, AI in the client product' },
+          primaryTool: { value: dataArtAIState.primaryTool, _label: dataArtAIState.primaryTool ? (DAAI_TOOL_LABELS[dataArtAIState.primaryTool] || dataArtAIState.primaryTool) : null },
+          artisyn: {
+            _meta: { question: 'Artisyn products in this account', options: ['using', 'planned', 'not-planned'] },
+            dw: { status: dataArtAIState.dw, _label: 'Artisyn Delivery Workspace' },
+            transform: { status: dataArtAIState.transform, _label: 'Artisyn Transform' },
+            build: { status: dataArtAIState.build, _label: 'Artisyn Build' }
+          },
+          caseStudies: {
+            _meta: { question: 'Case study status', options: ['na', 'not-yet', 'planned', 'in-progress', 'ready'] },
+            product: { status: dataArtAIState.caseProduct, _label: 'AI-Product case study' },
+            adlc: { status: dataArtAIState.caseAdlc, _label: 'ADLC case study' }
+          },
+          productAI: { status: dataArtAIState.productAI, _label: "AI in client's product" },
+          note: (dataArtAIState.note || '').trim() || null
         },
 
         // --- Step Notes ---
