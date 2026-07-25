@@ -4646,6 +4646,26 @@
     return hasNamedTool || hasCustomTool;
   }
 
+  // ── Canonical WFM stage for an account ───────────────────────────────
+  // THE single source for "which stage bucket is this account in?".
+  // Badges, widget buckets and the stage filter must all use this, otherwise
+  // an account can show one stage and be filtered into another. The override
+  // matters: an account whose role stages average e.g. 0.3 rounds to 0, but if
+  // ANY AI tool is in use it is not "No AI Usage" — it is at least Individual.
+  // Returns null when the account has no role stages recorded at all.
+  function getWfmDisplayStage(s) {
+    const wfm = s.data?.workflowMaturity;
+    if (!wfm) return null;
+    const stages = [];
+    ROLE_ORDER.forEach(role => {
+      const st = wfm[role]?.stage;
+      if (st !== null && st !== undefined && typeof st === 'number') stages.push(st);
+    });
+    if (stages.length === 0) return null;
+    const rounded = Math.round(stages.reduce((a, b) => a + b, 0) / stages.length);
+    return (rounded === 0 && surveyHasAiTools(s)) ? 1 : rounded;
+  }
+
   function onAiAdoptionFilterChange() {
     activeAiAdoptionFilter = document.getElementById('filterAiAdoption').value;
     refreshDashboard();
@@ -4997,18 +5017,8 @@
 
     // WFM stage filter
     if (groupFilters.wfmStage !== null) {
-      surveys = surveys.filter(s => {
-        const wfm = s.data?.workflowMaturity;
-        if (!wfm) return false;
-        const stages = [];
-        ROLE_ORDER.forEach(role => {
-          const st = wfm[role]?.stage;
-          if (st !== null && st !== undefined && typeof st === 'number') stages.push(st);
-        });
-        if (stages.length === 0) return false;
-        const avg = stages.reduce((a, b) => a + b, 0) / stages.length;
-        return Math.round(avg) === groupFilters.wfmStage;
-      });
+      // Same canonical stage as badges / widget buckets (see getWfmDisplayStage)
+      surveys = surveys.filter(s => getWfmDisplayStage(s) === groupFilters.wfmStage);
     }
 
     // AI tool filter
@@ -6248,18 +6258,9 @@
 
     // Apply workflow maturity stage filter
     if (activeWfmStageFilter !== null) {
-      surveys = surveys.filter(s => {
-        const wfm = s.data?.workflowMaturity;
-        if (!wfm) return false;
-        const stages = [];
-        ROLE_ORDER.forEach(role => {
-          const st = wfm[role]?.stage;
-          if (st !== null && st !== undefined && typeof st === 'number') stages.push(st);
-        });
-        if (stages.length === 0) return false;
-        const avg = stages.reduce((a, b) => a + b, 0) / stages.length;
-        return Math.round(avg) === activeWfmStageFilter;
-      });
+      // Uses the same canonical stage as the badges and widget buckets, so an
+      // account displayed as "Individual AI (0.3)" is never pulled into Stage 0.
+      surveys = surveys.filter(s => getWfmDisplayStage(s) === activeWfmStageFilter);
     }
 
     // Apply AI tool filter
