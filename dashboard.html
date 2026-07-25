@@ -3652,7 +3652,8 @@
 
       <div class="compare-preset-bar">
         <span class="preset-label">⚡ Quick compare:</span>
-        <button class="compare-preset-btn" onclick="applyComparePreset('latest-vs-previous')" title="Each account's newest survey vs the one before it">Latest vs previous survey</button>
+        <button class="compare-preset-btn" onclick="applyComparePreset('latest-vs-previous')" title="Each account's most recent survey vs the one just before it">Previous vs most recent</button>
+        <button class="compare-preset-btn" onclick="applyComparePreset('first-vs-latest')" title="Each account's first survey vs its most recent — progress since baseline">First vs most recent</button>
         <button class="compare-preset-btn" onclick="applyComparePreset('quarter-over-quarter')" title="Most recent quarter vs the quarter before">Latest quarter vs prior quarter</button>
         <span id="comparePresetHint" style="font-size:0.73rem;color:#6366f1;"></span>
       </div>
@@ -3671,10 +3672,11 @@
             <div class="compare-filter-label">Survey period</div>
             <select id="comparePeriodA" class="compare-period-select">
               <option value="all">All periods</option>
-              <option value="latest">Latest survey per account</option>
-              <option value="previous">Previous survey per account</option>
+              <option value="latest">Most recent survey</option>
+              <option value="previous">Survey just before the most recent</option>
+              <option value="first">First survey (earliest on record)</option>
             </select>
-            <div style="font-size:0.7rem;color:#9ca3af;margin-top:0.25rem;">Pick a quarter, or use latest / previous to track change over time.</div>
+            <div style="font-size:0.7rem;color:#9ca3af;margin-top:0.25rem;">Pick a quarter, or use first / previous / most recent to track change over time. Each is resolved per account.</div>
           </div>
           <div class="compare-filter-section">
             <div class="compare-filter-label">Accounts</div>
@@ -3732,10 +3734,11 @@
             <div class="compare-filter-label">Survey period</div>
             <select id="comparePeriodB" class="compare-period-select">
               <option value="all">All periods</option>
-              <option value="latest">Latest survey per account</option>
-              <option value="previous">Previous survey per account</option>
+              <option value="latest">Most recent survey</option>
+              <option value="previous">Survey just before the most recent</option>
+              <option value="first">First survey (earliest on record)</option>
             </select>
-            <div style="font-size:0.7rem;color:#9ca3af;margin-top:0.25rem;">Pick a quarter, or use latest / previous to track change over time.</div>
+            <div style="font-size:0.7rem;color:#9ca3af;margin-top:0.25rem;">Pick a quarter, or use first / previous / most recent to track change over time. Each is resolved per account.</div>
           </div>
           <div class="compare-filter-section">
             <div class="compare-filter-label">Accounts</div>
@@ -4692,8 +4695,9 @@
       if (sel) {
         sel.innerHTML =
           '<option value="all">All periods</option>' +
-          '<option value="latest">Latest survey per account</option>' +
-          '<option value="previous">Previous survey per account</option>' +
+          '<option value="latest">Most recent survey</option>' +
+          '<option value="previous">Survey just before the most recent</option>' +
+          '<option value="first">First survey (earliest on record)</option>' +
           (periods.length ? '<optgroup label="Specific quarter">' +
             periods.map(p => `<option value="${p.key}">${p.label}</option>`).join('') + '</optgroup>' : '');
         sel.value = g.filters.period || 'all';
@@ -4779,8 +4783,13 @@
     if (kind === 'latest-vs-previous') {
       selA.value = 'previous'; selB.value = 'latest';
       if (nameA) nameA.value = 'Previous survey';
-      if (nameB) nameB.value = 'Latest survey';
-      if (hint) hint.textContent = 'Per account: the survey before the newest one → the newest one.';
+      if (nameB) nameB.value = 'Most recent survey';
+      if (hint) hint.textContent = 'Per account: the survey just before the most recent → the most recent.';
+    } else if (kind === 'first-vs-latest') {
+      selA.value = 'first'; selB.value = 'latest';
+      if (nameA) nameA.value = 'First survey';
+      if (nameB) nameB.value = 'Most recent survey';
+      if (hint) hint.textContent = 'Per account: earliest survey on record → the most recent. Best view of progress since the baseline.';
     } else if (kind === 'quarter-over-quarter') {
       const periods = getAvailablePeriods();
       if (periods.length < 2) {
@@ -4922,21 +4931,27 @@
     });
   }
 
-  // period: 'all' | 'latest' | 'previous' | '2026-Q3'
+  // period: 'all' | 'latest' | 'previous' | 'first' | '2026-Q3'
+  //   latest   = each account's newest survey
+  //   previous = the one immediately before it (nothing if only one exists)
+  //   first    = each account's earliest survey on record
   function applyPeriodSelection(surveys, period) {
     if (!period || period === 'all') return surveys;
 
-    if (period === 'latest' || period === 'previous') {
+    if (period === 'latest' || period === 'previous' || period === 'first') {
       const byAccount = new Map();
       surveys.forEach(s => {
         if (!byAccount.has(s.account_name)) byAccount.set(s.account_name, []);
         byAccount.get(s.account_name).push(s);
       });
-      const idx = period === 'latest' ? 0 : 1;
       const out = [];
       byAccount.forEach(list => {
-        const ordered = sortByRecency(list);
-        if (ordered[idx]) out.push(ordered[idx]);
+        const ordered = sortByRecency(list);           // newest first
+        let pick = null;
+        if (period === 'latest') pick = ordered[0];
+        else if (period === 'previous') pick = ordered[1] || null;   // none if only one survey
+        else pick = ordered[ordered.length - 1];       // first = oldest on record
+        if (pick) out.push(pick);
       });
       return out;
     }
