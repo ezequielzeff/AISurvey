@@ -1265,6 +1265,18 @@
       font-weight: 700;
       color: #1f2937;
     }
+    /* Surveys section breaks out of the 1400px content column so all
+       columns fit; scrolls horizontally on narrower screens. */
+    .widget-section-wide {
+      width: min(calc(100vw - 3rem), 1920px);
+      margin-left: 50%;
+      transform: translateX(-50%);
+    }
+    .widget-section-wide .surveys-section { overflow-x: auto; }
+    .widget-section-wide .surveys-table { min-width: 1500px; }
+    @media (max-width: 1400px) {
+      .widget-section-wide { width: 100%; margin-left: 0; transform: none; }
+    }
     .surveys-table {
       width: 100%;
       border-collapse: separate;
@@ -1542,6 +1554,22 @@
     .compare-filter-section {
       margin-bottom: 0.75rem;
     }
+    .compare-period-select {
+      width: 100%; padding: 0.4rem 0.5rem; border: 1px solid #d1d5db; border-radius: 6px;
+      font-size: 0.8rem; font-family: inherit; background: #fff; color: #1f2937; cursor: pointer;
+    }
+    .compare-period-select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 2px #6366f133; }
+    .compare-preset-bar {
+      display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+      padding: 0.6rem 0.85rem; margin-bottom: 0.85rem;
+      background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px;
+    }
+    .compare-preset-bar .preset-label { font-size: 0.78rem; font-weight: 700; color: #3730a3; }
+    .compare-preset-btn {
+      font-size: 0.75rem; font-weight: 600; color: #4338ca; background: #fff;
+      border: 1px solid #c7d2fe; border-radius: 999px; padding: 0.28rem 0.7rem; cursor: pointer;
+    }
+    .compare-preset-btn:hover { background: #e0e7ff; }
     .compare-filter-label {
       font-size: 0.75rem; font-weight: 700; color: #6b7280;
       text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;
@@ -3358,8 +3386,29 @@
         </div> <!-- end widget-section-content -->
       </div> <!-- end Account AI Landscape section -->
 
-      <!-- Section: Surveys -->
+      <!-- Section: Artisyn Adoption -->
       <div class="widget-section">
+        <div class="widget-section-title" onclick="toggleSection(this)">
+          <span>Artisyn Adoption</span>
+          <span class="section-chevron">&#9662;</span>
+        </div>
+        <div class="widget-section-summary" id="sectionSummaryArtisyn"></div>
+        <div class="widget-section-content">
+          <div class="widget-card" id="artisynWidget">
+            <div class="widget-header" onclick="toggleWidget(this)">
+              <div class="widget-title">Artisyn Product Adoption <span class="widget-chevron">&#9662;</span></div>
+              <div class="widget-subtitle">Delivery Workspace, Transform and Build &mdash; share of accounts using or planning each product</div>
+              <div class="widget-summary" id="artisynSummary"></div>
+            </div>
+            <div class="widget-body">
+              <div id="artisynContent"><!-- Populated by JS --></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Surveys -->
+      <div class="widget-section widget-section-wide">
         <div class="widget-section-title" onclick="toggleSection(this)">
           <span>Surveys</span>
           <span class="section-chevron">&#9662;</span>
@@ -3589,6 +3638,12 @@
       <h2>⚖ Compare Two Groups</h2>
       <p style="font-size:0.85rem;color:#6b7280;margin:-0.5rem 0 1rem;">Define two groups of accounts using filters, then compare them across all dashboard widgets.</p>
 
+      <div class="compare-preset-bar">
+        <span class="preset-label">⚡ Quick compare:</span>
+        <button class="compare-preset-btn" onclick="applyComparePreset('latest-vs-previous')" title="Each account's newest survey vs the one before it">Latest vs previous survey</button>
+        <button class="compare-preset-btn" onclick="applyComparePreset('quarter-over-quarter')" title="Most recent quarter vs the quarter before">Latest quarter vs prior quarter</button>
+        <span id="comparePresetHint" style="font-size:0.73rem;color:#6366f1;"></span>
+      </div>
       <div class="compare-columns">
         <!-- Group A -->
         <div class="compare-group-col group-a">
@@ -3599,6 +3654,15 @@
               <button style="font-size:0.75rem;color:#6366f1;background:none;border:none;cursor:pointer;font-weight:600;" onclick="copyCurrentFiltersToGroup('A')" title="Copy current dashboard filters">📋 Copy Current</button>
               <button style="font-size:0.75rem;color:#ef4444;background:none;border:none;cursor:pointer;font-weight:600;margin-left:0.3rem;" onclick="clearCompareGroupFilters('A')">✕ Clear</button>
             </div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Survey period</div>
+            <select id="comparePeriodA" class="compare-period-select">
+              <option value="all">All periods</option>
+              <option value="latest">Latest survey per account</option>
+              <option value="previous">Previous survey per account</option>
+            </select>
+            <div style="font-size:0.7rem;color:#9ca3af;margin-top:0.25rem;">Pick a quarter, or use latest / previous to track change over time.</div>
           </div>
           <div class="compare-filter-section">
             <div class="compare-filter-label">Accounts</div>
@@ -3651,6 +3715,15 @@
               <button style="font-size:0.75rem;color:#10b981;background:none;border:none;cursor:pointer;font-weight:600;" onclick="copyCurrentFiltersToGroup('B')" title="Copy current dashboard filters">📋 Copy Current</button>
               <button style="font-size:0.75rem;color:#ef4444;background:none;border:none;cursor:pointer;font-weight:600;margin-left:0.3rem;" onclick="clearCompareGroupFilters('B')">✕ Clear</button>
             </div>
+          </div>
+          <div class="compare-filter-section">
+            <div class="compare-filter-label">Survey period</div>
+            <select id="comparePeriodB" class="compare-period-select">
+              <option value="all">All periods</option>
+              <option value="latest">Latest survey per account</option>
+              <option value="previous">Previous survey per account</option>
+            </select>
+            <div style="font-size:0.7rem;color:#9ca3af;margin-top:0.25rem;">Pick a quarter, or use latest / previous to track change over time.</div>
           </div>
           <div class="compare-filter-section">
             <div class="compare-filter-label">Accounts</div>
@@ -4197,8 +4270,8 @@
   let comparisonMode = false;
   const COMPARE_COLOR_A = '#6366f1'; // Indigo
   const COMPARE_COLOR_B = '#10b981'; // Emerald
-  let groupA = { name: 'Group A', filters: { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set() } };
-  let groupB = { name: 'Group B', filters: { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set() } };
+  let groupA = { name: 'Group A', filters: { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set(), period: 'all' } };
+  let groupB = { name: 'Group B', filters: { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set(), period: 'all' } };
 
   function setMaturityFilter(stage) {
     if (activeMaturityFilter === stage) {
@@ -4599,6 +4672,22 @@
     const accounts = [...new Set(surveys.map(s => s.account_name))].sort();
     const dms = [...new Set(surveys.map(s => s.delivery_manager).filter(Boolean))].sort();
 
+    // Survey-period dropdowns (rebuilt each open so new quarters show up)
+    const periods = getAvailablePeriods();
+    ['A', 'B'].forEach(side => {
+      const g = side === 'A' ? groupA : groupB;
+      const sel = document.getElementById('comparePeriod' + side);
+      if (sel) {
+        sel.innerHTML =
+          '<option value="all">All periods</option>' +
+          '<option value="latest">Latest survey per account</option>' +
+          '<option value="previous">Previous survey per account</option>' +
+          (periods.length ? '<optgroup label="Specific quarter">' +
+            periods.map(p => `<option value="${p.key}">${p.label}</option>`).join('') + '</optgroup>' : '');
+        sel.value = g.filters.period || 'all';
+      }
+    });
+
     ['A', 'B'].forEach(side => {
       const g = side === 'A' ? groupA : groupB;
       // Accounts checklist
@@ -4666,6 +4755,33 @@
     document.getElementById('compareModal').classList.add('open');
   }
 
+  // Quick presets for period-over-period comparison
+  function applyComparePreset(kind) {
+    const selA = document.getElementById('comparePeriodA');
+    const selB = document.getElementById('comparePeriodB');
+    const nameA = document.getElementById('compareGroupAName');
+    const nameB = document.getElementById('compareGroupBName');
+    const hint = document.getElementById('comparePresetHint');
+    if (!selA || !selB) return;
+
+    if (kind === 'latest-vs-previous') {
+      selA.value = 'previous'; selB.value = 'latest';
+      if (nameA) nameA.value = 'Previous survey';
+      if (nameB) nameB.value = 'Latest survey';
+      if (hint) hint.textContent = 'Per account: the survey before the newest one → the newest one.';
+    } else if (kind === 'quarter-over-quarter') {
+      const periods = getAvailablePeriods();
+      if (periods.length < 2) {
+        if (hint) hint.textContent = 'Need at least two quarters of surveys for this.';
+        return;
+      }
+      selA.value = periods[1].key; selB.value = periods[0].key;
+      if (nameA) nameA.value = periods[1].label;
+      if (nameB) nameB.value = periods[0].label;
+      if (hint) hint.textContent = `${periods[1].label} → ${periods[0].label}. Only accounts surveyed in a quarter appear in that side.`;
+    }
+  }
+
   function closeCompareModal() {
     document.getElementById('compareModal').classList.remove('open');
   }
@@ -4675,7 +4791,8 @@
       maturity: null, accounts: new Set(), deliveryManagers: new Set(),
       limitingFactor: null, aiTool: null, aiChallenge: null,
       wfmStage: null, champion: null, aiAdoption: 'all',
-      accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set()
+      accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set(),
+      period: document.getElementById(`comparePeriod${side}`)?.value || 'all'
     };
 
     // Accounts
@@ -4743,7 +4860,7 @@
 
   function clearCompareGroupFilters(side) {
     const g = side === 'A' ? groupA : groupB;
-    g.filters = { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, aiAdoption: 'all', accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set() };
+    g.filters = { maturity: null, accounts: new Set(), deliveryManagers: new Set(), limitingFactor: null, aiTool: null, aiChallenge: null, wfmStage: null, champion: null, aiAdoption: 'all', accountTypes: new Set(), engagementTypes: new Set(), cloudPlatforms: new Set(), period: 'all' };
     openCompareModal();
   }
 
@@ -4773,8 +4890,60 @@
     refreshDashboard();
   }
 
+  // ── Compare: survey-period helpers ──────────────────────────
+  // Returns every distinct period present, newest first: [{year, quarter, key, label}]
+  function getAvailablePeriods() {
+    if (!db) return [];
+    const res = db.exec('SELECT DISTINCT year, quarter FROM surveys ORDER BY year DESC, quarter DESC');
+    if (!res.length) return [];
+    return res[0].values.map(([y, q]) => ({
+      year: y, quarter: q, key: `${y}-Q${q}`, label: `Q${q} ${y}`
+    }));
+  }
+
+  // Rank surveys of one account chronologically (newest first)
+  function sortByRecency(list) {
+    return list.slice().sort((a, b) => {
+      if (b.year !== a.year) return b.year - a.year;
+      if (b.quarter !== a.quarter) return b.quarter - a.quarter;
+      return String(b.exported_at || '').localeCompare(String(a.exported_at || ''));
+    });
+  }
+
+  // period: 'all' | 'latest' | 'previous' | '2026-Q3'
+  function applyPeriodSelection(surveys, period) {
+    if (!period || period === 'all') return surveys;
+
+    if (period === 'latest' || period === 'previous') {
+      const byAccount = new Map();
+      surveys.forEach(s => {
+        if (!byAccount.has(s.account_name)) byAccount.set(s.account_name, []);
+        byAccount.get(s.account_name).push(s);
+      });
+      const idx = period === 'latest' ? 0 : 1;
+      const out = [];
+      byAccount.forEach(list => {
+        const ordered = sortByRecency(list);
+        if (ordered[idx]) out.push(ordered[idx]);
+      });
+      return out;
+    }
+
+    const m = /^(\d{4})-Q(\d)$/.exec(period);
+    if (m) {
+      const y = parseInt(m[1]), q = parseInt(m[2]);
+      return surveys.filter(s => s.year === y && s.quarter === q);
+    }
+    return surveys;
+  }
+
   function getFilteredSurveysForGroup(groupFilters) {
-    let surveys = getAllFilteredSurveys(); // base dataset (year/quarter/type/engagement only)
+    // Period-aware compare needs the full history, not just the globally filtered slice
+    let surveys = (groupFilters.period && groupFilters.period !== 'all')
+      ? getAllFilteredSurveys({ deduplicate: false })
+      : getAllFilteredSurveys(); // base dataset (year/quarter/type/engagement only)
+
+    surveys = applyPeriodSelection(surveys, groupFilters.period);
 
     // Maturity filter
     if (groupFilters.maturity) {
@@ -6290,6 +6459,7 @@
     renderSdlcCoverageWidget(surveys);
     renderAiAdoptionByRoleWidget(surveys);
     renderAiChampionWidget(surveys);
+    renderArtisynWidget(surveys);
     renderAiAdoptionWidget(allSurveys);
 
     // Collapsed account section summary (must run after renderWorkflowMaturityWidget sets currentWfmStage)
@@ -9157,6 +9327,126 @@
     const champSummary = document.getElementById('aiChampionSummary');
     if (champSummary) {
       champSummary.innerHTML = `<span class="widget-summary-label">Coverage:</span> <span class="widget-summary-value">${yesPct}% (${withChampion.length} of ${total} accounts)</span>`;
+    }
+  }
+
+  // ═══════════════════════════════════════════
+  // ARTISYN ADOPTION WIDGET (dataArtAI.artisyn)
+  // ═══════════════════════════════════════════
+  let artisynDetailsOpen = false;
+  function toggleArtisynDetails() {
+    artisynDetailsOpen = !artisynDetailsOpen;
+    const box = document.querySelector('#artisynWidget .artisyn-accounts-collapsible');
+    const tog = document.querySelector('#artisynWidget .champion-details-toggle .toggle-text');
+    if (box) box.style.display = artisynDetailsOpen ? 'block' : 'none';
+    if (tog) tog.textContent = artisynDetailsOpen ? 'Hide accounts' : 'Show accounts';
+  }
+
+  function renderArtisynWidget(surveys) {
+    const container = document.getElementById('artisynContent');
+    if (!container) return;
+
+    const PRODUCTS = [
+      { key: 'dw',        label: 'Delivery Workspace', icon: '🧩', color: '#4f46e5' },
+      { key: 'transform', label: 'Transform',          icon: '🔄', color: '#0891b2' },
+      { key: 'build',     label: 'Build',              icon: '🏗️', color: '#7c3aed' }
+    ];
+
+    // Latest survey per account, so an account is counted once
+    const latestByAccount = new Map();
+    surveys.forEach(s => {
+      const name = s.account_name;
+      const prev = latestByAccount.get(name);
+      const key = `${s.year}-${String(s.quarter).padStart(2, '0')}-${s.exported_at || ''}`;
+      if (!prev || key > prev.key) latestByAccount.set(name, { key, s });
+    });
+    const accounts = Array.from(latestByAccount.values()).map(v => v.s);
+    const total = accounts.length;
+
+    const stats = {};
+    PRODUCTS.forEach(p => { stats[p.key] = { using: [], planned: [], notPlanned: [], unknown: [] }; });
+
+    accounts.forEach(s => {
+      const art = s.data?.dataArtAI?.artisyn;
+      const name = s.data?.accountName || s.account_name || 'Unknown';
+      PRODUCTS.forEach(p => {
+        const st = art?.[p.key]?.status;
+        if (st === 'using') stats[p.key].using.push(name);
+        else if (st === 'planned') stats[p.key].planned.push(name);
+        else if (st === 'not-planned') stats[p.key].notPlanned.push(name);
+        else stats[p.key].unknown.push(name);
+      });
+    });
+
+    const pct = n => total > 0 ? Math.round((n / total) * 100) : 0;
+
+    // Any-Artisyn footprint
+    const anyUsing = accounts.filter(s => {
+      const art = s.data?.dataArtAI?.artisyn;
+      return art && PRODUCTS.some(p => art[p.key]?.status === 'using');
+    }).length;
+    const anyPlanned = accounts.filter(s => {
+      const art = s.data?.dataArtAI?.artisyn;
+      return art && !PRODUCTS.some(p => art[p.key]?.status === 'using')
+                 && PRODUCTS.some(p => art[p.key]?.status === 'planned');
+    }).length;
+
+    const cards = PRODUCTS.map(p => {
+      const st = stats[p.key];
+      const uPct = pct(st.using.length), pPct = pct(st.planned.length);
+      return `
+        <div style="flex:1;min-width:210px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:0.9rem 1rem;">
+          <div style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.55rem;">${p.icon} ${p.label}</div>
+          <div style="display:flex;align-items:baseline;gap:0.4rem;">
+            <span style="font-size:1.75rem;font-weight:800;color:${p.color};line-height:1;">${uPct}%</span>
+            <span style="font-size:0.78rem;color:#6b7280;">using &middot; ${st.using.length} of ${total}</span>
+          </div>
+          <div style="display:flex;height:8px;border-radius:99px;overflow:hidden;background:#f3f4f6;margin:0.6rem 0 0.45rem;">
+            <div style="width:${uPct}%;background:${p.color};" title="Using: ${st.using.length}"></div>
+            <div style="width:${pPct}%;background:${p.color}55;" title="Planned: ${st.planned.length}"></div>
+          </div>
+          <div style="font-size:0.74rem;color:#6b7280;line-height:1.6;">
+            <span style="color:${p.color};font-weight:600;">${st.using.length} using</span> &nbsp;·&nbsp;
+            <span style="font-weight:600;">${st.planned.length} planned</span> (${pPct}%) &nbsp;·&nbsp;
+            ${st.notPlanned.length} not planned &nbsp;·&nbsp; ${st.unknown.length} no data
+          </div>
+        </div>`;
+    }).join('');
+
+    const listCol = (p) => {
+      const st = stats[p.key];
+      const line = (arr, color, tag) => arr.length
+        ? arr.sort().map(n => `<div class="champion-account-item">${escapeHtml(n)} <span style="color:${color};font-size:0.72rem;">${tag}</span></div>`).join('')
+        : '';
+      const body = line(st.using, p.color, 'using') + line(st.planned, '#b45309', 'planned');
+      return `
+        <div class="champion-accounts-col">
+          <div class="champion-accounts-title" style="color:${p.color};">${p.icon} ${p.label} (${st.using.length + st.planned.length})</div>
+          ${body || '<div class="champion-account-item" style="color:#9ca3af;font-style:italic;">No accounts yet</div>'}
+        </div>`;
+    };
+
+    container.innerHTML = `
+      <div style="display:flex;gap:0.9rem;flex-wrap:wrap;margin-bottom:0.9rem;">${cards}</div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.7rem 1rem;font-size:0.82rem;color:#374151;">
+        <b>${pct(anyUsing)}%</b> of accounts (${anyUsing} of ${total}) use at least one Artisyn product${anyPlanned > 0 ? `, and a further <b>${anyPlanned}</b> ${anyPlanned === 1 ? 'has' : 'have'} one planned` : ''}.
+        <span style="color:#9ca3af;">Based on the latest survey per account; accounts without the DataArt AI step count as "no data".</span>
+      </div>
+      <div class="champion-details-toggle" onclick="toggleArtisynDetails()">
+        <span class="toggle-text">${artisynDetailsOpen ? 'Hide accounts' : 'Show accounts'}</span>
+        <span class="chevron">&#9662;</span>
+      </div>
+      <div class="artisyn-accounts-collapsible" style="display:${artisynDetailsOpen ? 'block' : 'none'};">
+        <div class="champion-accounts">${PRODUCTS.map(listCol).join('')}</div>
+      </div>`;
+
+    const sum = document.getElementById('artisynSummary');
+    if (sum) sum.innerHTML = `<span class="widget-summary-label">Any Artisyn:</span> <span class="widget-summary-value">${pct(anyUsing)}% (${anyUsing} of ${total} accounts)</span>`;
+    const secSum = document.getElementById('sectionSummaryArtisyn');
+    if (secSum) {
+      secSum.innerHTML = PRODUCTS.map(p =>
+        `<span class="widget-summary-label">${p.label}:</span> <span class="widget-summary-value" style="margin-right:0.9rem;">${pct(stats[p.key].using.length)}%</span>`
+      ).join('');
     }
   }
 
