@@ -3435,6 +3435,7 @@
               <th class="sortable" data-sort="maturity">Client AI Maturity</th>
               <th class="sortable" data-sort="wfm" style="white-space:normal;min-width:140px;">Account AI Agentic Workflow</th>
               <th class="sortable" data-sort="dm" style="min-width:110px;">Delivery Manager</th>
+              <th style="min-width:110px;" title="Engagement Manager — source of truth: Travel Accounts.md">Engagement Manager</th>
               <th class="sortable" data-sort="revenue">Revenue</th>
               <th style="min-width:110px;">AI Champions</th>
               <th style="min-width:104px;" title="Artisyn products: DW = Delivery Workspace, TR = Transform, BD = Build. Green = using, amber = planned, grey = not planned.">Artisyn</th>
@@ -5285,6 +5286,12 @@
     } catch (e) {
       // Column already exists — ignore
     }
+    // Migration: add engagement_manager (source of truth: Travel Accounts.md)
+    try {
+      db.run("ALTER TABLE surveys ADD COLUMN engagement_manager TEXT NOT NULL DEFAULT ''");
+    } catch (e) {
+      // Column already exists — ignore
+    }
     db.run(`
       CREATE TABLE IF NOT EXISTS schema_options (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -6102,7 +6109,7 @@
     // No types selected = no results
     if (selectedTypes.length === 0) return [];
 
-    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue FROM surveys WHERE 1=1';
+    let sql = "SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue, IFNULL(engagement_manager,'') AS engagement_manager FROM surveys WHERE 1=1";
     const params = [];
     // In "Latest per account" mode the Year/Quarter selects are overridden
     // — we look across all surveys and pick the newest one per account.
@@ -6122,7 +6129,8 @@
     let surveys = result[0].values.map(row => ({
       id: row[0], account_name: row[1], exported_at: row[2],
       year: row[3], quarter: row[4], schema_version: row[5],
-      data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || '', forecasted_service_revenue: row[9] || 0
+      data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || '', forecasted_service_revenue: row[9] || 0,
+      engagement_manager: row[10] || ''
     }));
 
     // Apply engagement type filter (structural filter on JSON data)
@@ -6256,7 +6264,7 @@
 
     if (selectedTypes.length === 0) return [];
 
-    let sql = 'SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue FROM surveys WHERE 1=1';
+    let sql = "SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue, IFNULL(engagement_manager,'') AS engagement_manager FROM surveys WHERE 1=1";
     const params = [];
     // "Latest per account" mode overrides Year/Quarter — search across all surveys.
     if (!latestOnly) {
@@ -6275,7 +6283,8 @@
     let surveys = result[0].values.map(row => ({
       id: row[0], account_name: row[1], exported_at: row[2],
       year: row[3], quarter: row[4], schema_version: row[5],
-      data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || '', forecasted_service_revenue: row[9] || 0
+      data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || '', forecasted_service_revenue: row[9] || 0,
+      engagement_manager: row[10] || ''
     }));
 
     // Apply engagement type filter (structural filter on JSON data)
@@ -9722,7 +9731,7 @@
   function renderSurveysTable(allSurveys, filteredSurveys) {
     const tbody = document.getElementById('surveysTableBody');
     if (allSurveys.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
       return;
     }
 
@@ -9758,6 +9767,7 @@
       ).join('');
 
       const dmValue = escapeHtml(s.delivery_manager || '');
+      const emValue = escapeHtml(s.engagement_manager || '');
       const revenueDisplay = s.forecasted_service_revenue ? formatCurrency(s.forecasted_service_revenue) : '';
 
       // AI Champions
@@ -9823,6 +9833,11 @@
           <input type="text" class="dm-input" value="${dmValue}" placeholder="—"
             onchange="updateDeliveryManager(${s.id}, this.value.trim())"
             title="Edit delivery manager">
+        </td>
+        <td onclick="event.stopPropagation();">
+          <input type="text" class="dm-input" value="${emValue}" placeholder="—"
+            onchange="updateEngagementManager(${s.id}, this.value.trim())"
+            title="Edit engagement manager (source of truth: Travel Accounts.md)">
         </td>
         <td onclick="event.stopPropagation();">
           <input type="text" class="revenue-input" value="${revenueDisplay}" placeholder="$0"
@@ -9908,6 +9923,11 @@
 
   async function updateDeliveryManager(id, newDM) {
     db.run('UPDATE surveys SET delivery_manager = ? WHERE id = ?', [newDM, id]);
+    await saveToIndexedDB();
+  }
+
+  async function updateEngagementManager(id, newEM) {
+    db.run('UPDATE surveys SET engagement_manager = ? WHERE id = ?', [newEM, id]);
     await saveToIndexedDB();
   }
 
@@ -10024,6 +10044,7 @@
       }
       if (db) db.close();
       db = newDb;
+      createTables();   // run migrations so restored backups gain any newer columns
       await saveToIndexedDB();
       populateFilters();
       refreshDashboard();
