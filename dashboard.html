@@ -3435,12 +3435,12 @@
               <th class="sortable" data-sort="maturity">Client AI Maturity</th>
               <th class="sortable" data-sort="wfm" style="white-space:normal;min-width:140px;">Account AI Agentic Workflow</th>
               <th class="sortable" data-sort="dm" style="min-width:110px;">Delivery Manager</th>
-              <th style="min-width:110px;" title="Engagement Manager — source of truth: Travel Accounts.md">Engagement Manager</th>
+              <th class="sortable" data-sort="em" style="min-width:110px;" title="Engagement Manager — source of truth: Travel Accounts.md">Engagement Manager</th>
               <th class="sortable" data-sort="revenue">Revenue</th>
-              <th style="min-width:110px;">AI Champions</th>
-              <th style="min-width:104px;" title="Artisyn products: DW = Delivery Workspace, TR = Transform, BD = Build. Green = using, amber = planned, grey = not planned.">Artisyn</th>
-              <th style="min-width:96px;" title="AI shipped inside the client's own product">Product AI</th>
-              <th style="min-width:104px;" title="Case study status — P = AI-Product, A = ADLC">Case Studies</th>
+              <th class="sortable" data-sort="champions" style="min-width:110px;">AI Champions</th>
+              <th class="sortable" data-sort="artisyn" style="min-width:104px;" title="Artisyn products: DW = Delivery Workspace, TR = Transform, BD = Build. Green = using, amber = planned, grey = not planned.">Artisyn</th>
+              <th class="sortable" data-sort="productai" style="min-width:96px;" title="AI shipped inside the client's own product">Product AI</th>
+              <th class="sortable" data-sort="casestudies" style="min-width:104px;" title="Case study status — P = AI-Product, A = ADLC">Case Studies</th>
               <th class="sortable" data-sort="quarter">Quarter</th>
               <th>Actions</th>
             </tr>
@@ -6144,6 +6144,14 @@
       });
     }
 
+    // ── Collapse to one row per account BEFORE any attribute filter ──
+    // This must happen first. If we filtered first and deduplicated after,
+    // "Latest per account" would pick the newest row that still MATCHES the
+    // filter, not the account's actual latest survey — e.g. clicking
+    // "Stage 0" would surface Clarity Portman's Q1 (stage 0) even though its
+    // latest survey (Q3) is Team, wrongly counting the account in that bucket.
+    surveys = latestOnly ? keepLatestPerAccount(surveys) : deduplicateSurveys(surveys);
+
     // Apply maturity filter (post-query JS filter)
     if (activeMaturityFilter) {
       surveys = surveys.filter(s =>
@@ -6251,7 +6259,8 @@
       });
     }
 
-    return latestOnly ? keepLatestPerAccount(surveys) : deduplicateSurveys(surveys);
+    // Already deduplicated above (before the attribute filters).
+    return surveys;
   }
 
   // Get all surveys for year/quarter/type (ignoring maturity/account name filters) for the widget itself
@@ -9639,6 +9648,48 @@
     return stages.length > 0 ? stages.reduce((a, b) => a + b, 0) / stages.length : -1;
   }
 
+  // ── Sort helpers for the DataArt AI / people columns ──────────
+  // Ranked so the "most adopted" end of each scale sorts together.
+  const ARTISYN_RANK   = { 'using': 3, 'planned': 2, 'not-planned': 1 };          // higher = further along
+  const CASE_RANK      = { 'ready': 5, 'in-progress': 4, 'planned': 3, 'not-yet': 2, 'na': 1 };
+  const PRODUCT_AI_ORDER = ['live', 'scoped', 'no', 'dont-know', null, undefined]; // index 0 sorts first
+
+  function normaliseNameForSort(v) {
+    const s = (v || '').trim();
+    return (s === '' || s.toLowerCase() === 'n/a' || s === '—') ? '' : s;
+  }
+
+  // Best Artisyn status across the three products, plus a tiny bonus per
+  // additional product so "DW + Transform" outranks "DW" alone.
+  function getArtisynSortValue(s) {
+    const art = s.data?.dataArtAI?.artisyn;
+    if (!art) return 0;
+    let best = 0, count = 0;
+    ['dw', 'transform', 'build'].forEach(k => {
+      const r = ARTISYN_RANK[art[k]?.status] || 0;
+      if (r > best) best = r;
+      if (r >= 2) count++;   // using or planned
+    });
+    return best * 10 + count;
+  }
+
+  function getCaseStudySortValue(s) {
+    const cs = s.data?.dataArtAI?.caseStudies;
+    if (!cs) return 0;
+    const p = CASE_RANK[cs.product?.status] || 0;
+    const a = CASE_RANK[cs.adlc?.status] || 0;
+    return Math.max(p, a) * 10 + Math.min(p, a);
+  }
+
+  // Has champions (2) > future champions only (1) > none (0), then by count
+  function getChampionSortValue(s) {
+    const c = s.data?.teamRoles?.aiChampion;
+    if (!c) return 0;
+    if (c.value === 'yes' && c.champions?.length) return 200 + c.champions.length;
+    if (c.futureChampions?.length) return 100 + c.futureChampions.length;
+    return 0;
+  }
+
   function sortSurveys(surveys) {
     const sorted = [...surveys];
     const dir = tableSortDirection === 'asc' ? 1 : -1;
@@ -9664,6 +9715,30 @@
           return dir * (va - vb);
         case 'dm':
           return dir * (a.delivery_manager || '').localeCompare(b.delivery_manager || '');
+        case 'em':
+          // blanks / "n/a" sort last regardless of direction
+          va = normaliseNameForSort(a.engagement_manager);
+          vb = normaliseNameForSort(b.engagement_manager);
+          if (va === '' && vb === '') return 0;
+          if (va === '') return 1;
+          if (vb === '') return -1;
+          return dir * va.localeCompare(vb);
+        case 'champions':
+          va = getChampionSortValue(a);
+          vb = getChampionSortValue(b);
+          return dir * (va - vb);
+        case 'artisyn':
+          va = getArtisynSortValue(a);
+          vb = getArtisynSortValue(b);
+          return dir * (va - vb);
+        case 'productai':
+          va = PRODUCT_AI_ORDER.indexOf(a.data?.dataArtAI?.productAI?.status ?? null);
+          vb = PRODUCT_AI_ORDER.indexOf(b.data?.dataArtAI?.productAI?.status ?? null);
+          return dir * (va - vb);
+        case 'casestudies':
+          va = getCaseStudySortValue(a);
+          vb = getCaseStudySortValue(b);
+          return dir * (va - vb);
         case 'revenue':
           return dir * ((a.forecasted_service_revenue || 0) - (b.forecasted_service_revenue || 0));
         case 'quarter':
