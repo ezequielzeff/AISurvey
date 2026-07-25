@@ -3383,6 +3383,9 @@
               <th class="sortable" data-sort="dm" style="min-width:110px;">Delivery Manager</th>
               <th class="sortable" data-sort="revenue">Revenue</th>
               <th style="min-width:110px;">AI Champions</th>
+              <th style="min-width:104px;" title="Artisyn products: DW = Delivery Workspace, TR = Transform, BD = Build. Green = using, amber = planned, grey = not planned.">Artisyn</th>
+              <th style="min-width:96px;" title="AI shipped inside the client's own product">Product AI</th>
+              <th style="min-width:104px;" title="Case study status — P = AI-Product, A = ADLC">Case Studies</th>
               <th class="sortable" data-sort="quarter">Quarter</th>
               <th>Actions</th>
             </tr>
@@ -9387,10 +9390,44 @@
     }
   }
 
+  // ── DataArt AI & Assets renderers (dataArtAI — Q3 2026 schema extension) ──
+  const DAAI_ART_STYLE = { 'using': ['#16a34a', '#dcfce7', 'Using'], 'planned': ['#b45309', '#fef3c7', 'Planned'], 'not-planned': ['#6b7280', '#f3f4f6', 'Not planned'] };
+  function renderArtisynChips(daai) {
+    const art = daai?.artisyn;
+    if (!art) return '<span style="color:#d1d5db;">—</span>';
+    const parts = [['dw', 'DW', 'Delivery Workspace'], ['transform', 'TR', 'Transform'], ['build', 'BD', 'Build']]
+      .filter(([k]) => art[k]?.status)
+      .map(([k, abbr, full]) => {
+        const st = DAAI_ART_STYLE[art[k].status];
+        if (!st) return '';
+        return `<span title="Artisyn ${full}: ${st[2]}" style="display:inline-block;background:${st[1]};color:${st[0]};border-radius:5px;padding:1px 6px;font-size:0.7rem;font-weight:700;margin:1px 3px 1px 0;">${abbr}</span>`;
+      }).join('');
+    return parts || '<span style="color:#d1d5db;">—</span>';
+  }
+  function renderProductAiBadge(daai) {
+    const st = daai?.productAI?.status;
+    if (!st) return '<span style="color:#d1d5db;">—</span>';
+    const M = { 'no': ['#6b7280', '#f3f4f6', 'No'], 'scoped': ['#b45309', '#fef3c7', 'Scoped'], 'live': ['#7c3aed', '#ede9fe', 'Live / in build'] };
+    const m = M[st]; if (!m) return '<span style="color:#d1d5db;">—</span>';
+    return `<span class="maturity-badge" style="background:${m[1]};color:${m[0]};" title="AI in the client's product: ${m[2]}">${m[2]}</span>`;
+  }
+  function renderCaseStudyChips(daai) {
+    const cs = daai?.caseStudies;
+    if (!cs) return '<span style="color:#d1d5db;">—</span>';
+    const M = { 'na': ['#9ca3af', '#f9fafb', 'N/A'], 'not-yet': ['#6b7280', '#f3f4f6', 'Not yet'], 'planned': ['#b45309', '#fef3c7', 'Planned'], 'in-progress': ['#2563eb', '#dbeafe', 'In progress'], 'ready': ['#16a34a', '#dcfce7', 'Ready'] };
+    const parts = [['product', 'P', 'AI-Product'], ['adlc', 'A', 'ADLC']]
+      .filter(([k]) => cs[k]?.status && cs[k].status !== 'na' && cs[k].status !== 'not-yet')
+      .map(([k, abbr, full]) => {
+        const m = M[cs[k].status]; if (!m) return '';
+        return `<span title="${full} case study: ${m[2]}" style="display:inline-block;background:${m[1]};color:${m[0]};border-radius:5px;padding:1px 6px;font-size:0.7rem;font-weight:700;margin:1px 3px 1px 0;">${abbr}&nbsp;${m[2]}</span>`;
+      }).join('');
+    return parts || '<span style="color:#d1d5db;">—</span>';
+  }
+
   function renderSurveysTable(allSurveys, filteredSurveys) {
     const tbody = document.getElementById('surveysTableBody');
     if (allSurveys.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#9ca3af;padding:2rem;">No surveys match the selected filters</td></tr>';
       return;
     }
 
@@ -9464,6 +9501,12 @@
         }
       }
 
+      // DataArt AI & Assets (dataArtAI section — Q3 2026 schema extension)
+      const daai = s.data?.dataArtAI;
+      const artisynCell = renderArtisynChips(daai);
+      const productAiCell = renderProductAiBadge(daai);
+      const caseCell = renderCaseStudyChips(daai);
+
       return `<tr style="${rowStyle}cursor:pointer;" onclick="window.location.href='account-detail.html?id=${s.id}'" title="Click to view ${escapeHtml(s.account_name)} details">
         <td style="text-align:center;width:40px;" onclick="event.stopPropagation();">
           <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleAccountSelection('${escapedName}')" title="Select ${escapeHtml(s.account_name)}">
@@ -9492,6 +9535,9 @@
             title="Edit forecasted service revenue (USD)">
         </td>
         <td class="champions-cell"><div title="${escapeHtml(champTitle)}">${champCell}</div></td>
+        <td>${artisynCell}</td>
+        <td>${productAiCell}</td>
+        <td>${caseCell}</td>
         <td>Q${s.quarter} ${s.year}</td>
         <td class="actions" onclick="event.stopPropagation();">
           <a href="account-detail.html?id=${s.id}" class="btn-icon" title="View account details" style="text-decoration:none;">🔍</a>
@@ -10963,4 +11009,110 @@ Instructions:
     // Headers
     html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
     html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>'
+    html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+    // Unordered lists
+    html = html.replace(/(^|\n)(- .+(?:\n- .+)*)/g, function(match, pre, listBlock) {
+      const items = listBlock.split('\n').map(line => '<li>' + line.replace(/^- /, '') + '</li>').join('');
+      return pre + '<ul>' + items + '</ul>';
+    });
+    // Ordered lists
+    html = html.replace(/(^|\n)(\d+\. .+(?:\n\d+\. .+)*)/g, function(match, pre, listBlock) {
+      const items = listBlock.split('\n').map(line => '<li>' + line.replace(/^\d+\. /, '') + '</li>').join('');
+      return pre + '<ol>' + items + '</ol>';
+    });
+    // Paragraphs
+    html = html.replace(/\n\n/g, '</p><p>');
+    html = html.replace(/\n/g, '<br>');
+    return '<p>' + html + '</p>';
+  }
+
+  // ── Utilities ──
+  function handleAiChatKeydown(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendAiMessage();
+    }
+  }
+
+  function autoResizeAiInput(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function initAiChat() {
+    loadAiKeys();
+    updatePRDStatus();
+    // Close on Escape
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && aiChatOpen) closeAiChatPanel();
+    });
+  }
+
+  // ═══════════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════════
+  async function init() {
+    try {
+      await initDatabase();
+      setupEventListeners();
+      initVersionDisplay();
+      populateFilters();
+
+      // Keep --header-height CSS variable in sync for sticky table headers
+      const dashHeader = document.querySelector('.dashboard-header');
+      if (dashHeader) {
+        const updateHeaderHeight = () => {
+          document.documentElement.style.setProperty('--header-height', dashHeader.offsetHeight + 'px');
+        };
+        updateHeaderHeight();
+        new ResizeObserver(updateHeaderHeight).observe(dashHeader);
+      }
+
+      // Hide loading, show content
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+
+      refreshDashboard();
+      initAiChat();
+
+      // Listen for updates from the survey tool in another tab
+      try {
+        const bc = new BroadcastChannel('ai-survey-dashboard-sync');
+        bc.onmessage = async (event) => {
+          if (event.data?.type === 'db-updated') {
+            console.log('Dashboard DB updated by survey tool — reloading...');
+            const savedData = await loadFromIndexedDB();
+            if (savedData) {
+              if (db) db.close();
+              const SQL = await initSqlJs({
+                locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${f}`
+              });
+              db = new SQL.Database(savedData);
+              populateFilters();
+              refreshDashboard();
+            }
+          }
+        };
+      } catch (e) { /* BroadcastChannel not supported */ }
+    } catch (e) {
+      document.getElementById('loadingState').innerHTML = `
+        <div style="color:#ef4444;text-align:center;padding:2rem;">
+          <div style="font-size:2rem;margin-bottom:1rem;">&#9888;&#65039;</div>
+          <div style="font-weight:600;margin-bottom:0.5rem;">Failed to initialize database</div>
+          <div style="font-size:0.85rem;color:#6b7280;">${e.message}</div>
+        </div>`;
+      console.error('Init error:', e);
+    }
+  }
+
+  init();
+</script>
+<div class="rh-cell-popup" id="rhCellPopup">
+  <div class="rh-cell-popup-header">
+    <span id="rhCellPopupTitle"></span>
+    <button class="rh-cell-popup-close" onclick="closeRhCellPopup()">&times;</button>
+  </div>
+  <div class="rh-cell-popup-body" id="rhCellPopupBody"></div>
+</div>
+</body>
+</html>

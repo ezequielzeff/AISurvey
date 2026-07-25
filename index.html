@@ -3794,6 +3794,7 @@
         limitingFactorsOrder,
         limitingFactorOther,
         dataArtAIState,
+        primaryAITool,
         clientAIMaturity,
         clientAIUsage: Array.from(clientAIUsage),
         clientAIPriority,
@@ -3837,6 +3838,7 @@
         currentStep = state.currentStep || 1;
         accountName = state.accountName || '';
         dataArtAIState = Object.assign({ dw:null, transform:null, build:null, caseProduct:null, caseAdlc:null, productAI:null, primaryTool:null, note:'' }, state.dataArtAIState || {});
+        primaryAITool = state.primaryAITool || null;
         aiChampion = state.aiChampion || null;
         aiChampions = state.aiChampions || [];
         // Backward compat: migrate old single-champion data
@@ -4847,6 +4849,7 @@
               <input type="text" placeholder="Add custom tool..." data-category="${cat.id}">
               <button type="button" data-category="${cat.id}" class="add-tool-btn">Add</button>
             </div>
+            ${cat.id === 'ai' ? `<div id="primaryAiPicker" style="margin-top:0.85rem;padding-top:0.85rem;border-top:1px dashed #e5e7eb;">${renderPrimaryAiPicker()}</div>` : ''}
           </div>
         `;
       }).join('');
@@ -4980,7 +4983,37 @@
         const isSelected = selectedTools[catId]?.has(toolId) || false;
         card.classList.toggle('selected', isSelected);
       });
+      refreshPrimaryAiPicker();
     }
+
+    // ── Primary AI tool (lives with the AI Tools group in Step 4) ──
+    let primaryAITool = null;
+    function renderPrimaryAiPicker() {
+      const tools = getSelectedAITools();      // [{id,name}, ...]
+      if (!tools.length) {
+        return `<div style="font-size:0.82rem;color:#9ca3af;">Select the AI tools above, then mark which one is the <b>primary</b> tool on this account.</div>`;
+      }
+      if (primaryAITool && !tools.some(t => t.id === primaryAITool)) primaryAITool = null;
+      return `<div style="font-weight:600;font-size:0.88rem;margin-bottom:0.1rem;">⭐ Primary AI tool on this account</div>
+        <div style="font-size:0.78rem;color:#6b7280;margin-bottom:0.45rem;">The one the team mainly relies on (click again to clear)</div>
+        <div>${tools.map(t => {
+          const on = primaryAITool === t.id;
+          return `<button type="button" data-primary-ai="${t.id}" style="padding:0.35rem 0.8rem;border-radius:999px;border:1.5px solid ${on ? '#4f46e5' : '#d1d5db'};background:${on ? '#eef2ff' : '#fff'};color:${on ? '#3730a3' : '#374151'};font-weight:${on ? '600' : '400'};font-size:0.83rem;cursor:pointer;margin:0 0.4rem 0.4rem 0;">${on ? '⭐ ' : ''}${escapeHtmlSafe(t.name)}</button>`;
+        }).join('')}</div>`;
+    }
+    function escapeHtmlSafe(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function refreshPrimaryAiPicker() {
+      const box = document.getElementById('primaryAiPicker');
+      if (box) box.innerHTML = renderPrimaryAiPicker();
+    }
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-primary-ai]');
+      if (!btn) return;
+      const id = btn.dataset.primaryAi;
+      primaryAITool = (primaryAITool === id) ? null : id;
+      refreshPrimaryAiPicker();
+      autoSave();
+    });
 
     function addCustomTool(categoryId) {
       const container = document.getElementById('toolsContainer');
@@ -5145,7 +5178,10 @@
         group("AI in the client's product", 'AI shipped inside the client\'s own product or service (customer-facing), not delivery tooling', 'productAI', [['no','No'],['scoped','Scoped / pipeline'],['live','Live / in build']]) +
         group('AI-Product case study', 'A story about AI DataArt built into the client\'s product', 'caseProduct', CS) +
         group('ADLC case study', 'A story about AI used in delivery (coding, testing, docs...)', 'caseAdlc', CS) +
-        group('Primary AI tool on the account', '', 'primaryTool', Object.entries(DAAI_TOOL_LABELS));
+        `<div style="margin-bottom:0.4rem;padding:0.6rem 0.8rem;background:#f9fafb;border:1px dashed #e5e7eb;border-radius:8px;font-size:0.83rem;color:#6b7280;">
+           ⭐ <b>Primary AI tool:</b> ${primaryAITool ? escapeHtmlSafe((getSelectedAITools().find(t => t.id === primaryAITool) || {}).name || primaryAITool) : 'not set'}
+           &nbsp;·&nbsp; set it in <b>Step 4 &mdash; Tools &amp; Infrastructure</b>, under AI Tools.
+         </div>`;
       const note = document.getElementById('daaiNote');
       if (note && note.value !== dataArtAIState.note) note.value = dataArtAIState.note || '';
     }
@@ -6886,7 +6922,9 @@
         dataArtAI: {
           _meta: { step: 'Step 9', title: 'DataArt AI & Assets', type: 'dm-review',
                    description: 'DataArt-side AI signals: Artisyn products, case studies, AI in the client product' },
-          primaryTool: { value: dataArtAIState.primaryTool, _label: dataArtAIState.primaryTool ? (DAAI_TOOL_LABELS[dataArtAIState.primaryTool] || dataArtAIState.primaryTool) : null },
+          primaryTool: { value: primaryAITool,
+                         _label: primaryAITool ? ((getSelectedAITools().find(t => t.id === primaryAITool) || {}).name || primaryAITool) : null,
+                         _meta: { question: 'Primary AI tool on the account', source: 'Step 4 - Tools & Infrastructure / AI Tools' } },
           artisyn: {
             _meta: { question: 'Artisyn products in this account', options: ['using', 'planned', 'not-planned'] },
             dw: { status: dataArtAIState.dw, _label: 'Artisyn Delivery Workspace' },
