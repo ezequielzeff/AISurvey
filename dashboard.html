@@ -6854,20 +6854,15 @@
   }
 
   function renderWorkflowMaturityWidget(filteredSurveys, allSurveys) {
-    // Helper: compute per-account WFM stages from a survey set
+    // Helper: compute per-account WFM stages from a survey set.
+    // Uses the canonical stage (see getWfmDisplayStage) so the counts on these
+    // cards always match the badges in the table and what the stage filter
+    // returns when you click a card.
     function computeAccountStages(surveyList) {
       const stages = [];
       surveyList.forEach(s => {
-        const wfm = s.data?.workflowMaturity;
-        if (!wfm) return;
-        const roleStages = [];
-        ROLE_ORDER.forEach(role => {
-          const st = wfm[role]?.stage;
-          if (st !== null && st !== undefined && typeof st === 'number') roleStages.push(st);
-        });
-        if (roleStages.length === 0) return;
-        const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
-        stages.push(Math.round(avg));
+        const stage = getWfmDisplayStage(s);
+        if (stage !== null) stages.push(stage);
       });
       return stages;
     }
@@ -8634,16 +8629,11 @@
       const maturityVal = s.data?.clientAILandscape?.maturity?.value || '-';
       const maturityLabel = MATURITY_LABELS[maturityVal] || maturityVal;
 
-      const wfm = s.data?.workflowMaturity;
       let wfmCell = '-';
-      if (wfm) {
-        const roleStages = [];
-        ROLE_ORDER.forEach(role => { const st = wfm[role]?.stage; if (typeof st === 'number') roleStages.push(st); });
-        if (roleStages.length > 0) {
-          const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
-          const rounded = Math.round(avg);
-          let displayStage = rounded;
-          if (rounded === 0 && surveyHasAiTools(s)) displayStage = 1;
+      {
+        const displayStage = getWfmDisplayStage(s);   // canonical — matches widget + filter
+        if (displayStage !== null) {
+          const avg = getWfmAverage(s);
           const wfmBg = WFM_COLORS[displayStage] || '#6b7280';
           wfmCell = `<span class="maturity-badge" style="background:${wfmBg}22;color:${wfmBg};">${WFM_LABELS[displayStage] || 'Stage ' + displayStage} (${avg.toFixed(1)})</span>`;
         }
@@ -9939,18 +9929,10 @@
       // surface "Individual AI" instead of "No AI Usage" — the avg number in parens
       // still tells the truth about how shallow that usage is.
       let wfmCell = '-';
-      const wfm = s.data?.workflowMaturity;
-      if (wfm) {
-        const roleStages = [];
-        ROLE_ORDER.forEach(role => {
-          const st = wfm[role]?.stage;
-          if (st !== null && st !== undefined && typeof st === 'number') roleStages.push(st);
-        });
-        if (roleStages.length > 0) {
-          const avg = roleStages.reduce((a, b) => a + b, 0) / roleStages.length;
-          const rounded = Math.round(avg);
-          let displayStage = rounded;
-          if (rounded === 0 && surveyHasAiTools(s)) displayStage = 1;
+      {
+        const displayStage = getWfmDisplayStage(s);   // canonical — matches widget + filter
+        if (displayStage !== null) {
+          const avg = getWfmAverage(s);
           const label = WFM_LABELS[displayStage] || `Stage ${displayStage}`;
           const wfmBg = WFM_COLORS[displayStage] || '#6b7280';
           wfmCell = `<span class="maturity-badge" style="background:${wfmBg}22;color:${wfmBg};">${label} (${avg.toFixed(1)})</span>`;
