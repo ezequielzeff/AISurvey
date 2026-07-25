@@ -2756,6 +2756,12 @@
           <span class="latest-toggle-text">Latest per account</span>
         </label>
       </div>
+      <div class="filter-group" id="filterActiveOnlyGroup" title="Hide accounts marked Inactive in Travel Accounts.md (they keep their historical surveys).">
+        <label class="latest-toggle">
+          <input type="checkbox" id="filterActiveOnly" checked />
+          <span class="latest-toggle-text">Active accounts only</span>
+        </label>
+      </div>
       <button class="filter-drawer-toggle" id="filterDrawerToggle" onclick="toggleFiltersDrawer()" type="button" title="Show/hide additional filters">
         More Filters <span class="filter-drawer-badge" id="filterDrawerBadge" style="display:none;">0</span>
         <span class="filter-drawer-chevron" id="filterDrawerChevron">&#9662;</span>
@@ -5292,6 +5298,13 @@
     } catch (e) {
       // Column already exists — ignore
     }
+    // Migration: add is_active (source of truth: Travel Accounts.md).
+    // Default 1 so existing rows stay visible until explicitly marked inactive.
+    try {
+      db.run("ALTER TABLE surveys ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1");
+    } catch (e) {
+      // Column already exists — ignore
+    }
     db.run(`
       CREATE TABLE IF NOT EXISTS schema_options (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -6088,6 +6101,13 @@
     return !!(el && el.checked);
   }
 
+  // "Active accounts only" — hides accounts flagged inactive in Travel Accounts.md.
+  // Their surveys stay in the database so historical data is never lost.
+  function isActiveOnlyMode() {
+    const el = document.getElementById('filterActiveOnly');
+    return !!(el && el.checked);
+  }
+
   // Visually disable Year/Quarter selects when "Latest per account" is on,
   // and highlight the toggle so its override is obvious.
   function syncLatestOnlyUiState() {
@@ -6109,8 +6129,10 @@
     // No types selected = no results
     if (selectedTypes.length === 0) return [];
 
-    let sql = "SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue, IFNULL(engagement_manager,'') AS engagement_manager FROM surveys WHERE 1=1";
+    let sql = "SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue, IFNULL(engagement_manager,'') AS engagement_manager, IFNULL(is_active,1) AS is_active FROM surveys WHERE 1=1";
     const params = [];
+    // Active-accounts-only toggle (inactive accounts keep their historical surveys)
+    if (isActiveOnlyMode()) sql += ' AND IFNULL(is_active,1) = 1';
     // In "Latest per account" mode the Year/Quarter selects are overridden
     // — we look across all surveys and pick the newest one per account.
     if (!latestOnly) {
@@ -6130,7 +6152,7 @@
       id: row[0], account_name: row[1], exported_at: row[2],
       year: row[3], quarter: row[4], schema_version: row[5],
       data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || '', forecasted_service_revenue: row[9] || 0,
-      engagement_manager: row[10] || ''
+      engagement_manager: row[10] || '', is_active: row[11] === undefined ? 1 : row[11]
     }));
 
     // Apply engagement type filter (structural filter on JSON data)
@@ -6273,8 +6295,10 @@
 
     if (selectedTypes.length === 0) return [];
 
-    let sql = "SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue, IFNULL(engagement_manager,'') AS engagement_manager FROM surveys WHERE 1=1";
+    let sql = "SELECT id, account_name, exported_at, year, quarter, schema_version, raw_json, account_type, delivery_manager, forecasted_service_revenue, IFNULL(engagement_manager,'') AS engagement_manager, IFNULL(is_active,1) AS is_active FROM surveys WHERE 1=1";
     const params = [];
+    // Active-accounts-only toggle (inactive accounts keep their historical surveys)
+    if (isActiveOnlyMode()) sql += ' AND IFNULL(is_active,1) = 1';
     // "Latest per account" mode overrides Year/Quarter — search across all surveys.
     if (!latestOnly) {
       if (year !== 'all') { sql += ' AND year = ?'; params.push(parseInt(year)); }
@@ -6293,7 +6317,7 @@
       id: row[0], account_name: row[1], exported_at: row[2],
       year: row[3], quarter: row[4], schema_version: row[5],
       data: JSON.parse(row[6]), account_type: row[7] || 'other', delivery_manager: row[8] || '', forecasted_service_revenue: row[9] || 0,
-      engagement_manager: row[10] || ''
+      engagement_manager: row[10] || '', is_active: row[11] === undefined ? 1 : row[11]
     }));
 
     // Apply engagement type filter (structural filter on JSON data)
@@ -9896,6 +9920,7 @@
             style="${isSelected ? 'color:#4f46e5;' : ''}"
             onchange="updateAccountName(${s.id}, this.value.trim(), this)"
             title="Click to edit account name">
+          ${Number(s.is_active) === 0 ? '<span style="display:inline-block;margin-left:4px;background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb;border-radius:4px;padding:0 5px;font-size:0.65rem;font-weight:700;text-transform:uppercase;" title="Marked Inactive in Travel Accounts.md">inactive</span>' : ''}
         </td>
         <td onclick="event.stopPropagation();">
           <select class="account-type-select" onchange="updateAccountType(${s.id}, this.value)" title="Change account type">
@@ -10218,6 +10243,13 @@
       selectedAccounts.clear();
       selectedDeliveryManagers.clear();
       syncLatestOnlyUiState();
+      refreshDashboard();
+    });
+    document.getElementById('filterActiveOnly').addEventListener('change', () => {
+      activeMaturityFilter = null;
+      selectedAccounts.clear();
+      selectedDeliveryManagers.clear();
+      populateFilters();
       refreshDashboard();
     });
     // Table column sorting
